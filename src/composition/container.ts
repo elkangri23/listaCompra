@@ -13,6 +13,7 @@ import { AuthenticateUser } from '@application/use-cases/auth/AuthenticateUser';
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
+import { MockEventPublisher } from '@infrastructure/messaging/MockEventPublisher';
 
 // HTTP Layer
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
@@ -21,6 +22,7 @@ import { AuthController } from '@infrastructure/http/controllers/AuthController'
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
+import type { IEventPublisher } from '@application/ports/messaging/IEventPublisher';
 
 export class Container {
   private static instance: Container;
@@ -32,6 +34,7 @@ export class Container {
   // External Services
   private _passwordHasher!: IPasswordHasher;
   private _tokenService!: ITokenService;
+  private _eventPublisher!: IEventPublisher;
 
   // Use Cases
   private _registerUser!: RegisterUser;
@@ -68,6 +71,17 @@ export class Container {
   private initializeExternalServices(): void {
     this._passwordHasher = new BcryptPasswordHasher();
     this._tokenService = new JWTTokenService();
+    
+    // Configurar EventPublisher según variables de entorno
+    const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
+    if (rabbitmqEnabled) {
+      // TODO: Implementar RabbitMQ cuando esté disponible
+      this._eventPublisher = new MockEventPublisher();
+      console.log('🔄 Usando MockEventPublisher (RabbitMQ configurado pero no disponible)');
+    } else {
+      this._eventPublisher = new MockEventPublisher();
+      console.log('🔄 Usando MockEventPublisher (RabbitMQ deshabilitado)');
+    }
   }
 
   private initializeUseCases(): void {
@@ -106,6 +120,10 @@ export class Container {
 
   public get tokenService(): ITokenService {
     return this._tokenService;
+  }
+
+  public get eventPublisher(): IEventPublisher {
+    return this._eventPublisher;
   }
 
   public get registerUser(): RegisterUser {
