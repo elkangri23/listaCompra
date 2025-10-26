@@ -33,47 +33,258 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 
 ---
 
+## Arquitectura y Estructura de Carpetas
+
+```
+/
+├── src/
+│   ├── domain/                          # Capa de dominio (lógica de negocio pura)
+│   │   ├── entities/                    # Entidades de dominio
+│   │   │   ├── Usuario.ts
+│   │   │   ├── Lista.ts
+│   │   │   ├── Producto.ts
+│   │   │   ├── Categoria.ts
+│   │   │   ├── Tienda.ts
+│   │   │   ├── Invitacion.ts
+│   │   │   ├── Permiso.ts
+│   │   │   └── Blueprint.ts
+│   │   ├── value-objects/               # Value Objects inmutables
+│   │   │   ├── Email.ts
+│   │   │   ├── Password.ts
+│   │   │   ├── Hash.ts
+│   │   │   └── PermissionType.ts
+│   │   ├── services/                    # Domain services puros
+│   │   │   ├── PasswordHasher.ts
+│   │   │   └── InvitationHashGenerator.ts
+│   │   ├── events/                      # Eventos de dominio (puros)
+│   │   │   ├── UsuarioRegistrado.ts
+│   │   │   ├── ListaCreada.ts
+│   │   │   ├── ListaCompartida.ts
+│   │   │   ├── ProductoAnadido.ts
+│   │   │   └── InvitacionEnviada.ts
+│   │   └── errors/                      # Errores de dominio
+│   │       ├── DomainError.ts
+│   │       ├── InvalidEmailError.ts
+│   │       └── InvalidPasswordError.ts
+│   │
+│   ├── application/                     # Capa de aplicación (casos de uso)
+│   │   ├── use-cases/                   # Orquestación por caso de uso
+│   │   │   ├── auth/
+│   │   │   │   ├── RegisterUser.ts
+│   │   │   │   └── AuthenticateUser.ts
+│   │   │   ├── lists/
+│   │   │   │   ├── CreateList.ts
+│   │   │   │   ├── GetUserLists.ts
+│   │   │   │   ├── UpdateList.ts
+│   │   │   │   ├── DeleteList.ts
+│   │   │   │   └── ShareList.ts
+│   │   │   ├── products/
+│   │   │   │   ├── AddProduct.ts
+│   │   │   │   ├── MarkProductAsPurchased.ts
+│   │   │   │   ├── UpdateProduct.ts
+│   │   │   │   └── DeleteProduct.ts
+│   │   │   ├── categories/
+│   │   │   │   ├── CreateCategory.ts
+│   │   │   │   ├── GetCategoriesByStore.ts
+│   │   │   │   ├── UpdateCategory.ts
+│   │   │   │   └── DeleteCategory.ts
+│   │   │   ├── invitations/
+│   │   │   │   ├── AccessSharedList.ts
+│   │   │   │   ├── ManagePermissions.ts
+│   │   │   │   └── CancelInvitation.ts
+│   │   │   ├── ai/
+│   │   │   │   ├── GetCategorySuggestions.ts
+│   │   │   │   └── AnalyzePurchaseHabits.ts
+│   │   │   ├── blueprints/
+│   │   │   │   ├── CreateBlueprint.ts
+│   │   │   │   └── CreateListFromBlueprint.ts
+│   │   │   └── admin/
+│   │   │       ├── ImpersonateUser.ts
+│   │   │       └── EndImpersonation.ts
+│   │   ├── ports/                       # Interfaces (puertos)
+│   │   │   ├── repositories/
+│   │   │   │   ├── IUsuarioRepository.ts
+│   │   │   │   ├── IListaRepository.ts
+│   │   │   │   ├── IProductoRepository.ts
+│   │   │   │   ├── ICategoriaRepository.ts
+│   │   │   │   ├── ITiendaRepository.ts
+│   │   │   │   ├── IInvitacionRepository.ts
+│   │   │   │   ├── IPermisoRepository.ts
+│   │   │   │   └── IBlueprintRepository.ts
+│   │   │   ├── messaging/
+│   │   │   │   ├── IEventPublisher.ts
+│   │   │   │   └── IOutboxService.ts
+│   │   │   ├── external/
+│   │   │   │   ├── IEmailService.ts
+│   │   │   │   └── IAIService.ts
+│   │   │   └── auth/
+│   │   │       ├── ITokenService.ts
+│   │   │       └── IPasswordHasher.ts
+│   │   ├── dto/                         # DTOs de entrada/salida
+│   │   │   ├── auth/
+│   │   │   │   ├── RegisterUserDto.ts
+│   │   │   │   └── LoginDto.ts
+│   │   │   ├── lists/
+│   │   │   │   ├── CreateListDto.ts
+│   │   │   │   └── UpdateListDto.ts
+│   │   │   ├── products/
+│   │   │   │   ├── AddProductDto.ts
+│   │   │   │   └── UpdateProductDto.ts
+│   │   │   └── shared/
+│   │   │       └── PaginationDto.ts
+│   │   └── errors/                      # Errores de aplicación
+│   │       ├── ValidationError.ts
+│   │       ├── UnauthorizedError.ts
+│   │       └── NotFoundError.ts
+│   │
+│   ├── infrastructure/                  # Capa de infraestructura (adaptadores)
+│   │   ├── persistence/
+│   │   │   ├── prisma/
+│   │   │   │   ├── schema.prisma        # Schema de Prisma
+│   │   │   │   ├── migrations/          # Migraciones
+│   │   │   │   └── seed.ts              # Datos iniciales
+│   │   │   ├── repositories/            # Implementaciones concretas
+│   │   │   │   ├── PrismaUsuarioRepository.ts
+│   │   │   │   ├── PrismaListaRepository.ts
+│   │   │   │   ├── PrismaProductoRepository.ts
+│   │   │   │   ├── PrismaCategoriaRepository.ts
+│   │   │   │   ├── PrismaTiendaRepository.ts
+│   │   │   │   ├── PrismaInvitacionRepository.ts
+│   │   │   │   ├── PrismaPermisoRepository.ts
+│   │   │   │   ├── PrismaBlueprintRepository.ts
+│   │   │   │   └── PrismaOutboxRepository.ts
+│   │   │   ├── mappers/                 # Mapeo entidad ↔ modelo persistencia
+│   │   │   │   ├── UsuarioMapper.ts
+│   │   │   │   ├── ListaMapper.ts
+│   │   │   │   └── ProductoMapper.ts
+│   │   │   └── in-memory/               # Dobles para testing
+│   │   │       ├── InMemoryUsuarioRepository.ts
+│   │   │       └── InMemoryListaRepository.ts
+│   │   ├── http/                        # Adaptadores HTTP
+│   │   │   ├── controllers/             # Controladores REST
+│   │   │   │   ├── AuthController.ts
+│   │   │   │   ├── ListController.ts
+│   │   │   │   ├── ProductController.ts
+│   │   │   │   ├── CategoryController.ts
+│   │   │   │   ├── InvitationController.ts
+│   │   │   │   ├── AIController.ts
+│   │   │   │   ├── BlueprintController.ts
+│   │   │   │   └── AdminController.ts
+│   │   │   ├── middlewares/             # Middlewares HTTP
+│   │   │   │   ├── authMiddleware.ts
+│   │   │   │   ├── roleMiddleware.ts
+│   │   │   │   ├── validationMiddleware.ts
+│   │   │   │   ├── errorMiddleware.ts
+│   │   │   │   ├── rateLimitMiddleware.ts
+│   │   │   │   └── loggerMiddleware.ts
+│   │   │   ├── routes/                  # Definición de rutas
+│   │   │   │   ├── authRoutes.ts
+│   │   │   │   ├── listRoutes.ts
+│   │   │   │   ├── productRoutes.ts
+│   │   │   │   ├── categoryRoutes.ts
+│   │   │   │   ├── invitationRoutes.ts
+│   │   │   │   ├── aiRoutes.ts
+│   │   │   │   ├── blueprintRoutes.ts
+│   │   │   │   └── adminRoutes.ts
+│   │   │   └── server.ts                # Bootstrap del servidor HTTP
+│   │   ├── messaging/                   # Mensajería (RabbitMQ/Kafka)
+│   │   │   ├── rabbitmq/
+│   │   │   │   ├── RabbitMQConnection.ts
+│   │   │   │   ├── RabbitMQPublisher.ts
+│   │   │   │   └── RabbitMQConsumer.ts
+│   │   │   ├── outbox/
+│   │   │   │   ├── OutboxService.ts
+│   │   │   │   ├── OutboxWorker.ts      # Worker para procesar outbox
+│   │   │   │   └── OutboxPoller.ts
+│   │   │   └── consumers/               # Consumers de eventos
+│   │   │       ├── NotificationConsumer.ts
+│   │   │       └── AuditConsumer.ts
+│   │   ├── external-services/           # Servicios externos
+│   │   │   ├── ai/
+│   │   │   │   ├── OpenAIService.ts
+│   │   │   │   └── AIServiceAdapter.ts
+│   │   │   ├── email/
+│   │   │   │   ├── NodemailerService.ts
+│   │   │   │   └── templates/
+│   │   │   │       └── invitation.html
+│   │   │   └── auth/
+│   │   │       ├── JWTTokenService.ts
+│   │   │       └── BcryptPasswordHasher.ts
+│   │   ├── observability/               # Observabilidad
+│   │   │   ├── logger/
+│   │   │   │   ├── Logger.ts
+│   │   │   │   └── WinstonLogger.ts
+│   │   │   ├── metrics/
+│   │   │   │   └── MetricsCollector.ts
+│   │   │   └── tracing/
+│   │   │       └── TracingService.ts
+│   │   └── config/                      # Configuración
+│   │       ├── database.config.ts
+│   │       ├── rabbitmq.config.ts
+│   │       ├── jwt.config.ts
+│   │       ├── ai.config.ts
+│   │       └── env.ts                   # Variables de entorno
+│   │
+│   ├── composition/                     # Composición e inversión de dependencias
+│   │   └── container.ts                 # Contenedor de inyección de dependencias
+│   │
+│   ├── shared/                          # Utilidades compartidas
+│   │   ├── result.ts                    # Result/Either para manejo de errores
+│   │   ├── types.ts                     # Tipos compartidos
+│   │   └── utils.ts                     # Utilidades puras
+│   │
+│   └── main.ts                          # Punto de entrada de la aplicación
+│
+├── tests/                               # Tests organizados por capas
+│   ├── unit/
+│   │   ├── domain/
+│   │   ├── application/
+│   │   └── infrastructure/
+│   ├── integration/
+│   │   ├── http/
+│   │   ├── persistence/
+│   │   └── messaging/
+│   └── e2e/
+│       └── scenarios/
+│
+├── docs/                                # Documentación adicional
+│   ├── Analisis-de-requisitos-ListaCompra.pdf
+│   ├── DiagramaClases_V1-mermaid.md
+│   ├── casos-uso-completos.md
+│   ├── architecture.md
+│   └── api-documentation.md
+│
+├── scripts/                             # Scripts auxiliares
+│   ├── seed.ts
+│   └── migrate.ts
+│
+├── .env.example                         # Plantilla de variables de entorno
+├── .eslintrc.json                       # Configuración ESLint
+├── .prettierrc                          # Configuración Prettier
+├── jest.config.js                       # Configuración Jest
+├── tsconfig.json                        # Configuración TypeScript
+├── package.json
+├── docker-compose.yml                   # PostgreSQL + RabbitMQ
+└── README.md
+```
+
+---
+
 ## Roadmap de Implementación
 
 ### Fase 1: Setup y Arquitectura Base (Semanas 1-2)
 **Casos de uso**: Ninguno (infraestructura)
 
 #### Entregables:
-1. Estructura de carpetas según arquitectura hexagonal
+1. Estructura de carpetas completa según arquitectura definida
 2. Configuración de TypeScript, ESLint, Prettier
 3. Setup de base de datos PostgreSQL con Prisma
-4. Configuración de variables de entorno
-5. Setup de servidor Express/Fastify
-6. Middleware de logging y manejo de errores
-
-#### Estructura de carpetas:
-```
-src/
-├── domain/
-│   ├── entities/
-│   ├── value-objects/
-│   ├── repositories/
-│   └── events/
-├── application/
-│   ├── use-cases/
-│   ├── services/
-│   └── dtos/
-├── infrastructure/
-│   ├── persistence/
-│   │   ├── prisma/
-│   │   └── repositories/
-│   ├── messaging/
-│   │   ├── rabbitmq/
-│   │   └── outbox/
-│   └── external-services/
-│       └── ai/
-└── adapters/
-    ├── http/
-    │   ├── controllers/
-    │   ├── middlewares/
-    │   └── routes/
-    └── events/
-```
+4. Configuración de variables de entorno (`src/infrastructure/config/`)
+5. Setup de servidor Express/Fastify (`src/infrastructure/http/server.ts`)
+6. Contenedor de inyección de dependencias (`src/composition/container.ts`)
+7. Utilidades base (Result, Logger, Error handlers)
+8. Middleware de logging y manejo de errores
+9. Docker Compose para PostgreSQL y RabbitMQ
 
 ---
 
@@ -81,12 +292,15 @@ src/
 **Casos de uso**: CU-01, CU-02
 
 #### Entregables:
-1. Entidad Usuario en dominio
-2. Casos de uso: RegisterUser, AuthenticateUser
-3. Repositorio de usuarios (Prisma)
-4. Endpoints: POST /auth/register, POST /auth/login
-5. Middleware de autenticación JWT
-6. Tests unitarios y de integración
+1. Entidad Usuario en `src/domain/entities/Usuario.ts`
+2. Value Objects: Email, Password en `src/domain/value-objects/`
+3. Casos de uso en `src/application/use-cases/auth/`
+4. Puertos: IUsuarioRepository, IPasswordHasher, ITokenService en `src/application/ports/`
+5. Implementaciones: PrismaUsuarioRepository, BcryptPasswordHasher, JWTTokenService
+6. Controlador AuthController en `src/infrastructure/http/controllers/`
+7. Rutas en `src/infrastructure/http/routes/authRoutes.ts`
+8. Middleware de autenticación en `src/infrastructure/http/middlewares/authMiddleware.ts`
+9. Tests unitarios y de integración
 
 ---
 
@@ -94,12 +308,16 @@ src/
 **Casos de uso**: CU-03, CU-04, CU-05, CU-06
 
 #### Entregables:
-1. Entidad Lista en dominio
-2. Casos de uso: CreateList, GetUserLists, UpdateList, DeleteList
-3. Repositorio de listas
-4. Endpoints CRUD: POST /lists, GET /lists, PUT /lists/:id, DELETE /lists/:id
-5. Validación de propiedad y permisos
-6. Tests completos
+1. Entidad Lista en `src/domain/entities/Lista.ts`
+2. Casos de uso en `src/application/use-cases/lists/`
+3. DTOs en `src/application/dto/lists/`
+4. Puerto IListaRepository en `src/application/ports/repositories/`
+5. PrismaListaRepository en `src/infrastructure/persistence/repositories/`
+6. Mapper: ListaMapper en `src/infrastructure/persistence/mappers/`
+7. ListController en `src/infrastructure/http/controllers/`
+8. Rutas en `src/infrastructure/http/routes/listRoutes.ts`
+9. Validación de propiedad y permisos
+10. Tests completos
 
 ---
 
@@ -107,12 +325,16 @@ src/
 **Casos de uso**: CU-07, CU-08, CU-09, CU-10
 
 #### Entregables:
-1. Entidad Producto en dominio
-2. Casos de uso: AddProduct, MarkProductAsPurchased, UpdateProduct, DeleteProduct
-3. Repositorio de productos
-4. Endpoints: POST /lists/:id/products, PATCH /products/:id/purchased, PUT /products/:id, DELETE /products/:id
-5. Validación de permisos de escritura
-6. Tests completos
+1. Entidad Producto en `src/domain/entities/Producto.ts`
+2. Casos de uso en `src/application/use-cases/products/`
+3. DTOs en `src/application/dto/products/`
+4. IProductoRepository en `src/application/ports/repositories/`
+5. PrismaProductoRepository en `src/infrastructure/persistence/repositories/`
+6. ProductoMapper en `src/infrastructure/persistence/mappers/`
+7. ProductController en `src/infrastructure/http/controllers/`
+8. Rutas en `src/infrastructure/http/routes/productRoutes.ts`
+9. Validación de permisos de escritura
+10. Tests completos
 
 ---
 
@@ -120,11 +342,13 @@ src/
 **Casos de uso**: CU-11, CU-12, CU-13, CU-14, CU-26
 
 #### Entregables:
-1. Entidades Categoria y Tienda en dominio
-2. Casos de uso: CreateCategory, GetCategoriesByStore, UpdateCategory, DeleteCategory, GetStores
-3. Repositorios correspondientes
-4. Endpoints: POST /categories, GET /stores/:id/categories, PUT /categories/:id, DELETE /categories/:id, GET /stores
-5. Tests completos
+1. Entidades Categoria y Tienda en `src/domain/entities/`
+2. Casos de uso en `src/application/use-cases/categories/`
+3. Puertos: ICategoriaRepository, ITiendaRepository
+4. Implementaciones Prisma de repositorios
+5. CategoryController en `src/infrastructure/http/controllers/`
+6. Rutas en `src/infrastructure/http/routes/categoryRoutes.ts`
+7. Tests completos
 
 ---
 
@@ -132,13 +356,14 @@ src/
 **Casos de uso**: CU-19
 
 #### Entregables:
-1. Tabla outbox en base de datos
-2. Servicio de Outbox para persistir eventos
-3. Worker para procesar eventos del outbox
-4. Configuración de RabbitMQ
-5. Publisher y Consumer de mensajes
-6. Eventos de dominio: ListaCompartida, UsuarioRegistrado, ProductoAñadido
-7. Tests de integración con RabbitMQ
+1. Eventos de dominio en `src/domain/events/`
+2. Puerto IOutboxService en `src/application/ports/messaging/`
+3. Tabla outbox en schema de Prisma
+4. OutboxService en `src/infrastructure/messaging/outbox/`
+5. OutboxWorker y OutboxPoller en `src/infrastructure/messaging/outbox/`
+6. RabbitMQConnection, RabbitMQPublisher en `src/infrastructure/messaging/rabbitmq/`
+7. Configuración RabbitMQ en `src/infrastructure/config/rabbitmq.config.ts`
+8. Tests de integración con RabbitMQ
 
 ---
 
@@ -146,13 +371,16 @@ src/
 **Casos de uso**: CU-15, CU-16, CU-17, CU-18
 
 #### Entregables:
-1. Entidades Invitacion y Permiso en dominio
-2. Casos de uso: ShareList, AccessSharedList, ManagePermissions, CancelInvitation
-3. Generación de hash seguro para enlaces
-4. Endpoints: POST /lists/:id/share, GET /shared/:hash, PUT /invitations/:id/permissions, DELETE /invitations/:id
-5. Lógica de permisos (lectura/escritura)
-6. Publicación de evento "ListaCompartida" al outbox
-7. Tests completos
+1. Entidades Invitacion y Permiso en `src/domain/entities/`
+2. Value Object Hash en `src/domain/value-objects/`
+3. Casos de uso en `src/application/use-cases/invitations/`
+4. Puertos: IInvitacionRepository, IPermisoRepository
+5. Implementaciones Prisma de repositorios
+6. InvitationController en `src/infrastructure/http/controllers/`
+7. Rutas en `src/infrastructure/http/routes/invitationRoutes.ts`
+8. Generación de hash seguro (domain service)
+9. Publicación de evento "ListaCompartida" al outbox
+10. Tests completos
 
 ---
 
@@ -160,12 +388,13 @@ src/
 **Casos de uso**: CU-19 (continuación)
 
 #### Entregables:
-1. Servicio de envío de emails (Nodemailer o similar)
-2. Worker que consume eventos "ListaCompartida" desde RabbitMQ
-3. Plantillas de emails para invitaciones
-4. Lógica de retry con backoff exponencial
-5. Logs de notificaciones enviadas
-6. Tests de integración
+1. Puerto IEmailService en `src/application/ports/external/`
+2. NodemailerService en `src/infrastructure/external-services/email/`
+3. Plantillas de email en `src/infrastructure/external-services/email/templates/`
+4. NotificationConsumer en `src/infrastructure/messaging/consumers/`
+5. RabbitMQConsumer en `src/infrastructure/messaging/rabbitmq/`
+6. Lógica de retry con backoff exponencial
+7. Tests de integración
 
 ---
 
@@ -173,13 +402,15 @@ src/
 **Casos de uso**: CU-20, CU-21
 
 #### Entregables:
-1. Servicio de IA en infrastructure/external-services
-2. Caso de uso: GetCategorySuggestions, AnalyzePurchaseHabits
-3. Integración con API de OpenAI/Gemini/Perplexity
-4. Endpoints: POST /ai/category-suggestions, GET /ai/habits-analysis
-5. Caché de respuestas para optimizar costos
-6. Manejo de timeouts y fallbacks
-7. Tests con mocks de API externa
+1. Puerto IAIService en `src/application/ports/external/`
+2. Casos de uso en `src/application/use-cases/ai/`
+3. OpenAIService y AIServiceAdapter en `src/infrastructure/external-services/ai/`
+4. Configuración IA en `src/infrastructure/config/ai.config.ts`
+5. AIController en `src/infrastructure/http/controllers/`
+6. Rutas en `src/infrastructure/http/routes/aiRoutes.ts`
+7. Caché de respuestas para optimizar costos
+8. Manejo de timeouts y fallbacks
+9. Tests con mocks de API externa
 
 ---
 
@@ -187,11 +418,13 @@ src/
 **Casos de uso**: CU-22, CU-23
 
 #### Entregables:
-1. Entidad Blueprint en dominio
-2. Casos de uso: CreateBlueprint, CreateListFromBlueprint
-3. Repositorio de blueprints
-4. Endpoints: POST /blueprints, POST /lists/from-blueprint/:id
-5. Tests completos
+1. Entidad Blueprint en `src/domain/entities/Blueprint.ts`
+2. Casos de uso en `src/application/use-cases/blueprints/`
+3. IBlueprintRepository en `src/application/ports/repositories/`
+4. PrismaBlueprintRepository en `src/infrastructure/persistence/repositories/`
+5. BlueprintController en `src/infrastructure/http/controllers/`
+6. Rutas en `src/infrastructure/http/routes/blueprintRoutes.ts`
+7. Tests completos
 
 ---
 
@@ -199,11 +432,12 @@ src/
 **Casos de uso**: CU-24, CU-25
 
 #### Entregables:
-1. Middleware de autorización por roles
-2. Casos de uso: ImpersonateUser, EndImpersonation
-3. Endpoints: POST /admin/impersonate, DELETE /admin/impersonate
-4. Logs de auditoría para impersonaciones
-5. Tests de seguridad
+1. Middleware de autorización por roles en `src/infrastructure/http/middlewares/roleMiddleware.ts`
+2. Casos de uso en `src/application/use-cases/admin/`
+3. AdminController en `src/infrastructure/http/controllers/`
+4. Rutas en `src/infrastructure/http/routes/adminRoutes.ts`
+5. Logs de auditoría para impersonaciones
+6. Tests de seguridad
 
 ---
 
@@ -212,10 +446,10 @@ src/
 
 #### Entregables:
 1. Proceso cron para validar enlaces expirados
-2. Implementación de rate limiting
+2. Rate limiting middleware en `src/infrastructure/http/middlewares/rateLimitMiddleware.ts`
 3. Protección CSRF
 4. Sanitización de inputs
-5. Validación exhaustiva con Zod/Joi
+5. Validación exhaustiva con Zod en `src/infrastructure/http/middlewares/validationMiddleware.ts`
 6. Tests de seguridad
 
 ---
@@ -224,10 +458,10 @@ src/
 #### Entregables:
 1. Documentación OpenAPI/Swagger completa
 2. Cobertura de tests >80%
-3. Tests E2E completos
+3. Tests E2E completos en `tests/e2e/`
 4. README detallado
-5. Documentación de arquitectura
-6. Guía de deployment
+5. Documentación de arquitectura en `docs/architecture.md`
+6. Guía de setup y deployment
 
 ---
 
@@ -239,10 +473,11 @@ src/
 **Herramientas**: TypeScript
 
 **Tareas**:
-- Definir entidades del dominio (Usuario, Lista, Producto, Categoria, Tienda, Invitacion, Permiso, Blueprint)
-- Crear value objects para encapsular lógica (Email, Password, Hash)
-- Definir interfaces de repositorios (puertos)
-- Modelar eventos de dominio
+- Definir entidades en `src/domain/entities/`
+- Crear value objects en `src/domain/value-objects/`
+- Implementar domain services puros en `src/domain/services/`
+- Modelar eventos de dominio en `src/domain/events/`
+- Definir errores de dominio en `src/domain/errors/`
 - Implementar reglas de negocio sin dependencias externas
 - Escribir tests unitarios para la lógica de dominio
 
@@ -258,11 +493,13 @@ src/
 **Herramientas**: TypeScript
 
 **Tareas**:
-- Implementar los 27 casos de uso definidos
-- Crear DTOs para entrada/salida de cada caso de uso
+- Implementar los 27 casos de uso en `src/application/use-cases/`
+- Crear DTOs en `src/application/dto/`
+- Definir puertos (interfaces) en `src/application/ports/`
 - Orquestar llamadas a repositorios y servicios
 - Validar reglas de negocio
 - Publicar eventos de dominio
+- Definir errores de aplicación en `src/application/errors/`
 - Escribir tests unitarios con mocks de repositorios
 
 **Referencias**:
@@ -277,12 +514,12 @@ src/
 **Herramientas**: PostgreSQL, Prisma, TypeScript
 
 **Tareas**:
-- Definir schema de Prisma según diagrama de clases
-- Implementar repositorios concretos (adaptadores)
-- Mapear entre entidades de dominio y modelos de Prisma
-- Gestionar migraciones de base de datos
-- Implementar patrón Repository
+- Definir schema de Prisma en `src/infrastructure/persistence/prisma/schema.prisma`
+- Implementar repositorios concretos en `src/infrastructure/persistence/repositories/`
+- Crear mappers en `src/infrastructure/persistence/mappers/`
+- Gestionar migraciones en `src/infrastructure/persistence/prisma/migrations/`
 - Implementar tabla y lógica de Outbox
+- Crear repositorios in-memory para testing en `src/infrastructure/persistence/in-memory/`
 - Escribir tests de integración con base de datos
 
 **Referencias**:
@@ -296,12 +533,13 @@ src/
 **Herramientas**: RabbitMQ, amqplib, TypeScript
 
 **Tareas**:
-- Configurar conexión con RabbitMQ
-- Implementar publisher de eventos
-- Implementar consumers de eventos
-- Crear worker del Outbox (polling o CDC)
+- Configurar conexión en `src/infrastructure/messaging/rabbitmq/RabbitMQConnection.ts`
+- Implementar publisher en `src/infrastructure/messaging/rabbitmq/RabbitMQPublisher.ts`
+- Implementar consumers en `src/infrastructure/messaging/rabbitmq/RabbitMQConsumer.ts`
+- Crear workers del Outbox en `src/infrastructure/messaging/outbox/`
+- Implementar consumers específicos en `src/infrastructure/messaging/consumers/`
 - Gestionar reintentos y dead letter queues
-- Implementar serialización/deserialización de eventos
+- Configuración en `src/infrastructure/config/rabbitmq.config.ts`
 - Escribir tests de integración con RabbitMQ
 
 **Referencias**:
@@ -311,34 +549,35 @@ src/
 ---
 
 ### agente-infrastructure-external
-**Responsabilidad**: Servicios externos (IA, email, etc.)
+**Responsabilidad**: Servicios externos (IA, email, auth)
 
-**Herramientas**: OpenAI API, Nodemailer, TypeScript
+**Herramientas**: OpenAI API, Nodemailer, JWT, bcrypt, TypeScript
 
 **Tareas**:
-- Integrar APIs de IA (OpenAI, Gemini, Perplexity)
-- Implementar servicio de envío de emails
+- Integrar APIs de IA en `src/infrastructure/external-services/ai/`
+- Implementar servicio de emails en `src/infrastructure/external-services/email/`
+- Implementar servicios de auth en `src/infrastructure/external-services/auth/`
 - Gestionar timeouts y fallbacks
 - Implementar caché de respuestas IA
-- Crear adaptadores para servicios externos
+- Configuración en `src/infrastructure/config/`
 - Escribir tests con mocks de APIs externas
 
 **Referencias**:
-- Casos de uso: CU-19, CU-20, CU-21
+- Casos de uso: CU-01, CU-02, CU-19, CU-20, CU-21
 
 ---
 
-### agente-adapters-http
+### agente-infrastructure-http
 **Responsabilidad**: API REST (controladores, rutas, middlewares)
 
 **Herramientas**: Express/Fastify, TypeScript
 
 **Tareas**:
-- Crear controladores para cada endpoint
-- Definir rutas y asociarlas a casos de uso
-- Implementar middlewares (auth, validación, errores, logging, rate limiting)
-- Validar requests con Zod/Joi
-- Mapear entre DTOs y JSON
+- Crear controladores en `src/infrastructure/http/controllers/`
+- Definir rutas en `src/infrastructure/http/routes/`
+- Implementar middlewares en `src/infrastructure/http/middlewares/`
+- Configurar servidor en `src/infrastructure/http/server.ts`
+- Validar requests con Zod
 - Gestionar respuestas HTTP y códigos de estado
 - Escribir tests de integración (Supertest)
 
@@ -347,24 +586,32 @@ src/
 
 ---
 
-### agente-security
-**Responsabilidad**: Autenticación, autorización y seguridad
+### agente-observability
+**Responsabilidad**: Logging, metrics y tracing
 
-**Herramientas**: bcrypt, jsonwebtoken, helmet, TypeScript
+**Herramientas**: Winston, Prometheus, OpenTelemetry, TypeScript
 
 **Tareas**:
-- Implementar encriptación de contraseñas con bcrypt
-- Generar y validar tokens JWT
-- Crear middleware de autenticación
-- Crear middleware de autorización por roles
-- Implementar rate limiting
-- Protección CSRF
-- Sanitización de inputs
-- Generar hashes seguros para invitaciones
-- Escribir tests de seguridad
+- Implementar logger en `src/infrastructure/observability/logger/`
+- Configurar métricas en `src/infrastructure/observability/metrics/`
+- Implementar tracing en `src/infrastructure/observability/tracing/`
+- Integrar logging en toda la aplicación
+- Crear dashboards de monitoreo
+- Escribir tests de observabilidad
 
-**Referencias**:
-- Casos de uso: CU-01, CU-02, CU-15, CU-24, CU-27
+---
+
+### agente-composition
+**Responsabilidad**: Inversión de dependencias y composición raíz
+
+**Herramientas**: TypeScript
+
+**Tareas**:
+- Crear contenedor de inyección de dependencias en `src/composition/container.ts`
+- Registrar todas las dependencias (repositorios, servicios, casos de uso)
+- Configurar ciclo de vida de dependencias
+- Implementar factory patterns cuando sea necesario
+- Escribir tests del contenedor
 
 ---
 
@@ -375,10 +622,10 @@ src/
 
 **Tareas**:
 - Configurar Jest y cobertura
-- Escribir tests unitarios para cada capa
-- Escribir tests de integración
-- Escribir tests E2E completos
-- Crear mocks y stubs necesarios
+- Escribir tests unitarios en `tests/unit/`
+- Escribir tests de integración en `tests/integration/`
+- Escribir tests E2E en `tests/e2e/`
+- Crear mocks, stubs y fakes necesarios
 - Mantener cobertura >80%
 - Setup de base de datos de test
 - Tests de rendimiento básicos
@@ -399,7 +646,7 @@ src/
 - Incluir ejemplos de requests/responses
 - Documentar códigos de error
 - Crear README detallado
-- Documentar arquitectura del proyecto
+- Documentar arquitectura en `docs/architecture.md`
 - Crear guía de setup y deployment
 - Documentar decisiones de diseño
 
@@ -429,6 +676,7 @@ src/
     "express-rate-limit": "^7.1.5",
     "cors": "^2.8.5",
     "morgan": "^1.10.0",
+    "winston": "^3.11.0",
     "swagger-ui-express": "^5.0.0",
     "uuid": "^9.0.1"
   }
@@ -523,10 +771,13 @@ Cada fase debe cumplir:
 - Priorizar **separación de responsabilidades** según arquitectura hexagonal
 - Mantener **independencia del dominio** de frameworks y librerías externas
 - Aplicar **principios SOLID** en cada capa
-- Implementar **inyección de dependencias** para facilitar testing
-- Usar **interfaces/contratos** en lugar de implementaciones concretas
+- Implementar **inyección de dependencias** mediante container en `src/composition/`
+- Usar **puertos (interfaces)** en lugar de implementaciones concretas
 - Documentar **decisiones arquitectónicas** importantes
 - Crear **logs estructurados** para facilitar debugging
 - Implementar **health checks** para monitoreo
+- Usar **Result/Either** para manejo de errores funcional
+- Mantener **inmutabilidad** en value objects
+- Aplicar **mappers** para aislar capas de persistencia
 
-Este roadmap está diseñado para cubrir todos los casos de uso definidos aplicando arquitectura limpia, SAGA/Outbox y buenas prácticas de desarrollo.
+Este roadmap está diseñado para cubrir todos los casos de uso definidos aplicando arquitectura limpia, SAGA/Outbox y buenas prácticas de desarrollo con una estructura de carpetas clara y escalable.
