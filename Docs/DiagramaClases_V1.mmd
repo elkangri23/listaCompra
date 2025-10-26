@@ -1,0 +1,85 @@
+classDiagram
+    class Usuario {
+        +id: int
+        +nombre: string
+        +email: string
+        +fechaCreacion: datetime
+        +telefono: string
+        +crearLista()
+        +compartirLista()
+        +editarPerfil()
+    }
+
+    class Lista {
+        +id: int
+        +nombre: string
+        +descripcion: string
+        +fechaCreacion: datetime
+        +usuarioId: int
+        +tiendaId: int
+        +agregarProducto()
+        +eliminarProducto()
+        +compartir()
+    }
+
+    class Producto {
+        +id: int
+        +nombre: string
+        +descripcion: string
+        +precio: float
+        +cantidad: int
+        +comprado: boolean
+        +actualizarEstado()
+        +modificarCantidad()
+    }
+
+    class Categoria {
+        +id: int
+        +nombre: string
+        +descripcion: string
+        +color: string
+        +asignarProducto()
+        +eliminarProducto()
+    }
+
+    class Tienda {
+        +id: int
+        +nombre: string
+        +direccion: string
+        +telefono: string
+        +horario: string
+        +obtenerCategorias()
+        +buscarProductos()
+    }
+
+    class Invitacion {
+        +id: int
+        +listaId: int
+        +usuarioInvitadoId: int
+        +estado: string
+        +fechaEnvio: datetime
+        +fechaRespuesta: datetime
+        +aceptar()
+        +rechazar()
+        +cancelar()
+    }
+
+    class Permiso {
+        +id: int
+        +listaId: int
+        +usuarioId: int
+        +tipoPermiso: string
+        +fechaOtorgado: datetime
+        +modificarPermiso()
+        +revocarPermiso()
+    }
+
+    Usuario "1" --> "*" Lista : crea
+    Usuario "1" --> "*" Invitacion : envia/recibe
+    Lista "1" --> "*" Producto : contiene
+    Lista "1" --> "*" Permiso : tiene
+    Lista "1" --> "*" Invitacion : genera
+    Lista "*" --> "1" Tienda : asociada a
+    Producto "*" --> "1" Categoria : pertenece a
+    Categoria "*" --> "1" Tienda : pertenece a
+    Permiso "*" --> "1" Usuario : otorga
