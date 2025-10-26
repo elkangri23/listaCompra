@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import type { AuthController } from './controllers/AuthController';
 import { createAuthRoutes } from './routes/authRoutes';
+import { devRoutes } from './routes/devRoutes';
 
 export interface ServerDependencies {
   authController: AuthController;
@@ -54,6 +55,9 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
 
   // Rutas de la aplicación
   app.use('/api/v1/auth', createAuthRoutes(dependencies.authController));
+  
+  // Rutas de desarrollo (solo en development)
+  app.use('/api/v1/dev', devRoutes);
 
   // Manejo de rutas no encontradas
   app.use('*', (_req, res) => {

@@ -1,3 +1,4 @@
+
 # AGENTS.md - Lista de la Compra Colaborativa
 
 ## Descripción del Proyecto

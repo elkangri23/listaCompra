@@ -3,8 +3,13 @@
 
 import dotenv from 'dotenv';
 
+// Configurar NODE_ENV para tests si no está configurado
+if (!process.env['NODE_ENV']) {
+  process.env['NODE_ENV'] = 'test';
+}
+
 // Cargar variables de entorno para testing
-dotenv.config({ path: '.env.test' });
+dotenv.config({ path: '.env' });
 
 // Configuración global para Jest
 global.beforeAll(async () => {
