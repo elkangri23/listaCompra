@@ -6,8 +6,14 @@ import express, { type Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import type { AuthController } from './controllers/AuthController';
+import { createAuthRoutes } from './routes/authRoutes';
 
-export async function createServer(): Promise<Application> {
+export interface ServerDependencies {
+  authController: AuthController;
+}
+
+export async function createServer(dependencies: ServerDependencies): Promise<Application> {
   const app = express();
 
   // Middlewares de seguridad
@@ -46,8 +52,8 @@ export async function createServer(): Promise<Application> {
     });
   });
 
-  // TODO: Agregar rutas de la aplicación
-  // app.use('/api/v1', routes);
+  // Rutas de la aplicación
+  app.use('/api/v1/auth', createAuthRoutes(dependencies.authController));
 
   // Manejo de rutas no encontradas
   app.use('*', (_req, res) => {
