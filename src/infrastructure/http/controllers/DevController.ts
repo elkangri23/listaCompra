@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Container } from '../../../composition/container';
-import { MockEventPublisher } from '../../messaging/MockEventPublisher';
+import { RabbitMQEventPublisher } from '../../messaging/RabbitMQEventPublisher';
 
 /**
  * Controlador para endpoints de desarrollo y debugging
@@ -9,65 +9,69 @@ import { MockEventPublisher } from '../../messaging/MockEventPublisher';
 export class DevController {
   
   /**
-   * GET /dev/events - Obtener eventos publicados (solo MockEventPublisher)
+   * GET /dev/events - Información del sistema de eventos
    */
   public async getPublishedEvents(_req: Request, res: Response): Promise<void> {
     try {
       const container = Container.getInstance();
       const eventPublisher = container.eventPublisher;
 
-      // Solo funciona con MockEventPublisher
-      if (eventPublisher instanceof MockEventPublisher) {
-        const events = eventPublisher.getPublishedEvents();
-        const stats = eventPublisher.getStats();
+      // Verificar el tipo de EventPublisher en uso
+      if (eventPublisher instanceof RabbitMQEventPublisher) {
+        const status = eventPublisher.getConnectionStatus();
+        const isHealthy = eventPublisher.isHealthy();
 
         res.json({
           success: true,
           data: {
-            events,
-            stats,
-            message: 'Eventos del MockEventPublisher'
+            type: 'RabbitMQEventPublisher',
+            status,
+            isHealthy,
+            message: 'Sistema de eventos usando RabbitMQ'
           }
         });
       } else {
         res.json({
-          success: false,
-          message: 'Este endpoint solo funciona con MockEventPublisher'
+          success: true,
+          data: {
+            type: 'FallbackEventPublisher',
+            message: 'Sistema de eventos usando fallback (RabbitMQ no disponible)'
+          }
         });
       }
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: 'Error obteniendo eventos',
+        message: 'Error obteniendo información del sistema de eventos',
         error: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
   }
 
   /**
-   * DELETE /dev/events - Limpiar eventos (solo MockEventPublisher)
+   * DELETE /dev/events - Reset del sistema de eventos
    */
   public async clearEvents(_req: Request, res: Response): Promise<void> {
     try {
       const container = Container.getInstance();
       const eventPublisher = container.eventPublisher;
 
-      if (eventPublisher instanceof MockEventPublisher) {
-        eventPublisher.clearEvents();
+      if (eventPublisher instanceof RabbitMQEventPublisher) {
+        // Para RabbitMQ no hay concepto de "limpiar eventos" ya que son persistentes
         res.json({
           success: true,
-          message: 'Eventos limpiados correctamente'
+          message: 'RabbitMQ no requiere limpieza de eventos (son persistentes en el broker)'
         });
       } else {
         res.json({
-          success: false,
-          message: 'Este endpoint solo funciona con MockEventPublisher'
+          success: true,
+          message: 'Sistema de eventos usando fallback (no hay eventos que limpiar)'
         });
       }
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: 'Error limpiando eventos',
+        message: 'Error en operación de limpieza',
         error: error instanceof Error ? error.message : 'Error desconocido'
       });
     }
@@ -78,26 +82,25 @@ export class DevController {
    */
   public async publishTestEvent(req: Request, res: Response): Promise<void> {
     try {
-      const { exchange = 'test_exchange', routingKey = 'test.event', message } = req.body;
+      const { eventType = 'TestEvent', data } = req.body;
       
       const container = Container.getInstance();
       const eventPublisher = container.eventPublisher;
 
-      const testMessage = message || {
+      const testData = data || {
         type: 'test_event',
         timestamp: new Date().toISOString(),
-        data: 'Evento de prueba desde DevController'
+        message: 'Evento de prueba desde DevController'
       };
 
-      await eventPublisher.publish(exchange, routingKey, testMessage);
+      await eventPublisher.publish('test.exchange', 'dev.test.event', testData);
 
       res.json({
         success: true,
         message: 'Evento de prueba publicado correctamente',
         data: {
-          exchange,
-          routingKey,
-          message: testMessage
+          eventType,
+          data: testData
         }
       });
     } catch (error) {

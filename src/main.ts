@@ -29,6 +29,9 @@ async function bootstrap(): Promise<void> {
     // Conectar a la base de datos
     await container.connect();
 
+    // Inicializar RabbitMQ si está habilitado
+    await container.initializeRabbitMQ();
+
     // Verificar conexión
     const isHealthy = await container.healthCheck();
     if (!isHealthy) {
@@ -58,7 +61,8 @@ async function bootstrap(): Promise<void> {
         console.log('✅ Servidor HTTP cerrado');
         
         try {
-          await container.disconnect();
+          await container.close();
+          console.log('✅ Base de datos desconectada');
           console.log('✅ Aplicación cerrada exitosamente');
           process.exit(0);
         } catch (error) {

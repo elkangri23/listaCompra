@@ -13,7 +13,7 @@ import { AuthenticateUser } from '@application/use-cases/auth/AuthenticateUser';
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
-import { MockEventPublisher } from '@infrastructure/messaging/MockEventPublisher';
+import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
 
 // HTTP Layer
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
@@ -58,6 +58,41 @@ export class Container {
     return Container.instance;
   }
 
+  /**
+   * Inicializa la conexión RabbitMQ si está habilitado
+   */
+  public async initializeRabbitMQ(): Promise<void> {
+    const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
+    
+    if (rabbitmqEnabled && this._eventPublisher instanceof RabbitMQEventPublisher) {
+      try {
+        await this._eventPublisher.initialize();
+        console.log('✅ RabbitMQ inicializado correctamente');
+      } catch (error) {
+        console.error('❌ Error al inicializar RabbitMQ:', error);
+        // Fallback a un publisher que no haga nada
+        this._eventPublisher = {
+          publish: async (exchange: string, routingKey: string, _message: any) => {
+            console.log(`📝 EventPublisher fallback - ${exchange} -> ${routingKey}`);
+          }
+        };
+        console.log('🔄 Usando EventPublisher fallback por error de conexión');
+      }
+    }
+  }
+
+  /**
+   * Cierra las conexiones del container
+   */
+  public async close(): Promise<void> {
+    if (this._eventPublisher instanceof RabbitMQEventPublisher) {
+      await this._eventPublisher.close();
+    }
+    
+    await this._prisma.$disconnect();
+    console.log('✅ Container cerrado correctamente');
+  }
+
   private initializeInfrastructure(): void {
     this._prisma = new PrismaClient({
       log: process.env['NODE_ENV'] === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
@@ -74,13 +109,19 @@ export class Container {
     
     // Configurar EventPublisher según variables de entorno
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
+    const rabbitmqUrl = process.env['RABBITMQ_URL'] || 'amqp://guest:guest@localhost:5672';
+    
     if (rabbitmqEnabled) {
-      // TODO: Implementar RabbitMQ cuando esté disponible
-      this._eventPublisher = new MockEventPublisher();
-      console.log('🔄 Usando MockEventPublisher (RabbitMQ configurado pero no disponible)');
+      this._eventPublisher = new RabbitMQEventPublisher(rabbitmqUrl);
+      console.log('� Usando RabbitMQEventPublisher - RabbitMQ habilitado');
     } else {
-      this._eventPublisher = new MockEventPublisher();
-      console.log('🔄 Usando MockEventPublisher (RabbitMQ deshabilitado)');
+      // Crear un EventPublisher que no haga nada si está deshabilitado
+      this._eventPublisher = {
+        publish: async (exchange: string, routingKey: string, _message: any) => {
+          console.log(`📝 EventPublisher deshabilitado - ${exchange} -> ${routingKey}`);
+        }
+      };
+      console.log('🔄 EventPublisher deshabilitado');
     }
   }
 
