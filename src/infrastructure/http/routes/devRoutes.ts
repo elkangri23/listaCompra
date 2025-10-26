@@ -11,13 +11,13 @@ if (isDevelopmentOrTest) {
   
   /**
    * GET /api/v1/dev/events
-   * Obtener todos los eventos publicados por MockEventPublisher
+   * Obtener información del sistema de eventos
    */
   router.get('/events', devController.getPublishedEvents.bind(devController));
 
   /**
    * DELETE /api/v1/dev/events
-   * Limpiar todos los eventos de MockEventPublisher
+   * Reset del sistema de eventos
    */
   router.delete('/events', devController.clearEvents.bind(devController));
 
