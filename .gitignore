@@ -1,0 +1,102 @@
+# =================================
+# DEPENDENCIAS
+# =================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =================================
+# ARCHIVOS DE CONSTRUCCIÓN
+# =================================
+dist/
+build/
+*.tsbuildinfo
+
+# =================================
+# ARCHIVOS DE ENTORNO
+# =================================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# =================================
+# LOGS
+# =================================
+logs/
+*.log
+lerna-debug.log*
+
+# =================================
+# COVERAGE Y TESTING
+# =================================
+coverage/
+*.lcov
+.nyc_output/
+
+# =================================
+# RUNTIME Y CACHE
+# =================================
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+.stylelintcache
+
+# =================================
+# ARCHIVOS DE SISTEMA OPERATIVO
+# =================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =================================
+# EDITORES E IDEs
+# =================================
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# =================================
+# PRISMA
+# =================================
+# Keep this if you want to generate fresh migrations
+# migrations/
+
+# =================================
+# DOCKER
+# =================================
+docker-compose.override.yml
+
+# =================================
+# CERTIFICADOS Y CLAVES
+# =================================
+*.pem
+*.key
+*.crt
+
+# =================================
+# ARCHIVOS TEMPORALES
+# =================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# =================================
+# VARIABLES DE DESARROLLO LOCAL
+# =================================
+.env.local
