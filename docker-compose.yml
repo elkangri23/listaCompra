@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  # =================================
+  # BASE DE DATOS POSTGRESQL
+  # =================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: lista_compra_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lista_user
+      POSTGRES_PASSWORD: lista_password
+      POSTGRES_DB: lista_compra_db
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --lc-collate=C --lc-ctype=C'
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - lista_compra_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lista_user -d lista_compra_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =================================
+  # BASE DE DATOS POSTGRESQL PARA TESTING
+  # =================================
+  postgres_test:
+    image: postgres:15-alpine
+    container_name: lista_compra_postgres_test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lista_user
+      POSTGRES_PASSWORD: lista_password
+      POSTGRES_DB: lista_compra_test_db
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --lc-collate=C --lc-ctype=C'
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    networks:
+      - lista_compra_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lista_user -d lista_compra_test_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =================================
+  # RABBITMQ
+  # =================================
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: lista_compra_rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"    # Puerto AMQP
+      - "15672:15672"  # Puerto Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./docker/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    networks:
+      - lista_compra_network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  # =================================
+  # REDIS PARA CACHÉ (OPCIONAL)
+  # =================================
+  redis:
+    image: redis:7-alpine
+    container_name: lista_compra_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - lista_compra_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # =================================
+  # ADMINER (OPCIONAL - PARA DESARROLLO)
+  # =================================
+  adminer:
+    image: adminer:4.8.1
+    container_name: lista_compra_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - lista_compra_network
+    depends_on:
+      - postgres
+
+# =================================
+# VOLÚMENES PERSISTENTES
+# =================================
+volumes:
+  postgres_data:
+    driver: local
+  postgres_test_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# =================================
+# RED PERSONALIZADA
+# =================================
+networks:
+  lista_compra_network:
+    driver: bridge
+    name: lista_compra_network
