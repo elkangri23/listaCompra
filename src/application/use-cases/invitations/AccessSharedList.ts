@@ -10,9 +10,6 @@ import type { IListaRepository } from '@application/ports/repositories/IListaRep
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IInvitacionRepository } from '@application/ports/repositories/IInvitacionRepository';
 import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
-import { Lista } from '@domain/entities/Lista';
-import { Usuario } from '@domain/entities/Usuario';
-import { Invitacion } from '@domain/entities/Invitacion';
 import { Permiso } from '@domain/entities/Permiso';
 import { Hash } from '@domain/value-objects/Hash';
 
@@ -84,7 +81,6 @@ export class AccessSharedList {
     if (usuarioResult.isFailure || !usuarioResult.value) {
       return failure(new NotFoundError('Usuario', dto.usuarioId));
     }
-    const usuario = usuarioResult.value;
 
     // 5. Obtener la lista
     const listaResult = await this.listaRepository.findById(invitacion.listaId);

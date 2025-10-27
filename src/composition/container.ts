@@ -25,10 +25,10 @@ import { CreateStore } from '@application/use-cases/stores/CreateStore';
 import { GetStores } from '@application/use-cases/stores/GetStores';
 import { UpdateStore } from '@application/use-cases/stores/UpdateStore';
 import { DeleteStore } from '@application/use-cases/stores/DeleteStore';
-// import { ShareList } from '@application/use-cases/invitations/ShareList';
-// import { AccessSharedList } from '@application/use-cases/invitations/AccessSharedList';
-// import { ManagePermissions } from '@application/use-cases/invitations/ManagePermissions';
-// import { CancelInvitation } from '@application/use-cases/invitations/CancelInvitation';
+import { ShareList } from '@application/use-cases/invitations/ShareList';
+import { AccessSharedList } from '@application/use-cases/invitations/AccessSharedList';
+import { ManagePermissions } from '@application/use-cases/invitations/ManagePermissions';
+import { CancelInvitation } from '@application/use-cases/invitations/CancelInvitation';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
@@ -36,13 +36,13 @@ import { PrismaListaRepository } from '@infrastructure/persistence/repositories/
 import { PrismaProductoRepository } from '@infrastructure/persistence/repositories/PrismaProductoRepository';
 import { PrismaCategoriaRepository } from '@infrastructure/persistence/repositories/PrismaCategoriaRepository';
 import { PrismaTiendaRepository } from '@infrastructure/persistence/repositories/PrismaTiendaRepository';
-// import { PrismaInvitacionRepository } from '@infrastructure/persistence/repositories/PrismaInvitacionRepository';
-// import { PrismaPermisoRepository } from '@infrastructure/persistence/repositories/PrismaPermisoRepository';
+import { PrismaInvitacionRepository } from '@infrastructure/persistence/repositories/PrismaInvitacionRepository';
+import { PrismaPermisoRepository } from '@infrastructure/persistence/repositories/PrismaPermisoRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
-// import { PrismaOutboxService } from '@infrastructure/messaging/PrismaOutboxService';
-// import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
+import { PrismaOutboxService } from '@infrastructure/messaging/outbox/PrismaOutboxService';
+import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 
 // HTTP Layer
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
@@ -50,7 +50,7 @@ import { ListController } from '@infrastructure/http/controllers/ListController'
 import { ProductController } from '@infrastructure/http/controllers/ProductController';
 import { CategoryController } from '@infrastructure/http/controllers/CategoryController';
 import { StoreController } from '@infrastructure/http/controllers/StoreController';
-// import { InvitationController } from '@infrastructure/http/controllers/InvitationController';
+import { InvitationController } from '@infrastructure/http/controllers/InvitationController';
 
 // Interfaces
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
@@ -58,9 +58,13 @@ import type { IListaRepository } from '@application/ports/repositories/IListaRep
 import type { IProductoRepository } from '@application/ports/repositories/IProductoRepository';
 import type { ICategoriaRepository } from '@application/ports/repositories/ICategoriaRepository';
 import type { ITiendaRepository } from '@application/ports/repositories/ITiendaRepository';
+import type { IInvitacionRepository } from '@application/ports/repositories/IInvitacionRepository';
+import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
 import type { IEventPublisher } from '@application/ports/messaging/IEventPublisher';
+import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
+import type { IInvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 
 export class Container {
   private static instance: Container;
@@ -72,11 +76,15 @@ export class Container {
   private _productoRepository!: IProductoRepository;
   private _categoriaRepository!: ICategoriaRepository;
   private _tiendaRepository!: ITiendaRepository;
+  private _invitacionRepository!: IInvitacionRepository;
+  private _permisoRepository!: IPermisoRepository;
 
   // External Services
   private _passwordHasher!: IPasswordHasher;
   private _tokenService!: ITokenService;
   private _eventPublisher!: IEventPublisher;
+  private _outboxService!: IOutboxService;
+  private _hashGenerator!: IInvitationHashGenerator;
 
   // Use Cases
   private _registerUser!: RegisterUser;
@@ -98,6 +106,10 @@ export class Container {
   private _getStores!: GetStores;
   private _updateStore!: UpdateStore;
   private _deleteStore!: DeleteStore;
+  private _shareList!: ShareList;
+  private _accessSharedList!: AccessSharedList;
+  private _managePermissions!: ManagePermissions;
+  private _cancelInvitation!: CancelInvitation;
 
   // Controllers
   private _authController!: AuthController;
@@ -105,6 +117,7 @@ export class Container {
   private _productController!: ProductController;
   private _categoryController!: CategoryController;
   private _storeController!: StoreController;
+  private _invitationController!: InvitationController;
 
   private constructor() {
     this.initializeInfrastructure();
@@ -172,11 +185,15 @@ export class Container {
     this._productoRepository = new PrismaProductoRepository(this._prisma);
     this._categoriaRepository = new PrismaCategoriaRepository(this._prisma);
     this._tiendaRepository = new PrismaTiendaRepository(this._prisma);
+    this._invitacionRepository = new PrismaInvitacionRepository(this._prisma);
+    this._permisoRepository = new PrismaPermisoRepository(this._prisma);
   }
 
   private initializeExternalServices(): void {
     this._passwordHasher = new BcryptPasswordHasher();
     this._tokenService = new JWTTokenService();
+    this._hashGenerator = new InvitationHashGenerator();
+    this._outboxService = new PrismaOutboxService(this._prisma);
     
     // Configurar EventPublisher según variables de entorno
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
@@ -286,6 +303,36 @@ export class Container {
     this._deleteStore = new DeleteStore(
       this._tiendaRepository
     );
+
+    // Invitation Use Cases
+    this._shareList = new ShareList(
+      this._listaRepository,
+      this._usuarioRepository,
+      this._invitacionRepository,
+      this._permisoRepository,
+      this._hashGenerator,
+      this._outboxService
+    );
+
+    this._accessSharedList = new AccessSharedList(
+      this._listaRepository,
+      this._usuarioRepository,
+      this._invitacionRepository,
+      this._permisoRepository
+    );
+
+    this._managePermissions = new ManagePermissions(
+      this._listaRepository,
+      this._usuarioRepository,
+      this._permisoRepository
+    );
+
+    this._cancelInvitation = new CancelInvitation(
+      this._listaRepository,
+      this._usuarioRepository,
+      this._invitacionRepository,
+      this._permisoRepository
+    );
   }
 
   private initializeControllers(): void {
@@ -322,6 +369,13 @@ export class Container {
       this._updateStore,
       this._deleteStore
     );
+
+    this._invitationController = new InvitationController(
+      this._shareList,
+      this._accessSharedList,
+      this._managePermissions,
+      this._cancelInvitation
+    );
   }
 
   // Getters para acceder a las dependencias
@@ -348,6 +402,22 @@ export class Container {
 
   public get eventPublisher(): IEventPublisher {
     return this._eventPublisher;
+  }
+
+  public get outboxService(): IOutboxService {
+    return this._outboxService;
+  }
+
+  public get hashGenerator(): IInvitationHashGenerator {
+    return this._hashGenerator;
+  }
+
+  public get invitacionRepository(): IInvitacionRepository {
+    return this._invitacionRepository;
+  }
+
+  public get permisoRepository(): IPermisoRepository {
+    return this._permisoRepository;
   }
 
   public get registerUser(): RegisterUser {
@@ -452,6 +522,26 @@ export class Container {
 
   public get storeController(): StoreController {
     return this._storeController;
+  }
+
+  public get shareList(): ShareList {
+    return this._shareList;
+  }
+
+  public get accessSharedList(): AccessSharedList {
+    return this._accessSharedList;
+  }
+
+  public get managePermissions(): ManagePermissions {
+    return this._managePermissions;
+  }
+
+  public get cancelInvitation(): CancelInvitation {
+    return this._cancelInvitation;
+  }
+
+  public get invitationController(): InvitationController {
+    return this._invitationController;
   }
 
   /**
