@@ -126,8 +126,9 @@ export class Container {
         console.error('❌ Error al inicializar RabbitMQ:', error);
         // Fallback a un publisher que no haga nada
         this._eventPublisher = {
-          publish: async (exchange: string, routingKey: string, _message: any) => {
-            console.log(`📝 EventPublisher fallback - ${exchange} -> ${routingKey}`);
+          publish: async (event: any) => {
+            console.log(`📝 EventPublisher fallback - ${event.eventType} (${event.eventId})`);
+            return { isSuccess: true, isFailure: false, value: undefined, error: null };
           }
         };
         console.log('🔄 Usando EventPublisher fallback por error de conexión');
@@ -176,8 +177,9 @@ export class Container {
     } else {
       // Crear un EventPublisher que no haga nada si está deshabilitado
       this._eventPublisher = {
-        publish: async (exchange: string, routingKey: string, _message: any) => {
-          console.log(`📝 EventPublisher deshabilitado - ${exchange} -> ${routingKey}`);
+        publish: async (event: any) => {
+          console.log(`📝 EventPublisher deshabilitado - ${event.eventType} (${event.eventId})`);
+          return { isSuccess: true, isFailure: false, value: undefined, error: null };
         }
       };
       console.log('🔄 EventPublisher deshabilitado');

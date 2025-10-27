@@ -1,10 +1,13 @@
 /**
- * Implementación real de IEventPublisher usando RabbitMQ
+ * Implementación simplificada de IEventPublisher usando RabbitMQ
  * Publica eventos a través de RabbitMQ usando amqplib
  */
 
 import * as amqp from 'amqplib';
 import type { IEventPublisher } from '@application/ports/messaging/IEventPublisher';
+import type { DomainEvent } from '@domain/events/DomainEvent';
+import type { Result } from '@shared/result';
+import { success, failure } from '@shared/result';
 
 export class RabbitMQEventPublisher implements IEventPublisher {
   private connection: any = null;
@@ -48,80 +51,79 @@ export class RabbitMQEventPublisher implements IEventPublisher {
         this.channel = await this.connection.createChannel();
         
         // Declarar el exchange
-        if (this.channel) {
-          await this.channel.assertExchange(this.exchangeName, this.exchangeType, {
-            durable: true,
-            autoDelete: false,
-          });
-        }
+        await this.channel.assertExchange(this.exchangeName, this.exchangeType, {
+          durable: true
+        });
+
+        this.isConnected = true;
+        console.log('✅ RabbitMQ conectado exitosamente');
       }
 
-      this.isConnected = true;
-      console.log('✅ RabbitMQ conectado y configurado');
-      
     } catch (error) {
-      console.error('❌ Error al conectar con RabbitMQ:', error);
-      throw new Error(`Failed to connect to RabbitMQ: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Publica un evento a RabbitMQ
-   */
-  async publish(exchange: string, routingKey: string, message: any): Promise<void> {
-    try {
-      if (!this.isConnected || !this.channel) {
-        console.warn('⚠️ RabbitMQ no está conectado. Intentando reconectar...');
-        await this.initialize();
-      }
-
-      if (!this.channel) {
-        throw new Error('No se pudo establecer canal de RabbitMQ');
-      }
-
-      // Usar el exchange proporcionado, o el por defecto si no se especifica
-      const targetExchange = exchange || this.exchangeName;
-      
-      const messagePayload = JSON.stringify({
-        routingKey,
-        message,
-        timestamp: new Date().toISOString(),
-        id: this.generateEventId(),
-      });
-
-      const published = this.channel.publish(
-        targetExchange,
-        routingKey,
-        Buffer.from(messagePayload),
-        {
-          persistent: true,
-          contentType: 'application/json',
-          timestamp: Date.now(),
-        }
-      );
-
-      if (!published) {
-        throw new Error('Error al publicar evento en RabbitMQ');
-      }
-
-      console.log(`📨 Evento publicado: ${targetExchange} -> ${routingKey}`);
-      
-    } catch (error) {
-      console.error('❌ Error al publicar evento:', error);
-      
-      // Si hay error de conexión, marcamos como desconectado
-      if (error instanceof Error && error.message.includes('Channel closed')) {
-        this.isConnected = false;
-      }
-      
+      console.error('❌ Error inicializando RabbitMQ:', error);
+      this.isConnected = false;
       throw error;
     }
   }
 
   /**
-   * Cierra la conexión con RabbitMQ
+   * Publica un evento de dominio
    */
-  async close(): Promise<void> {
+  async publish(event: DomainEvent): Promise<Result<void, Error>> {
+    try {
+      if (!this.isConnected) {
+        await this.initialize();
+      }
+
+      if (!this.channel) {
+        return failure(new Error('Canal RabbitMQ no disponible'));
+      }
+
+      // Construir routing key basado en el evento
+      const routingKey = `${event.aggregateType.toLowerCase()}.${event.eventType.toLowerCase()}`;
+      
+      // Serializar evento
+      const messageBody = JSON.stringify({
+        eventId: event.eventId,
+        eventType: event.eventType,
+        aggregateId: event.aggregateId,
+        aggregateType: event.aggregateType,
+        eventData: event.eventData,
+        occurredOn: event.occurredOn.toISOString(),
+        eventVersion: event.eventVersion,
+        eventContext: event.eventContext,
+      });
+
+      // Publicar mensaje
+      const published = this.channel.publish(
+        this.exchangeName,
+        routingKey,
+        Buffer.from(messageBody),
+        {
+          persistent: true,
+          messageId: event.eventId,
+          timestamp: event.occurredOn.getTime(),
+          type: event.eventType,
+        }
+      );
+
+      if (!published) {
+        return failure(new Error('No se pudo publicar el evento (canal saturado)'));
+      }
+
+      console.log(`📨 Evento publicado: ${event.eventType} (${event.eventId})`);
+      return success(undefined);
+
+    } catch (error) {
+      console.error('❌ Error publicando evento:', error);
+      return failure(error as Error);
+    }
+  }
+
+  /**
+   * Cierra la conexión
+   */
+  async close(): Promise<Result<void, Error>> {
     try {
       if (this.channel) {
         await this.channel.close();
@@ -134,34 +136,12 @@ export class RabbitMQEventPublisher implements IEventPublisher {
       }
 
       this.isConnected = false;
-      console.log('🔒 Conexión RabbitMQ cerrada correctamente');
-      
+      console.log('✅ RabbitMQ desconectado');
+      return success(undefined);
+
     } catch (error) {
-      console.error('❌ Error al cerrar conexión RabbitMQ:', error);
+      console.error('❌ Error desconectando RabbitMQ:', error);
+      return failure(error as Error);
     }
-  }
-
-  /**
-   * Verifica si está conectado a RabbitMQ
-   */
-  isHealthy(): boolean {
-    return this.isConnected && this.connection !== null && this.channel !== null;
-  }
-
-  /**
-   * Genera un ID único para el evento
-   */
-  private generateEventId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Getter para compatibilidad con la interfaz (si se necesita en tests)
-   */
-  getConnectionStatus(): 'connected' | 'disconnected' | 'error' {
-    if (this.isConnected && this.connection && this.channel) {
-      return 'connected';
-    }
-    return 'disconnected';
   }
 }

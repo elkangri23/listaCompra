@@ -18,15 +18,11 @@ export class DevController {
 
       // Verificar el tipo de EventPublisher en uso
       if (eventPublisher instanceof RabbitMQEventPublisher) {
-        const status = eventPublisher.getConnectionStatus();
-        const isHealthy = eventPublisher.isHealthy();
-
         res.json({
           success: true,
           data: {
             type: 'RabbitMQEventPublisher',
-            status,
-            isHealthy,
+            status: 'active',
             message: 'Sistema de eventos usando RabbitMQ'
           }
         });
@@ -93,7 +89,26 @@ export class DevController {
         message: 'Evento de prueba desde DevController'
       };
 
-      await eventPublisher.publish('test.exchange', 'dev.test.event', testData);
+      // Crear un evento de dominio para la nueva interfaz
+      const testEvent = {
+        eventId: `test-${Date.now()}`,
+        eventType: eventType,
+        aggregateId: 'dev-test',
+        aggregateType: 'Test',
+        eventData: testData,
+        occurredOn: new Date(),
+        eventVersion: 1,
+        eventContext: {
+          userId: 'dev-user',
+          correlationId: `dev-${Date.now()}`,
+        }
+      };
+
+      const result = await eventPublisher.publish(testEvent);
+
+      if (result && 'isSuccess' in result && !result.isSuccess) {
+        throw new Error(`Error publicando evento: ${result.error?.message}`);
+      }
 
       res.json({
         success: true,

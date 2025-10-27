@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,157 +7,169 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// =================================
-// MODELO DE USUARIO
-// =================================
-
 model Usuario {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String
-  nombre        String
-  apellidos     String?
-  rol           RolUsuario @default(USUARIO)
-  activo        Boolean   @default(true)
-  emailVerificado Boolean @default(false)
-  fechaCreacion DateTime  @default(now())
-  fechaActualizacion DateTime @updatedAt
-
-  // Relaciones
-  listas        Lista[]
-  productos     Producto[]
-  invitaciones  Invitacion[]
-  permisos      Permiso[]
-  blueprints    Blueprint[]
+  id                 String       @id @default(uuid())
+  email              String       @unique
+  password           String
+  nombre             String
+  apellidos          String?
+  rol                RolUsuario   @default(USUARIO)
+  activo             Boolean      @default(true)
+  emailVerificado    Boolean      @default(false)
+  fechaCreacion      DateTime     @default(now())
+  fechaActualizacion DateTime     @updatedAt
+  blueprints         Blueprint[]
+  invitaciones       Invitacion[]
+  listas             Lista[]
+  permisos           Permiso[]
+  productos          Producto[]
 
   @@map("usuarios")
 }
 
-enum RolUsuario {
-  USUARIO
-  ADMIN
-}
-
-// =================================
-// MODELO DE LISTA
-// =================================
-
 model Lista {
-  id            String    @id @default(uuid())
-  nombre        String
-  descripcion   String?
-  color         String?
-  icono         String?
-  activa        Boolean   @default(true)
-  fechaCreacion DateTime  @default(now())
-  fechaActualizacion DateTime @updatedAt
-
-  // Relaciones
-  propietarioId String
-  propietario   Usuario   @relation(fields: [propietarioId], references: [id])
-  
-  productos     Producto[]
-  invitaciones  Invitacion[]
-  permisos      Permiso[]
+  id                 String       @id @default(uuid())
+  nombre             String
+  descripcion        String?
+  color              String?
+  icono              String?
+  activa             Boolean      @default(true)
+  fechaCreacion      DateTime     @default(now())
+  fechaActualizacion DateTime     @updatedAt
+  propietarioId      String
+  invitaciones       Invitacion[]
+  propietario        Usuario      @relation(fields: [propietarioId], references: [id])
+  permisos           Permiso[]
+  productos          Producto[]
 
   @@map("listas")
 }
 
-// =================================
-// MODELO DE PRODUCTO
-// =================================
-
 model Producto {
-  id            String    @id @default(uuid())
-  nombre        String
-  descripcion   String?
-  cantidad      Int       @default(1)
-  unidad        String?
-  precio        Decimal?
-  comprado      Boolean   @default(false)
-  urgente       Boolean   @default(false)
-  fechaCreacion DateTime  @default(now())
-  fechaActualizacion DateTime @updatedAt
-  fechaCompra   DateTime?
-
-  // Relaciones
-  listaId       String
-  lista         Lista     @relation(fields: [listaId], references: [id], onDelete: Cascade)
-  
-  categoriaId   String?
-  categoria     Categoria? @relation(fields: [categoriaId], references: [id])
-  
-  creadoPorId   String
-  creadoPor     Usuario   @relation(fields: [creadoPorId], references: [id])
+  id                 String     @id @default(uuid())
+  nombre             String
+  descripcion        String?
+  cantidad           Int        @default(1)
+  unidad             String?
+  precio             Decimal?
+  comprado           Boolean    @default(false)
+  urgente            Boolean    @default(false)
+  fechaCreacion      DateTime   @default(now())
+  fechaActualizacion DateTime   @updatedAt
+  fechaCompra        DateTime?
+  listaId            String
+  categoriaId        String?
+  creadoPorId        String
+  categoria          Categoria? @relation(fields: [categoriaId], references: [id])
+  creadoPor          Usuario    @relation(fields: [creadoPorId], references: [id])
+  lista              Lista      @relation(fields: [listaId], references: [id], onDelete: Cascade)
 
   @@map("productos")
 }
 
-// =================================
-// MODELO DE CATEGORIA
-// =================================
-
 model Categoria {
-  id            String    @id @default(uuid())
-  nombre        String
-  descripcion   String?
-  color         String?
-  icono         String?
-  activa        Boolean   @default(true)
-  fechaCreacion DateTime  @default(now())
-  fechaActualizacion DateTime @updatedAt
-
-  // Relaciones
-  tiendaId      String?
-  tienda        Tienda?   @relation(fields: [tiendaId], references: [id])
-  
-  productos     Producto[]
+  id                 String     @id @default(uuid())
+  nombre             String
+  descripcion        String?
+  color              String?
+  icono              String?
+  activa             Boolean    @default(true)
+  fechaCreacion      DateTime   @default(now())
+  fechaActualizacion DateTime   @updatedAt
+  tiendaId           String?
+  tienda             Tienda?    @relation(fields: [tiendaId], references: [id])
+  productos          Producto[]
 
   @@unique([nombre, tiendaId])
   @@map("categorias")
 }
 
-// =================================
-// MODELO DE TIENDA
-// =================================
-
 model Tienda {
-  id            String    @id @default(uuid())
-  nombre        String    @unique
-  direccion     String?
-  telefono      String?
-  sitioWeb      String?
-  activa        Boolean   @default(true)
-  fechaCreacion DateTime  @default(now())
-  fechaActualizacion DateTime @updatedAt
-
-  // Relaciones
-  categorias    Categoria[]
+  id                 String      @id @default(uuid())
+  nombre             String      @unique
+  direccion          String?
+  telefono           String?
+  sitioWeb           String?
+  activa             Boolean     @default(true)
+  fechaCreacion      DateTime    @default(now())
+  fechaActualizacion DateTime    @updatedAt
+  categorias         Categoria[]
 
   @@map("tiendas")
 }
 
-// =================================
-// MODELO DE INVITACION
-// =================================
-
 model Invitacion {
-  id            String    @id @default(uuid())
-  hash          String    @unique
-  email         String
-  estado        EstadoInvitacion @default(PENDIENTE)
-  fechaCreacion DateTime  @default(now())
+  id              String           @id @default(uuid())
+  hash            String           @unique
+  email           String
+  estado          EstadoInvitacion @default(PENDIENTE)
+  fechaCreacion   DateTime         @default(now())
   fechaExpiracion DateTime
   fechaAceptacion DateTime?
-
-  // Relaciones
-  listaId       String
-  lista         Lista     @relation(fields: [listaId], references: [id], onDelete: Cascade)
-  
-  invitadoPorId String
-  invitadoPor   Usuario   @relation(fields: [invitadoPorId], references: [id])
+  listaId         String
+  invitadoPorId   String
+  invitadoPor     Usuario          @relation(fields: [invitadoPorId], references: [id])
+  lista           Lista            @relation(fields: [listaId], references: [id], onDelete: Cascade)
 
   @@map("invitaciones")
+}
+
+model Permiso {
+  id                 String      @id @default(uuid())
+  tipo               TipoPermiso
+  fechaCreacion      DateTime    @default(now())
+  fechaActualizacion DateTime    @updatedAt
+  usuarioId          String
+  listaId            String
+  lista              Lista       @relation(fields: [listaId], references: [id], onDelete: Cascade)
+  usuario            Usuario     @relation(fields: [usuarioId], references: [id])
+
+  @@unique([usuarioId, listaId])
+  @@map("permisos")
+}
+
+model Blueprint {
+  id                 String   @id @default(uuid())
+  nombre             String
+  descripcion        String?
+  publico            Boolean  @default(false)
+  contenido          Json
+  fechaCreacion      DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
+  creadoPorId        String
+  creadoPor          Usuario  @relation(fields: [creadoPorId], references: [id])
+
+  @@map("blueprints")
+}
+
+model OutboxEvent {
+  id            String    @id @default(uuid())
+  aggregateId   String
+  eventType     String
+  eventData     Json
+  processed     Boolean   @default(false)
+  attempts      Int       @default(0)
+  aggregateType String
+  createdAt     DateTime  @default(now())
+  eventContext  Json?
+  eventId       String    @unique
+  eventVersion  Int       @default(1)
+  lastAttemptAt DateTime?
+  lastError     String?
+  occurredOn    DateTime
+  processedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  @@index([processed, createdAt])
+  @@index([eventType, processed])
+  @@index([aggregateId, aggregateType])
+  @@index([occurredOn])
+  @@map("outbox_events")
+}
+
+enum RolUsuario {
+  USUARIO
+  ADMIN
 }
 
 enum EstadoInvitacion {
@@ -170,70 +179,8 @@ enum EstadoInvitacion {
   EXPIRADA
 }
 
-// =================================
-// MODELO DE PERMISO
-// =================================
-
-model Permiso {
-  id            String    @id @default(uuid())
-  tipo          TipoPermiso
-  fechaCreacion DateTime  @default(now())
-  fechaActualizacion DateTime @updatedAt
-
-  // Relaciones
-  usuarioId     String
-  usuario       Usuario   @relation(fields: [usuarioId], references: [id])
-  
-  listaId       String
-  lista         Lista     @relation(fields: [listaId], references: [id], onDelete: Cascade)
-
-  @@unique([usuarioId, listaId])
-  @@map("permisos")
-}
-
 enum TipoPermiso {
   LECTURA
   ESCRITURA
   ADMIN
-}
-
-// =================================
-// MODELO DE BLUEPRINT/PLANTILLA
-// =================================
-
-model Blueprint {
-  id            String    @id @default(uuid())
-  nombre        String
-  descripcion   String?
-  publico       Boolean   @default(false)
-  contenido     Json      // Estructura JSON con los productos y categorías
-  fechaCreacion DateTime  @default(now())
-  fechaActualizacion DateTime @updatedAt
-
-  // Relaciones
-  creadoPorId   String
-  creadoPor     Usuario   @relation(fields: [creadoPorId], references: [id])
-
-  @@map("blueprints")
-}
-
-// =================================
-// MODELO DE OUTBOX (Patrón Outbox)
-// =================================
-
-model OutboxEvent {
-  id            String    @id @default(uuid())
-  aggregateId   String
-  eventType     String
-  eventData     Json
-  processed     Boolean   @default(false)
-  attempts      Int       @default(0)
-  maxAttempts   Int       @default(3)
-  nextAttempt   DateTime?
-  fechaCreacion DateTime  @default(now())
-  fechaProcesado DateTime?
-  error         String?
-
-  @@index([processed, nextAttempt])
-  @@map("outbox_events")
 }
