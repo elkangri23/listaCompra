@@ -25,6 +25,10 @@ import { CreateStore } from '@application/use-cases/stores/CreateStore';
 import { GetStores } from '@application/use-cases/stores/GetStores';
 import { UpdateStore } from '@application/use-cases/stores/UpdateStore';
 import { DeleteStore } from '@application/use-cases/stores/DeleteStore';
+// import { ShareList } from '@application/use-cases/invitations/ShareList';
+// import { AccessSharedList } from '@application/use-cases/invitations/AccessSharedList';
+// import { ManagePermissions } from '@application/use-cases/invitations/ManagePermissions';
+// import { CancelInvitation } from '@application/use-cases/invitations/CancelInvitation';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
@@ -32,9 +36,13 @@ import { PrismaListaRepository } from '@infrastructure/persistence/repositories/
 import { PrismaProductoRepository } from '@infrastructure/persistence/repositories/PrismaProductoRepository';
 import { PrismaCategoriaRepository } from '@infrastructure/persistence/repositories/PrismaCategoriaRepository';
 import { PrismaTiendaRepository } from '@infrastructure/persistence/repositories/PrismaTiendaRepository';
+// import { PrismaInvitacionRepository } from '@infrastructure/persistence/repositories/PrismaInvitacionRepository';
+// import { PrismaPermisoRepository } from '@infrastructure/persistence/repositories/PrismaPermisoRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
+// import { PrismaOutboxService } from '@infrastructure/messaging/PrismaOutboxService';
+// import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 
 // HTTP Layer
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
@@ -42,6 +50,7 @@ import { ListController } from '@infrastructure/http/controllers/ListController'
 import { ProductController } from '@infrastructure/http/controllers/ProductController';
 import { CategoryController } from '@infrastructure/http/controllers/CategoryController';
 import { StoreController } from '@infrastructure/http/controllers/StoreController';
+// import { InvitationController } from '@infrastructure/http/controllers/InvitationController';
 
 // Interfaces
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
@@ -115,6 +124,9 @@ export class Container {
   /**
    * Inicializa la conexión RabbitMQ si está habilitado
    */
+  /**
+   * Inicializa la conexión RabbitMQ si está habilitado
+   */
   public async initializeRabbitMQ(): Promise<void> {
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
     
@@ -168,12 +180,11 @@ export class Container {
     
     // Configurar EventPublisher según variables de entorno
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
-    // TODO: Usar rabbitmqUrl cuando implementemos la conexión real
-    // const rabbitmqUrl = process.env['RABBITMQ_URL'] || 'amqp://guest:guest@localhost:5672';
+    const rabbitmqUrl = process.env['RABBITMQ_URL'] || 'amqp://guest:guest@localhost:5672';
     
     if (rabbitmqEnabled) {
-      this._eventPublisher = new RabbitMQEventPublisher();
-      console.log('� Usando RabbitMQEventPublisher - RabbitMQ habilitado');
+      this._eventPublisher = new RabbitMQEventPublisher(rabbitmqUrl);
+      console.log('📡 Usando RabbitMQEventPublisher - RabbitMQ habilitado');
     } else {
       // Crear un EventPublisher que no haga nada si está deshabilitado
       this._eventPublisher = {
