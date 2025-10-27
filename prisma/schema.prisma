@@ -8,18 +8,17 @@ datasource db {
 }
 
 model Usuario {
-  id                 String       @id @default(uuid())
-  email              String       @unique
+  id                 String      @id @default(uuid())
+  email              String      @unique
   password           String
   nombre             String
   apellidos          String?
-  rol                RolUsuario   @default(USUARIO)
-  activo             Boolean      @default(true)
-  emailVerificado    Boolean      @default(false)
-  fechaCreacion      DateTime     @default(now())
-  fechaActualizacion DateTime     @updatedAt
+  rol                RolUsuario  @default(USUARIO)
+  activo             Boolean     @default(true)
+  emailVerificado    Boolean     @default(false)
+  fechaCreacion      DateTime    @default(now())
+  fechaActualizacion DateTime    @updatedAt
   blueprints         Blueprint[]
-  invitaciones       Invitacion[]
   listas             Lista[]
   permisos           Permiso[]
   productos          Producto[]
@@ -99,30 +98,26 @@ model Tienda {
 }
 
 model Invitacion {
-  id              String           @id @default(uuid())
-  hash            String           @unique
-  email           String
-  estado          EstadoInvitacion @default(PENDIENTE)
-  fechaCreacion   DateTime         @default(now())
+  id              String      @id @default(uuid())
+  hash            String      @unique
+  fechaCreacion   DateTime    @default(now())
   fechaExpiracion DateTime
-  fechaAceptacion DateTime?
   listaId         String
-  invitadoPorId   String
-  invitadoPor     Usuario          @relation(fields: [invitadoPorId], references: [id])
-  lista           Lista            @relation(fields: [listaId], references: [id], onDelete: Cascade)
+  activa          Boolean     @default(true)
+  tipoPermiso     TipoPermiso @default(LECTURA)
+  lista           Lista       @relation(fields: [listaId], references: [id], onDelete: Cascade)
 
   @@map("invitaciones")
 }
 
 model Permiso {
-  id                 String      @id @default(uuid())
-  tipo               TipoPermiso
-  fechaCreacion      DateTime    @default(now())
-  fechaActualizacion DateTime    @updatedAt
-  usuarioId          String
-  listaId            String
-  lista              Lista       @relation(fields: [listaId], references: [id], onDelete: Cascade)
-  usuario            Usuario     @relation(fields: [usuarioId], references: [id])
+  id            String      @id @default(uuid())
+  fechaCreacion DateTime    @default(now())
+  usuarioId     String
+  listaId       String
+  tipoPermiso   TipoPermiso
+  lista         Lista       @relation(fields: [listaId], references: [id], onDelete: Cascade)
+  usuario       Usuario     @relation(fields: [usuarioId], references: [id])
 
   @@unique([usuarioId, listaId])
   @@map("permisos")
@@ -170,13 +165,6 @@ model OutboxEvent {
 enum RolUsuario {
   USUARIO
   ADMIN
-}
-
-enum EstadoInvitacion {
-  PENDIENTE
-  ACEPTADA
-  RECHAZADA
-  EXPIRADA
 }
 
 enum TipoPermiso {
