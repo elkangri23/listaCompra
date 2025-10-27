@@ -17,11 +17,21 @@ import { UpdateProduct } from '@application/use-cases/products/UpdateProduct';
 import { MarkProductAsPurchased } from '@application/use-cases/products/MarkProductAsPurchased';
 import { DeleteProduct } from '@application/use-cases/products/DeleteProduct';
 import { GetProducts } from '@application/use-cases/products/GetProducts';
+import { CreateCategory } from '@application/use-cases/categories/CreateCategory';
+import { GetCategoriesByStore } from '@application/use-cases/categories/GetCategoriesByStore';
+import { UpdateCategory } from '@application/use-cases/categories/UpdateCategory';
+import { DeleteCategory } from '@application/use-cases/categories/DeleteCategory';
+import { CreateStore } from '@application/use-cases/stores/CreateStore';
+import { GetStores } from '@application/use-cases/stores/GetStores';
+import { UpdateStore } from '@application/use-cases/stores/UpdateStore';
+import { DeleteStore } from '@application/use-cases/stores/DeleteStore';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
 import { PrismaListaRepository } from '@infrastructure/persistence/repositories/PrismaListaRepository';
 import { PrismaProductoRepository } from '@infrastructure/persistence/repositories/PrismaProductoRepository';
+import { PrismaCategoriaRepository } from '@infrastructure/persistence/repositories/PrismaCategoriaRepository';
+import { PrismaTiendaRepository } from '@infrastructure/persistence/repositories/PrismaTiendaRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
@@ -30,11 +40,15 @@ import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventP
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
 import { ListController } from '@infrastructure/http/controllers/ListController';
 import { ProductController } from '@infrastructure/http/controllers/ProductController';
+import { CategoryController } from '@infrastructure/http/controllers/CategoryController';
+import { StoreController } from '@infrastructure/http/controllers/StoreController';
 
 // Interfaces
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IListaRepository } from '@application/ports/repositories/IListaRepository';
 import type { IProductoRepository } from '@application/ports/repositories/IProductoRepository';
+import type { ICategoriaRepository } from '@application/ports/repositories/ICategoriaRepository';
+import type { ITiendaRepository } from '@application/ports/repositories/ITiendaRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
 import type { IEventPublisher } from '@application/ports/messaging/IEventPublisher';
@@ -47,6 +61,8 @@ export class Container {
   private _usuarioRepository!: IUsuarioRepository;
   private _listaRepository!: IListaRepository;
   private _productoRepository!: IProductoRepository;
+  private _categoriaRepository!: ICategoriaRepository;
+  private _tiendaRepository!: ITiendaRepository;
 
   // External Services
   private _passwordHasher!: IPasswordHasher;
@@ -65,11 +81,21 @@ export class Container {
   private _markProductAsPurchased!: MarkProductAsPurchased;
   private _deleteProduct!: DeleteProduct;
   private _getProducts!: GetProducts;
+  private _createCategory!: CreateCategory;
+  private _getCategoriesByStore!: GetCategoriesByStore;
+  private _updateCategory!: UpdateCategory;
+  private _deleteCategory!: DeleteCategory;
+  private _createStore!: CreateStore;
+  private _getStores!: GetStores;
+  private _updateStore!: UpdateStore;
+  private _deleteStore!: DeleteStore;
 
   // Controllers
   private _authController!: AuthController;
   private _listController!: ListController;
   private _productController!: ProductController;
+  private _categoryController!: CategoryController;
+  private _storeController!: StoreController;
 
   private constructor() {
     this.initializeInfrastructure();
@@ -131,6 +157,8 @@ export class Container {
     this._usuarioRepository = new PrismaUsuarioRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
     this._productoRepository = new PrismaProductoRepository(this._prisma);
+    this._categoriaRepository = new PrismaCategoriaRepository(this._prisma);
+    this._tiendaRepository = new PrismaTiendaRepository(this._prisma);
   }
 
   private initializeExternalServices(): void {
@@ -207,6 +235,44 @@ export class Container {
       this._productoRepository,
       this._listaRepository
     );
+
+    // Category use cases
+    this._createCategory = new CreateCategory(
+      this._categoriaRepository,
+      this._tiendaRepository
+    );
+
+    this._getCategoriesByStore = new GetCategoriesByStore(
+      this._categoriaRepository,
+      this._tiendaRepository
+    );
+
+    this._updateCategory = new UpdateCategory(
+      this._categoriaRepository,
+      this._tiendaRepository
+    );
+
+    this._deleteCategory = new DeleteCategory(
+      this._categoriaRepository,
+      this._productoRepository
+    );
+
+    // Store use cases
+    this._createStore = new CreateStore(
+      this._tiendaRepository
+    );
+
+    this._getStores = new GetStores(
+      this._tiendaRepository
+    );
+
+    this._updateStore = new UpdateStore(
+      this._tiendaRepository
+    );
+
+    this._deleteStore = new DeleteStore(
+      this._tiendaRepository
+    );
   }
 
   private initializeControllers(): void {
@@ -228,6 +294,20 @@ export class Container {
       this._markProductAsPurchased,
       this._deleteProduct,
       this._getProducts
+    );
+
+    this._categoryController = new CategoryController(
+      this._createCategory,
+      this._getCategoriesByStore,
+      this._updateCategory,
+      this._deleteCategory
+    );
+
+    this._storeController = new StoreController(
+      this._createStore,
+      this._getStores,
+      this._updateStore,
+      this._deleteStore
     );
   }
 
@@ -311,6 +391,54 @@ export class Container {
 
   public get productController(): ProductController {
     return this._productController;
+  }
+
+  public get categoriaRepository(): ICategoriaRepository {
+    return this._categoriaRepository;
+  }
+
+  public get tiendaRepository(): ITiendaRepository {
+    return this._tiendaRepository;
+  }
+
+  public get createCategory(): CreateCategory {
+    return this._createCategory;
+  }
+
+  public get getCategoriesByStore(): GetCategoriesByStore {
+    return this._getCategoriesByStore;
+  }
+
+  public get updateCategory(): UpdateCategory {
+    return this._updateCategory;
+  }
+
+  public get deleteCategory(): DeleteCategory {
+    return this._deleteCategory;
+  }
+
+  public get createStore(): CreateStore {
+    return this._createStore;
+  }
+
+  public get getStores(): GetStores {
+    return this._getStores;
+  }
+
+  public get updateStore(): UpdateStore {
+    return this._updateStore;
+  }
+
+  public get deleteStore(): DeleteStore {
+    return this._deleteStore;
+  }
+
+  public get categoryController(): CategoryController {
+    return this._categoryController;
+  }
+
+  public get storeController(): StoreController {
+    return this._storeController;
   }
 
   /**
