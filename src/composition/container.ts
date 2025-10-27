@@ -12,10 +12,16 @@ import { CreateList } from '@application/use-cases/lists/CreateList';
 import { GetUserLists } from '@application/use-cases/lists/GetUserLists';
 import { UpdateList } from '@application/use-cases/lists/UpdateList';
 import { DeleteList } from '@application/use-cases/lists/DeleteList';
+import { AddProduct } from '@application/use-cases/products/AddProduct';
+import { UpdateProduct } from '@application/use-cases/products/UpdateProduct';
+import { MarkProductAsPurchased } from '@application/use-cases/products/MarkProductAsPurchased';
+import { DeleteProduct } from '@application/use-cases/products/DeleteProduct';
+import { GetProducts } from '@application/use-cases/products/GetProducts';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
 import { PrismaListaRepository } from '@infrastructure/persistence/repositories/PrismaListaRepository';
+import { PrismaProductoRepository } from '@infrastructure/persistence/repositories/PrismaProductoRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
@@ -23,10 +29,12 @@ import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventP
 // HTTP Layer
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
 import { ListController } from '@infrastructure/http/controllers/ListController';
+import { ProductController } from '@infrastructure/http/controllers/ProductController';
 
 // Interfaces
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IListaRepository } from '@application/ports/repositories/IListaRepository';
+import type { IProductoRepository } from '@application/ports/repositories/IProductoRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
 import type { IEventPublisher } from '@application/ports/messaging/IEventPublisher';
@@ -38,6 +46,7 @@ export class Container {
   // Repositories
   private _usuarioRepository!: IUsuarioRepository;
   private _listaRepository!: IListaRepository;
+  private _productoRepository!: IProductoRepository;
 
   // External Services
   private _passwordHasher!: IPasswordHasher;
@@ -51,10 +60,16 @@ export class Container {
   private _getUserLists!: GetUserLists;
   private _updateList!: UpdateList;
   private _deleteList!: DeleteList;
+  private _addProduct!: AddProduct;
+  private _updateProduct!: UpdateProduct;
+  private _markProductAsPurchased!: MarkProductAsPurchased;
+  private _deleteProduct!: DeleteProduct;
+  private _getProducts!: GetProducts;
 
   // Controllers
   private _authController!: AuthController;
   private _listController!: ListController;
+  private _productController!: ProductController;
 
   private constructor() {
     this.initializeInfrastructure();
@@ -115,6 +130,7 @@ export class Container {
   private initializeRepositories(): void {
     this._usuarioRepository = new PrismaUsuarioRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
+    this._productoRepository = new PrismaProductoRepository(this._prisma);
   }
 
   private initializeExternalServices(): void {
@@ -168,6 +184,29 @@ export class Container {
     this._deleteList = new DeleteList(
       this._listaRepository
     );
+
+    // Product use cases
+    this._addProduct = new AddProduct(
+      this._productoRepository,
+      this._listaRepository
+    );
+
+    this._updateProduct = new UpdateProduct(
+      this._productoRepository
+    );
+
+    this._markProductAsPurchased = new MarkProductAsPurchased(
+      this._productoRepository
+    );
+
+    this._deleteProduct = new DeleteProduct(
+      this._productoRepository
+    );
+
+    this._getProducts = new GetProducts(
+      this._productoRepository,
+      this._listaRepository
+    );
   }
 
   private initializeControllers(): void {
@@ -181,6 +220,14 @@ export class Container {
       this._getUserLists,
       this._updateList,
       this._deleteList
+    );
+
+    this._productController = new ProductController(
+      this._addProduct,
+      this._updateProduct,
+      this._markProductAsPurchased,
+      this._deleteProduct,
+      this._getProducts
     );
   }
 
@@ -234,12 +281,36 @@ export class Container {
     return this._deleteList;
   }
 
+  public get addProduct(): AddProduct {
+    return this._addProduct;
+  }
+
+  public get updateProduct(): UpdateProduct {
+    return this._updateProduct;
+  }
+
+  public get markProductAsPurchased(): MarkProductAsPurchased {
+    return this._markProductAsPurchased;
+  }
+
+  public get deleteProduct(): DeleteProduct {
+    return this._deleteProduct;
+  }
+
+  public get getProducts(): GetProducts {
+    return this._getProducts;
+  }
+
   public get authController(): AuthController {
     return this._authController;
   }
 
   public get listController(): ListController {
     return this._listController;
+  }
+
+  public get productController(): ProductController {
+    return this._productController;
   }
 
   /**
