@@ -1,40 +1,59 @@
-import { Router } from 'express';
-import { authMiddleware } from '../middlewares/authMiddleware';
+import { Router, RequestHandler } from 'express';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { z } from 'zod';
 import { InvitationController } from '../controllers/InvitationController';
 
 // Schemas de validación para los endpoints de invitaciones
 const shareListSchema = z.object({
-  tipoPermiso: z.enum(['LECTURA', 'ESCRITURA']),
-  duracionHoras: z.number().int().min(1).max(168).optional() // máximo 1 semana
+  body: z.object({
+    tipoPermiso: z.enum(['LECTURA', 'ESCRITURA']),
+    duracionHoras: z.number().int().min(1).max(168).optional() // máximo 1 semana
+  }),
+  params: z.object({
+    listaId: z.string().uuid('ID de lista debe ser un UUID válido')
+  })
 });
 
 const accessSharedListSchema = z.object({
-  hash: z.string().min(1, 'Hash requerido')
+  body: z.object({
+    hash: z.string().min(1, 'Hash requerido')
+  })
 });
 
 const changePermissionsSchema = z.object({
-  nuevoTipoPermiso: z.enum(['LECTURA', 'ESCRITURA'])
-});
-
-const removePermissionsSchema = z.object({
-  usuarioId: z.string().uuid('ID de usuario debe ser un UUID válido')
-});
-
-const listParamsSchema = z.object({
-  listaId: z.string().uuid('ID de lista debe ser un UUID válido')
+  body: z.object({
+    nuevoTipoPermiso: z.enum(['LECTURA', 'ESCRITURA'])
+  }),
+  params: z.object({
+    permisoId: z.string().uuid('ID de permiso debe ser un UUID válido')
+  })
 });
 
 const invitationParamsSchema = z.object({
-  invitacionId: z.string().uuid('ID de invitación debe ser un UUID válido')
+  params: z.object({
+    invitacionId: z.string().uuid('ID de invitación debe ser un UUID válido')
+  })
 });
 
-const permisoParamsSchema = z.object({
-  permisoId: z.string().uuid('ID de permiso debe ser un UUID válido')
+const listParamsSchema = z.object({
+  params: z.object({
+    listaId: z.string().uuid('ID de lista debe ser un UUID válido')
+  })
 });
 
-export function createInvitationRoutes(invitationController: InvitationController): Router {
+const removePermissionSchema = z.object({
+  params: z.object({
+    permisoId: z.string().uuid('ID de permiso debe ser un UUID válido')
+  })
+});
+
+interface InvitationRoutesDependencies {
+  invitationController: InvitationController;
+  authMiddleware: RequestHandler;
+}
+
+export function createInvitationRoutes(dependencies: InvitationRoutesDependencies): Router {
+  const { invitationController, authMiddleware } = dependencies;
   const router = Router();
 
   // Todas las rutas requieren autenticación
@@ -114,8 +133,7 @@ export function createInvitationRoutes(invitationController: InvitationControlle
    */
   router.post(
     '/:listaId/share',
-    validationMiddleware(listParamsSchema, 'params'),
-    validationMiddleware(shareListSchema, 'body'),
+    validationMiddleware(shareListSchema),
     invitationController.shareList.bind(invitationController)
   );
 
@@ -169,7 +187,7 @@ export function createInvitationRoutes(invitationController: InvitationControlle
    */
   router.post(
     '/access',
-    validationMiddleware(accessSharedListSchema, 'body'),
+    validationMiddleware(accessSharedListSchema),
     invitationController.accessSharedList.bind(invitationController)
   );
 
@@ -228,8 +246,7 @@ export function createInvitationRoutes(invitationController: InvitationControlle
    */
   router.put(
     '/permissions/:permisoId',
-    validationMiddleware(permisoParamsSchema, 'params'),
-    validationMiddleware(changePermissionsSchema, 'body'),
+    validationMiddleware(changePermissionsSchema),
     invitationController.changePermissions.bind(invitationController)
   );
 
@@ -273,7 +290,7 @@ export function createInvitationRoutes(invitationController: InvitationControlle
    */
   router.delete(
     '/permissions/:permisoId',
-    validationMiddleware(permisoParamsSchema, 'params'),
+    validationMiddleware(removePermissionSchema),
     invitationController.removePermissions.bind(invitationController)
   );
 
@@ -317,7 +334,7 @@ export function createInvitationRoutes(invitationController: InvitationControlle
    */
   router.delete(
     '/:invitacionId/cancel',
-    validationMiddleware(invitationParamsSchema, 'params'),
+    validationMiddleware(invitationParamsSchema),
     invitationController.cancelInvitation.bind(invitationController)
   );
 
@@ -363,7 +380,7 @@ export function createInvitationRoutes(invitationController: InvitationControlle
    */
   router.get(
     '/:listaId',
-    validationMiddleware(listParamsSchema, 'params'),
+    validationMiddleware(listParamsSchema),
     invitationController.getListInvitations.bind(invitationController)
   );
 
@@ -409,7 +426,7 @@ export function createInvitationRoutes(invitationController: InvitationControlle
    */
   router.get(
     '/:listaId/permissions',
-    validationMiddleware(listParamsSchema, 'params'),
+    validationMiddleware(listParamsSchema),
     invitationController.getListPermissions.bind(invitationController)
   );
 

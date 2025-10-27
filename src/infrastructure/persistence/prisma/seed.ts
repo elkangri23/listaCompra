@@ -232,7 +232,7 @@ async function main(): Promise<void> {
   // Crear permisos para compartir la lista familiar
   await prisma.permiso.create({
     data: {
-      tipo: TipoPermiso.ESCRITURA,
+      tipoPermiso: TipoPermiso.ESCRITURA,
       usuarioId: usuario2.id,
       listaId: listaFamiliar.id,
     },
