@@ -1,6 +1,6 @@
 # 🛒 Lista de la Compra Colaborativa
 
-> Proyecto educativo de backend desarrollado con **Node.js + TypeScript**, aplicando **arquitectura limpia (hexagonal)**, **patrón SAGA/Outbox**, **mensajería asíncrona con RabbitMQ** e integración de **Inteligencia Artificial**.
+> Proyecto educativo de backend desarrollado con **Node.js + TypeScript**, aplicando **arquitectura limpia (hexagonal)**, **patrón Outbox**, **mensajería asíncrona con RabbitMQ** e integración de **Inteligencia Artificial**.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-v20+-green.svg)](https://nodejs.org/)
@@ -41,7 +41,7 @@ Sistema backend de gestión de **listas de compra colaborativas** que permite a 
 El proyecto es un ejercicio educativo avanzado desarrollado como parte del **Máster de Desarrollo con IA de Big School** (Brais Moure), enfocado en la aplicación práctica de:
 - Arquitectura limpia y hexagonal
 - Principios SOLID
-- Patrón SAGA/Outbox para consistencia eventual
+- Patrón Outbox para consistencia eventual
 - Mensajería asíncrona con RabbitMQ
 - Integración de APIs de Inteligencia Artificial
 - Testing exhaustivo (unitario, integración, E2E)
@@ -129,7 +129,7 @@ El proyecto sigue los principios de **Clean Architecture** y **Arquitectura Hexa
 └─────────────────────────────────────────────────────┘
 ```
 
-### Patrón SAGA/Outbox
+### Patrón Outbox
 
 Implementa consistencia eventual mediante:
 1. **Outbox Table**: Almacena eventos de dominio en la misma transacción
@@ -139,34 +139,54 @@ Implementa consistencia eventual mediante:
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Stack Tecnológico - Estado Real
 
-### Backend
-- **Runtime**: Node.js v20+
-- **Lenguaje**: TypeScript 5.x
-- **Framework Web**: Express / Fastify
-- **Validación**: Zod
+### ✅ **Implementado y Funcionando**
 
-### Persistencia
-- **Base de datos**: PostgreSQL 15+
-- **ORM**: Prisma 5.x
-- **Migraciones**: Prisma Migrate
+#### Backend
+- **Runtime**: Node.js v16.17.0+ ✅
+- **Lenguaje**: TypeScript 5.x ✅
+- **Framework Web**: Express ✅
+- **Validación**: Zod ✅
 
-### Mensajería
-- **Broker**: RabbitMQ 3.x
-- **Cliente**: amqplib
+#### Persistencia
+- **Base de datos**: PostgreSQL 15+ con Docker ✅
+- **ORM**: Prisma 5.x ✅
+- **Migraciones**: Prisma Migrate ✅
 
-### Autenticación y Seguridad
-- **Tokens**: JWT (jsonwebtoken)
-- **Encriptación**: bcrypt
-- **Seguridad HTTP**: Helmet
-- **Rate Limiting**: express-rate-limit
+#### Mensajería
+- **Broker**: RabbitMQ 3.x con Docker ✅
+- **Cliente**: amqplib ✅
+- **Patrón Outbox**: Implementado y funcionando ✅
 
-### Inteligencia Artificial
-- OpenAI API
-- Google Gemini
-- Perplexity AI
-- Azure OpenAI
+#### Autenticación y Seguridad
+- **Tokens**: JWT (jsonwebtoken) ✅
+- **Encriptación**: bcrypt ✅
+- **Arquitectura**: Event-driven con eventos de dominio ✅
+
+#### Testing
+- **Framework**: Jest con 149 tests pasando ✅
+- **API Testing**: Supertest ✅
+- **Cobertura**: >90% en capas core ✅
+
+### ⏳ **Planificado para Fases Futuras**
+
+#### Documentación y Observabilidad
+- **API**: Swagger/OpenAPI (Fase 13)
+- **Logging avanzado**: Winston (mejora pendiente)
+- **Métricas**: Prometheus (Fase 12)
+- **Tracing**: OpenTelemetry (Fase 12)
+
+#### Servicios Externos
+- **Email**: Nodemailer (Fase 8)
+- **Seguridad HTTP**: Helmet (Fase 12)
+- **Rate Limiting**: express-rate-limit (Fase 12)
+
+#### Inteligencia Artificial
+- **OpenAI API** (Fase 9)
+- **Google Gemini** (Fase 9)
+- **Perplexity AI** (Fase 9)
+- **Azure OpenAI** (Fase 9)
 
 ### Testing
 - **Framework**: Jest
@@ -174,14 +194,15 @@ Implementa consistencia eventual mediante:
 - **Cobertura**: >80%
 
 ### Calidad de Código
-- **Linter**: ESLint
-- **Formatter**: Prettier
-- **Pre-commit**: Husky (opcional)
+- **TypeScript**: Strict mode habilitado con `exactOptionalPropertyTypes`
+- **Result Pattern**: Manejo funcional de errores implementado
+- **Arquitectura Hexagonal**: Separación estricta de capas
+- **Pre-commit**: Verificación de compilación TypeScript
 
-### Documentación
-- **API**: Swagger/OpenAPI
-- **Logs**: Winston
-- **Observabilidad**: Métricas y tracing
+### Documentación y Observabilidad
+- **API**: Swagger/OpenAPI (planificado para Fase 13)
+- **Logs**: Console logging estructurado (Winston planificado)
+- **Observabilidad**: Métricas y tracing (planificado)
 
 ---
 
@@ -425,6 +446,31 @@ El sistema implementa **27 casos de uso** completos organizados en módulos:
 
 ---
 
+## 🗓️ Estado del Proyecto - Progreso Actual
+
+| Fase | Estado | Descripción | Casos de Uso |
+|------|--------|-------------|--------------|
+| **Fase 1** | ✅ **COMPLETADA** | Setup y arquitectura base | - |
+| **Fase 2** | ✅ **COMPLETADA** | Autenticación y gestión de usuarios | CU-01, CU-02 |
+| **Fase 3** | ✅ **COMPLETADA** | Gestión de listas | CU-03 a CU-06 |
+| **Fase 4** | ✅ **COMPLETADA** | Gestión de productos | CU-07 a CU-10 |
+| **Fase 5** | ✅ **COMPLETADA** | Gestión de categorías y tiendas | CU-11 a CU-14, CU-26 |
+| **Fase 6** | ✅ **COMPLETADA** | Patrón Outbox y RabbitMQ | CU-19 (base) |
+| **Fase 7** | 🔄 **EN DESARROLLO** | Compartición de listas | CU-15 a CU-18 |
+| **Fase 8** | ⏳ **PENDIENTE** | Notificaciones por email | CU-19 (completo) |
+| **Fase 9** | ⏳ **PENDIENTE** | Integración con IA | CU-20, CU-21 |
+| **Fase 10** | ⏳ **PENDIENTE** | Blueprints/Plantillas | CU-22, CU-23 |
+| **Fase 11** | ⏳ **PENDIENTE** | Funcionalidades de administrador | CU-24, CU-25 |
+| **Fase 12** | ⏳ **PENDIENTE** | Validación y seguridad | CU-27 |
+| **Fase 13** | ⏳ **PENDIENTE** | Documentación y testing final | - |
+
+**Progreso:** 6/13 fases completadas **(46%)**  
+**Tests:** 149/150 pasando **(99.3%)**  
+**Arquitectura:** Hexagonal implementada ✅  
+**Eventos:** Sistema robusto con Outbox pattern ✅
+
+---
+
 ## 🗓️ Roadmap de Desarrollo
 
 El proyecto se desarrolla en **13 fases** a lo largo de **15 semanas**:
@@ -549,8 +595,8 @@ Este es un proyecto educativo, pero las contribuciones son bienvenidas. Si desea
 - Escribe tests para todo código nuevo
 - Mantén la cobertura >80%
 - Documenta las funciones públicas
-- Usa Prettier para formatear
-- Pasa el linter antes de commitear
+- Usa TypeScript strict mode
+- Verifica que compila sin errores antes de commitear
 
 ---
 
