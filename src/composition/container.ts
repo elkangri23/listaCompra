@@ -8,18 +8,25 @@ import { PrismaClient } from '@prisma/client';
 // Application Use Cases
 import { RegisterUser } from '@application/use-cases/auth/RegisterUser';
 import { AuthenticateUser } from '@application/use-cases/auth/AuthenticateUser';
+import { CreateList } from '@application/use-cases/lists/CreateList';
+import { GetUserLists } from '@application/use-cases/lists/GetUserLists';
+import { UpdateList } from '@application/use-cases/lists/UpdateList';
+import { DeleteList } from '@application/use-cases/lists/DeleteList';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
+import { PrismaListaRepository } from '@infrastructure/persistence/repositories/PrismaListaRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
 
 // HTTP Layer
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
+import { ListController } from '@infrastructure/http/controllers/ListController';
 
 // Interfaces
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
+import type { IListaRepository } from '@application/ports/repositories/IListaRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
 import type { IEventPublisher } from '@application/ports/messaging/IEventPublisher';
@@ -30,6 +37,7 @@ export class Container {
 
   // Repositories
   private _usuarioRepository!: IUsuarioRepository;
+  private _listaRepository!: IListaRepository;
 
   // External Services
   private _passwordHasher!: IPasswordHasher;
@@ -39,9 +47,14 @@ export class Container {
   // Use Cases
   private _registerUser!: RegisterUser;
   private _authenticateUser!: AuthenticateUser;
+  private _createList!: CreateList;
+  private _getUserLists!: GetUserLists;
+  private _updateList!: UpdateList;
+  private _deleteList!: DeleteList;
 
   // Controllers
   private _authController!: AuthController;
+  private _listController!: ListController;
 
   private constructor() {
     this.initializeInfrastructure();
@@ -101,6 +114,7 @@ export class Container {
 
   private initializeRepositories(): void {
     this._usuarioRepository = new PrismaUsuarioRepository(this._prisma);
+    this._listaRepository = new PrismaListaRepository(this._prisma);
   }
 
   private initializeExternalServices(): void {
@@ -109,10 +123,11 @@ export class Container {
     
     // Configurar EventPublisher según variables de entorno
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
-    const rabbitmqUrl = process.env['RABBITMQ_URL'] || 'amqp://guest:guest@localhost:5672';
+    // TODO: Usar rabbitmqUrl cuando implementemos la conexión real
+    // const rabbitmqUrl = process.env['RABBITMQ_URL'] || 'amqp://guest:guest@localhost:5672';
     
     if (rabbitmqEnabled) {
-      this._eventPublisher = new RabbitMQEventPublisher(rabbitmqUrl);
+      this._eventPublisher = new RabbitMQEventPublisher();
       console.log('� Usando RabbitMQEventPublisher - RabbitMQ habilitado');
     } else {
       // Crear un EventPublisher que no haga nada si está deshabilitado
@@ -136,6 +151,23 @@ export class Container {
       this._passwordHasher,
       this._tokenService
     );
+
+    // Lista use cases
+    this._createList = new CreateList(
+      this._listaRepository
+    );
+
+    this._getUserLists = new GetUserLists(
+      this._listaRepository
+    );
+
+    this._updateList = new UpdateList(
+      this._listaRepository
+    );
+
+    this._deleteList = new DeleteList(
+      this._listaRepository
+    );
   }
 
   private initializeControllers(): void {
@@ -143,6 +175,13 @@ export class Container {
       registerUser: this._registerUser,
       authenticateUser: this._authenticateUser,
     });
+
+    this._listController = new ListController(
+      this._createList,
+      this._getUserLists,
+      this._updateList,
+      this._deleteList
+    );
   }
 
   // Getters para acceder a las dependencias
@@ -153,6 +192,10 @@ export class Container {
 
   public get usuarioRepository(): IUsuarioRepository {
     return this._usuarioRepository;
+  }
+
+  public get listaRepository(): IListaRepository {
+    return this._listaRepository;
   }
 
   public get passwordHasher(): IPasswordHasher {
@@ -175,8 +218,28 @@ export class Container {
     return this._authenticateUser;
   }
 
+  public get createList(): CreateList {
+    return this._createList;
+  }
+
+  public get getUserLists(): GetUserLists {
+    return this._getUserLists;
+  }
+
+  public get updateList(): UpdateList {
+    return this._updateList;
+  }
+
+  public get deleteList(): DeleteList {
+    return this._deleteList;
+  }
+
   public get authController(): AuthController {
     return this._authController;
+  }
+
+  public get listController(): ListController {
+    return this._listController;
   }
 
   /**

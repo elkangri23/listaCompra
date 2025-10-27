@@ -8,7 +8,8 @@ import { IEventPublisher } from '../../../application/ports/messaging/IEventPubl
 export class RabbitMQEventPublisher implements IEventPublisher {
   private isConnected = false;
 
-  constructor(private readonly _connectionUrl: string) {}
+  // TODO: Añadir connectionUrl cuando implementemos la conexión real a RabbitMQ
+  constructor() {}
 
   async connect(): Promise<void> {
     try {
