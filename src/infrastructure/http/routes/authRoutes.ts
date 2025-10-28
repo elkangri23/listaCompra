@@ -5,27 +5,28 @@
 
 import { Router } from 'express';
 import type { AuthController } from '@infrastructure/http/controllers/AuthController';
+import { authRateLimit, apiRateLimit } from '../middlewares/rateLimitMiddleware';
 
 export function createAuthRoutes(authController: AuthController): Router {
   const router = Router();
 
   /**
    * POST /auth/register
-   * Registra un nuevo usuario
+   * Registra un nuevo usuario con rate limiting estricto
    */
-  router.post('/register', authController.register);
+  router.post('/register', authRateLimit, authController.register);
 
   /**
    * POST /auth/login
-   * Autentica un usuario existente
+   * Autentica un usuario existente con rate limiting estricto
    */
-  router.post('/login', authController.login);
+  router.post('/login', authRateLimit, authController.login);
 
   /**
    * POST /auth/refresh
-   * Renueva un token de acceso
+   * Renueva un token de acceso con rate limiting moderado
    */
-  router.post('/refresh', authController.refresh);
+  router.post('/refresh', apiRateLimit, authController.refresh);
 
   /**
    * POST /auth/logout
