@@ -5,6 +5,7 @@
 
 import { PerplexityService } from './PerplexityService';
 import { RedisCacheService } from '../cache/RedisCacheService';
+import { RedisCacheAnalytics } from '../cache/RedisCacheAnalytics';
 import { PerplexityConfig } from '../../config/ai.config';
 import { RedisConfig } from '../../config/redis.config';
 import { Logger } from '../../observability/logger/Logger';
@@ -31,6 +32,7 @@ export class CachedAIService implements IAIService {
   private readonly logger = new Logger('CachedAIService');
   private readonly perplexityService: PerplexityService;
   private readonly cacheService?: RedisCacheService;
+  private readonly cacheAnalytics?: RedisCacheAnalytics;
 
   constructor(dependencies: CachedAIServiceDependencies) {
     const { aiConfig, redisConfig } = dependencies;
@@ -38,6 +40,7 @@ export class CachedAIService implements IAIService {
     // Inicializar cache si se proporciona configuración
     if (redisConfig) {
       this.cacheService = new RedisCacheService(redisConfig);
+      this.cacheAnalytics = new RedisCacheAnalytics(this.cacheService);
     }
 
     // Inicializar servicio de IA con cache opcional
@@ -203,5 +206,49 @@ export class CachedAIService implements IAIService {
         this.logger.error('Error al cerrar servicios de IA', error as Error);
       }
     }
+  }
+
+  /**
+   * Obtiene analytics del cache en tiempo real
+   */
+  async getCacheAnalytics(): Promise<any> {
+    if (!this.cacheAnalytics) {
+      return null;
+    }
+    
+    return await this.cacheAnalytics.getRealTimeMetrics();
+  }
+
+  /**
+   * Obtiene métricas diarias del cache
+   */
+  async getDailyCacheMetrics(): Promise<any> {
+    if (!this.cacheAnalytics) {
+      return null;
+    }
+    
+    return await this.cacheAnalytics.getDailyMetrics();
+  }
+
+  /**
+   * Genera reporte de optimización del cache
+   */
+  async getCacheOptimizationReport(): Promise<any> {
+    if (!this.cacheAnalytics) {
+      return null;
+    }
+    
+    return await this.cacheAnalytics.generateOptimizationReport();
+  }
+
+  /**
+   * Obtiene métricas para dashboard
+   */
+  async getCacheMetricsForDashboard(): Promise<any> {
+    if (!this.cacheAnalytics) {
+      return null;
+    }
+    
+    return await this.cacheAnalytics.getMetricsForDashboard();
   }
 }
