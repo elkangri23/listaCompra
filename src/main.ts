@@ -41,6 +41,8 @@ async function bootstrap(): Promise<void> {
     // Crear y configurar el servidor
     const app = await createServer({
       authController: container.authController,
+      invitationController: container.invitationController,
+      authMiddleware: container.authMiddleware,
     });
     const port = process.env['PORT'] || 3000;
 

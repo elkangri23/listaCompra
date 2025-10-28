@@ -7,11 +7,15 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import type { AuthController } from './controllers/AuthController';
+import type { InvitationController } from './controllers/InvitationController';
 import { createAuthRoutes } from './routes/authRoutes';
+import { createInvitationRoutes } from './routes/invitationRoutes';
 import { devRoutes } from './routes/devRoutes';
 
 export interface ServerDependencies {
   authController: AuthController;
+  invitationController: InvitationController;
+  authMiddleware: express.RequestHandler;
 }
 
 export async function createServer(dependencies: ServerDependencies): Promise<Application> {
@@ -55,6 +59,10 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
 
   // Rutas de la aplicación
   app.use('/api/v1/auth', createAuthRoutes(dependencies.authController));
+  app.use('/api/v1/invitations', createInvitationRoutes({
+    invitationController: dependencies.invitationController,
+    authMiddleware: dependencies.authMiddleware
+  }));
   
   // Rutas de desarrollo (solo en development)
   app.use('/api/v1/dev', devRoutes);
