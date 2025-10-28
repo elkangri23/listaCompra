@@ -4,9 +4,9 @@
  */
 
 import { MessageHandler } from '../rabbitmq/RabbitMQConsumer';
-import type { IEmailService } from '@application/ports/external/IEmailService';
-import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
-import type { IListaRepository } from '@application/ports/repositories/IListaRepository';
+import type { IEmailService } from '../../../application/ports/external/IEmailService';
+import type { IUsuarioRepository } from '../../../application/ports/repositories/IUsuarioRepository';
+import type { IListaRepository } from '../../../application/ports/repositories/IListaRepository';
 import amqp from 'amqplib';
 
 // Tipos de eventos que maneja este consumer

@@ -1,58 +1,49 @@
 /**
- * Consumer genérico de RabbitMQ para procesar mensajes de diferentes colas
- * Permite registrar handlers específicos para cada tipo de mensaje
+ * Consumer base para RabbitMQ con manejo de errores y retry
+ * Permite configurar handlers específicos para diferentes tipos de mensajes
+ * Versión simplificada para evitar conflictos de tipos con amqplib
  */
 
-import * as amqp from 'amqplib';
+import amqp from 'amqplib';
 
+// Interface para handlers de mensajes
 export interface MessageHandler<T = any> {
-  handle(data: T, message: amqp.ConsumeMessage): Promise<void>;
+  handle(message: T, rawMessage: amqp.ConsumeMessage): Promise<void>;
 }
 
-export interface QueueConfig {
-  name: string;
-  durable?: boolean;
-  exclusive?: boolean;
-  autoDelete?: boolean;
-  arguments?: Record<string, any>;
-}
-
-export interface ExchangeConfig {
-  name: string;
-  type: 'direct' | 'topic' | 'headers' | 'fanout';
-  durable?: boolean;
-  autoDelete?: boolean;
-  arguments?: Record<string, any>;
-}
-
-export interface BindingConfig {
-  queue: string;
-  exchange: string;
-  routingKey?: string;
-  arguments?: Record<string, any>;
-}
-
+// Opciones de configuración del consumer
 export interface ConsumerOptions {
-  prefetch?: number; // Número de mensajes no confirmados simultáneos
-  retryAttempts?: number;
-  retryDelay?: number; // en milisegundos
-  deadLetterExchange?: string;
+  queueName: string;
+  exchangeName?: string;
+  exchangeType?: string;
+  routingKey?: string;
+  prefetch?: number;
+  autoAck?: boolean;
+  maxRetries?: number;
+  retryDelay?: number;
   deadLetterQueue?: string;
 }
 
-export class RabbitMQConsumer {
-  private connection: amqp.Connection | null = null;
-  private channel: amqp.Channel | null = null;
-  private handlers = new Map<string, MessageHandler>();
+export class RabbitMQConsumer<T = any> {
+  private connection: any = null; // Usar any para evitar conflictos de tipos
+  private channel: any = null;
   private isConnected = false;
+  private shouldReconnect = true;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 5000;
 
   constructor(
     private connectionUrl: string,
-    private options: ConsumerOptions = {}
+    private handler: MessageHandler<T>,
+    private options: ConsumerOptions
   ) {
+    // Configurar valores por defecto
     this.options = {
+      exchangeType: 'direct',
       prefetch: 10,
-      retryAttempts: 3,
+      autoAck: false,
+      maxRetries: 3,
       retryDelay: 1000,
       ...options
     };
@@ -60,222 +51,210 @@ export class RabbitMQConsumer {
 
   async connect(): Promise<void> {
     try {
-      console.log('Conectando a RabbitMQ...');
+      console.log(`🔗 Conectando a RabbitMQ: ${this.connectionUrl}`);
+      
       this.connection = await amqp.connect(this.connectionUrl);
       this.channel = await this.connection.createChannel();
-
-      // Configurar prefetch para control de flujo
+      
+      // Configurar prefetch
       await this.channel.prefetch(this.options.prefetch!);
-
-      // Manejar cierre de conexión
+      
+      // Configurar event listeners
       this.connection.on('close', () => {
-        console.log('Conexión RabbitMQ cerrada');
-        this.isConnected = false;
+        console.log('❌ Conexión RabbitMQ cerrada');
+        this.handleConnectionClose();
       });
 
-      this.connection.on('error', (error) => {
-        console.error('Error en conexión RabbitMQ:', error);
-        this.isConnected = false;
+      this.connection.on('error', (error: Error) => {
+        console.error('💥 Error en conexión RabbitMQ:', error);
+        this.handleConnectionError(error);
       });
 
       this.isConnected = true;
-      console.log('Conectado a RabbitMQ exitosamente');
+      this.reconnectAttempts = 0;
+      console.log('✅ Conectado a RabbitMQ exitosamente');
+
     } catch (error) {
-      console.error('Error conectando a RabbitMQ:', error);
+      console.error('💥 Error conectando a RabbitMQ:', error);
+      await this.handleReconnect();
       throw error;
     }
   }
 
   async disconnect(): Promise<void> {
+    console.log('🔌 Desconectando de RabbitMQ...');
+    this.shouldReconnect = false;
+    
     try {
       if (this.channel) {
         await this.channel.close();
         this.channel = null;
       }
+      
       if (this.connection) {
         await this.connection.close();
         this.connection = null;
       }
+      
       this.isConnected = false;
-      console.log('Desconectado de RabbitMQ');
+      console.log('✅ Desconectado de RabbitMQ');
     } catch (error) {
-      console.error('Error desconectando de RabbitMQ:', error);
+      console.error('⚠️ Error al desconectar:', error);
     }
   }
 
-  async setupQueue(config: QueueConfig): Promise<void> {
-    if (!this.channel) {
-      throw new Error('No hay conexión a RabbitMQ');
+  async startConsuming(): Promise<void> {
+    if (!this.isConnected || !this.channel) {
+      throw new Error('No conectado a RabbitMQ');
     }
 
-    await this.channel.assertQueue(config.name, {
-      durable: config.durable ?? true,
-      exclusive: config.exclusive ?? false,
-      autoDelete: config.autoDelete ?? false,
-      arguments: config.arguments
-    });
-
-    console.log(`Cola "${config.name}" configurada`);
-  }
-
-  async setupExchange(config: ExchangeConfig): Promise<void> {
-    if (!this.channel) {
-      throw new Error('No hay conexión a RabbitMQ');
-    }
-
-    await this.channel.assertExchange(config.name, config.type, {
-      durable: config.durable ?? true,
-      autoDelete: config.autoDelete ?? false,
-      arguments: config.arguments
-    });
-
-    console.log(`Exchange "${config.name}" configurado`);
-  }
-
-  async bindQueue(binding: BindingConfig): Promise<void> {
-    if (!this.channel) {
-      throw new Error('No hay conexión a RabbitMQ');
-    }
-
-    await this.channel.bindQueue(
-      binding.queue, 
-      binding.exchange, 
-      binding.routingKey || '',
-      binding.arguments
-    );
-
-    console.log(`Cola "${binding.queue}" vinculada a exchange "${binding.exchange}"`);
-  }
-
-  registerHandler<T>(queueName: string, handler: MessageHandler<T>): void {
-    this.handlers.set(queueName, handler);
-    console.log(`Handler registrado para cola "${queueName}"`);
-  }
-
-  async startConsuming(queueName: string): Promise<void> {
-    if (!this.channel) {
-      throw new Error('No hay conexión a RabbitMQ');
-    }
-
-    const handler = this.handlers.get(queueName);
-    if (!handler) {
-      throw new Error(`No hay handler registrado para la cola "${queueName}"`);
-    }
-
-    await this.channel.consume(queueName, async (message) => {
-      if (!message) return;
-
-      const startTime = Date.now();
-      let attempts = 0;
-
-      while (attempts < this.options.retryAttempts!) {
-        try {
-          // Parsear el mensaje
-          const content = message.content.toString();
-          const data = JSON.parse(content);
-
-          // Procesar mensaje con el handler correspondiente
-          await handler.handle(data, message);
-
-          // Confirmar procesamiento exitoso
-          this.channel!.ack(message);
-          
-          const processingTime = Date.now() - startTime;
-          console.log(`Mensaje procesado exitosamente en ${processingTime}ms (cola: ${queueName})`);
-          
-          return; // Salir del bucle de reintentos
-        } catch (error) {
-          attempts++;
-          console.error(`Error procesando mensaje (intento ${attempts}/${this.options.retryAttempts}):`, error);
-
-          if (attempts < this.options.retryAttempts!) {
-            // Esperar antes del siguiente intento
-            await this.sleep(this.options.retryDelay! * Math.pow(2, attempts - 1));
-          } else {
-            // Agotados los reintentos, enviar a dead letter queue o rechazar
-            console.error(`Mensaje rechazado después de ${attempts} intentos (cola: ${queueName})`);
-            
-            if (this.options.deadLetterQueue) {
-              await this.sendToDeadLetter(message, error);
-            }
-            
-            this.channel!.nack(message, false, false); // Rechazar sin reencolar
-          }
-        }
+    try {
+      // Declarar exchange si se especifica
+      if (this.options.exchangeName) {
+        await this.channel.assertExchange(
+          this.options.exchangeName,
+          this.options.exchangeType!,
+          { durable: true }
+        );
       }
-    });
 
-    console.log(`Iniciado consumo de cola "${queueName}"`);
-  }
+      // Declarar cola
+      await this.channel.assertQueue(this.options.queueName, { 
+        durable: true 
+      });
 
-  async stopConsuming(queueName: string): Promise<void> {
-    if (!this.channel) return;
+      // Bindear cola a exchange si se especifica
+      if (this.options.exchangeName && this.options.routingKey) {
+        await this.channel.bindQueue(
+          this.options.queueName,
+          this.options.exchangeName,
+          this.options.routingKey
+        );
+      }
 
-    try {
-      await this.channel.cancel(`consumer-${queueName}`);
-      console.log(`Detenido consumo de cola "${queueName}"`);
-    } catch (error) {
-      console.error(`Error deteniendo consumo de cola "${queueName}":`, error);
-    }
-  }
+      // Declarar dead letter queue si se especifica
+      if (this.options.deadLetterQueue) {
+        await this.channel.assertQueue(this.options.deadLetterQueue, { 
+          durable: true 
+        });
+      }
 
-  private async sendToDeadLetter(message: amqp.ConsumeMessage, error: unknown): Promise<void> {
-    if (!this.channel || !this.options.deadLetterQueue) return;
-
-    try {
-      const errorMessage = {
-        originalMessage: JSON.parse(message.content.toString()),
-        error: error instanceof Error ? error.message : 'Error desconocido',
-        timestamp: new Date().toISOString(),
-        originalQueue: message.fields.routingKey,
-        attempts: this.options.retryAttempts
-      };
-
-      await this.channel.sendToQueue(
-        this.options.deadLetterQueue,
-        Buffer.from(JSON.stringify(errorMessage)),
-        {
-          persistent: true,
-          timestamp: Date.now()
+      // Iniciar consumo
+      console.log(`🎯 Iniciando consumo de cola: ${this.options.queueName}`);
+      
+      await this.channel.consume(
+        this.options.queueName,
+        async (msg: any) => {
+          if (msg) {
+            await this.handleMessage(msg);
+          }
+        },
+        { 
+          noAck: this.options.autoAck 
         }
       );
 
-      console.log(`Mensaje enviado a dead letter queue: ${this.options.deadLetterQueue}`);
-    } catch (deadLetterError) {
-      console.error('Error enviando mensaje a dead letter queue:', deadLetterError);
+      console.log(`✅ Consumer activo en cola: ${this.options.queueName}`);
+
+    } catch (error) {
+      console.error('💥 Error iniciando consumer:', error);
+      throw error;
     }
   }
 
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  private async handleMessage(msg: amqp.ConsumeMessage): Promise<void> {
+    try {
+      // Parsear mensaje
+      const content = msg.content.toString();
+      const message: T = JSON.parse(content);
+
+      console.log(`📨 Mensaje recibido en ${this.options.queueName}:`, message);
+
+      // Procesar mensaje con handler
+      await this.handler.handle(message, msg);
+
+      // Ack manual si no está en auto-ack
+      if (!this.options.autoAck && this.channel) {
+        this.channel.ack(msg);
+        console.log(`✅ Mensaje procesado y confirmado`);
+      }
+
+    } catch (error) {
+      console.error('💥 Error procesando mensaje:', error);
+      
+      // Manejo de errores
+      if (!this.options.autoAck && this.channel) {
+        // Rechazar mensaje y enviar a dead letter queue si está configurada
+        if (this.options.deadLetterQueue) {
+          this.channel.reject(msg, false); // No requeue
+          console.log(`💀 Mensaje enviado a dead letter queue`);
+        } else {
+          this.channel.nack(msg, false, true); // Requeue para retry
+          console.log(`🔄 Mensaje reencolarizado para retry`);
+        }
+      }
+    }
   }
 
-  isHealthy(): boolean {
-    return this.isConnected && this.channel !== null;
+  private handleConnectionClose(): void {
+    this.isConnected = false;
+    this.channel = null;
+    this.connection = null;
+    
+    if (this.shouldReconnect) {
+      console.log('🔄 Intentando reconectar...');
+      setTimeout(() => this.handleReconnect(), this.reconnectDelay);
+    }
   }
 
-  async getQueueInfo(queueName: string): Promise<{
-    messageCount: number;
-    consumerCount: number;
-  }> {
-    if (!this.channel) {
-      throw new Error('No hay conexión a RabbitMQ');
+  private handleConnectionError(error: Error): void {
+    console.error('💥 Error de conexión:', error);
+    this.isConnected = false;
+  }
+
+  private async handleReconnect(): Promise<void> {
+    if (!this.shouldReconnect) return;
+    
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error(`💀 Máximo de intentos de reconexión alcanzado (${this.maxReconnectAttempts})`);
+      return;
     }
 
-    const queueInfo = await this.channel.checkQueue(queueName);
-    return {
-      messageCount: queueInfo.messageCount,
-      consumerCount: queueInfo.consumerCount
-    };
+    this.reconnectAttempts++;
+    console.log(`🔄 Intento de reconexión ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+
+    try {
+      await this.connect();
+      await this.startConsuming();
+      console.log('✅ Reconectado exitosamente');
+    } catch (error) {
+      console.error(`💥 Error en reconexión ${this.reconnectAttempts}:`, error);
+      setTimeout(() => this.handleReconnect(), this.reconnectDelay);
+    }
   }
 
-  async purgeQueue(queueName: string): Promise<number> {
-    if (!this.channel) {
-      throw new Error('No hay conexión a RabbitMQ');
-    }
+  // Getters para monitoreo
+  public isConnectedToRabbitMQ(): boolean {
+    return this.isConnected;
+  }
 
-    const result = await this.channel.purgeQueue(queueName);
-    console.log(`Cola "${queueName}" purgada: ${result.messageCount} mensajes eliminados`);
-    return result.messageCount;
+  public getReconnectAttempts(): number {
+    return this.reconnectAttempts;
+  }
+
+  public getQueueName(): string {
+    return this.options.queueName;
+  }
+
+  // Método estático para crear y iniciar un consumer
+  public static async createAndStart<T>(
+    connectionUrl: string,
+    handler: MessageHandler<T>,
+    options: ConsumerOptions
+  ): Promise<RabbitMQConsumer<T>> {
+    const consumer = new RabbitMQConsumer(connectionUrl, handler, options);
+    await consumer.connect();
+    await consumer.startConsuming();
+    return consumer;
   }
 }
