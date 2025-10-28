@@ -437,22 +437,63 @@ El servidor estará disponible en: **http://localhost:3000**
 │   └── main.ts                      # Punto de entrada
 │
 ├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
+│   ├── unit/                        # Tests unitarios por capa
+│   │   ├── domain/                  # Tests de entidades y value objects
+│   │   ├── application/             # Tests de casos de uso
+│   │   └── infrastructure/          # Tests de adaptadores
+│   ├── integration/                 # Tests de integración
+│   │   ├── http/                    # Tests de controladores y rutas
+│   │   ├── persistence/             # Tests de repositorios con BD
+│   │   └── messaging/               # Tests de RabbitMQ
+│   ├── e2e/                         # Tests end-to-end
+│   │   └── scenarios/               # Escenarios completos de usuario
+│   ├── setup.ts                     # Configuración global de tests
+│   └── setup.d.ts                   # Tipos para tests
 │
-├── docs/                            # Documentación
+├── scripts/                         # Scripts auxiliares
+│   ├── test-email-config.ts         # Verificar configuración email
+│   ├── test-email.ts                # Test manual de emails
+│   └── test-workers.ts              # Test manual de workers RabbitMQ
+│
+├── docker/                          # Configuraciones Docker
+│   ├── postgres/                    # Configuración PostgreSQL
+│   │   └── init/                    # Scripts de inicialización
+│   └── rabbitmq/                    # Configuración RabbitMQ
+│       ├── definitions.json         # Definiciones de exchanges/queues
+│       └── rabbitmq.conf            # Configuración del broker
+│
+├── prisma/                          # Prisma ORM
+│   ├── schema.prisma                # Schema de base de datos
+│   └── migrations/                  # Migraciones de BD
+│       └── migration_lock.toml      # Lock de migraciones
+│
+├── Docs/                            # Documentación del proyecto
 │   ├── Analisis-de-requisitos-ListaCompra.pdf
 │   ├── DiagramaClases_V1-mermaid.md
+│   ├── DiagramaClases_V1.mmd
+│   ├── DiagramaClases_v1.png
+│   ├── DiagramaClases_V1.svg
 │   └── casos-uso-completos.md
 │
-├── .env.example
-├── docker-compose.yml
-├── package.json
-├── tsconfig.json
-├── jest.config.js
-├── AGENTS.md
-└── README.md
+├── 🧪 **Archivos de Testing API**   # 🔥 **NUEVOS**
+├── postman_collection.json          # Colección Postman (33+ endpoints)
+├── postman_environment.json         # Variables de entorno para testing
+├── API_Testing_Guide.md             # Guía completa de testing
+│
+├── 📋 **Configuración del Proyecto**
+├── .env.example                     # Plantilla de variables de entorno
+├── .eslintrc.json                   # Configuración ESLint
+├── .prettierrc                      # Configuración Prettier
+├── .prettierignore                  # Archivos ignorados por Prettier
+├── .gitignore                       # Archivos ignorados por Git
+├── tsconfig.json                    # Configuración TypeScript
+├── jest.config.js                   # Configuración Jest
+├── docker-compose.yml               # Servicios PostgreSQL + RabbitMQ
+├── package.json                     # Dependencias y scripts NPM
+│
+├── 📚 **Documentación Principal**
+├── README.md                        # 🔥 **Este archivo - Guía completa**
+└── AGENTS.md                        # Arquitectura y roadmap detallado
 ```
 
 ---
