@@ -45,6 +45,8 @@ import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventP
 import { PrismaOutboxService } from '@infrastructure/messaging/outbox/PrismaOutboxService';
 import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import { NodemailerService } from '@infrastructure/external-services/email/NodemailerService';
+import { PerplexityService } from '@infrastructure/external-services/ai/PerplexityService';
+import { PerplexityConfig } from '@infrastructure/config/ai.config';
 import { WorkerService } from '@infrastructure/messaging/WorkerService';
 
 // HTTP Layer
@@ -70,6 +72,7 @@ import type { IEventPublisher } from '@application/ports/messaging/IEventPublish
 import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
 import type { IInvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import type { IEmailService } from '@application/ports/external/IEmailService';
+import type { IAIService } from '@application/ports/external/IAIService';
 
 export class Container {
   private static instance: Container;
@@ -88,6 +91,7 @@ export class Container {
   private _passwordHasher!: IPasswordHasher;
   private _tokenService!: ITokenService;
   private _emailService!: IEmailService;
+  private _aiService!: IAIService;
   private _eventPublisher!: IEventPublisher;
   private _outboxService!: IOutboxService;
   private _hashGenerator!: IInvitationHashGenerator;
@@ -221,6 +225,25 @@ export class Container {
     };
     this._emailService = new NodemailerService(emailConfig);
     
+    // Configurar IA Service (Perplexity)
+    const aiConfig: PerplexityConfig = {
+      provider: 'perplexity',
+      apiKey: process.env['PERPLEXITY_API_KEY'] || '',
+      apiUrl: process.env['PERPLEXITY_API_URL'] || 'https://api.perplexity.ai',
+      model: (process.env['PERPLEXITY_MODEL'] as any) || 'llama-3.1-sonar-small-128k-online',
+      temperature: parseFloat(process.env['AI_TEMPERATURE'] || '0.1'),
+      maxTokens: parseInt(process.env['AI_MAX_TOKENS'] || '1000'),
+      timeout: parseInt(process.env['AI_TIMEOUT'] || '30000'),
+      cache: {
+        enabled: process.env['AI_CACHE_ENABLED'] === 'true',
+        ttl: parseInt(process.env['AI_CACHE_TTL'] || '3600')
+      },
+      rateLimit: {
+        requestsPerMinute: parseInt(process.env['AI_RATE_LIMIT_PER_MINUTE'] || '10')
+      }
+    };
+    this._aiService = new PerplexityService(aiConfig);
+    
     // Configurar EventPublisher según variables de entorno
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
     const rabbitmqUrl = process.env['RABBITMQ_URL'] || 'amqp://guest:guest@localhost:5672';
@@ -279,10 +302,13 @@ export class Container {
     );
 
     // Product use cases
-    this._addProduct = new AddProduct(
-      this._productoRepository,
-      this._listaRepository
-    );
+    this._addProduct = new AddProduct({
+      productoRepository: this._productoRepository,
+      listaRepository: this._listaRepository,
+      categoriaRepository: this._categoriaRepository,
+      tiendaRepository: this._tiendaRepository,
+      aiService: this._aiService // Opcional
+    });
 
     this._updateProduct = new UpdateProduct(
       this._productoRepository
@@ -450,6 +476,10 @@ export class Container {
 
   public get emailService(): IEmailService {
     return this._emailService;
+  }
+
+  public get aiService(): IAIService {
+    return this._aiService;
   }
 
   public get workerService(): WorkerService {

@@ -37,5 +37,18 @@ module.exports = {
   forceExit: true,
   clearMocks: true,
   resetMocks: true,
-  restoreMocks: true
+  restoreMocks: true,
+  
+  // 🚀 OPTIMIZACIONES DE PERFORMANCE SIMPLIFICADAS
+  maxWorkers: '50%',           // Usar 50% de cores disponibles
+  detectOpenHandles: false,    // Deshabilitar para desarrollo
+  
+  // Ignorar archivos que cambian frecuentemente
+  watchPathIgnorePatterns: [
+    '/node_modules/',
+    '/coverage/',
+    '/logs/',
+    '/docker/',
+    '/prisma/migrations/'
+  ]
 };
