@@ -73,7 +73,7 @@ El proyecto es un ejercicio educativo avanzado desarrollado como parte del **Má
 |-----------|-------------|
 | [`./Doc/Analisis-de-requisitos-ListaCompra.pdf`](./Doc/Analisis-de-requisitos-ListaCompra.pdf) | Análisis de requisitos funcionales y no funcionales completo |
 | [`./Doc/DiagramaClases_V1-mermaid.md`](./Doc/DiagramaClases_V1-mermaid.md) | Diagrama de clases UML en formato Mermaid |
-| [`./Doc/casos-uso-completos.md`](./Doc/casos-uso-completos.md) | 27 casos de uso detallados con flujos principales y alternativos |
+| [`./Doc/casos-uso-completos.md`](./Doc/casos-uso-completos.md) | 33 casos de uso detallados con flujos principales y alternativos |
 | [`AGENTS-v2.md`](./AGENTS-v2.md) | Guía completa de arquitectura, roadmap y agentes de desarrollo |
 
 ---
@@ -104,10 +104,27 @@ El proyecto es un ejercicio educativo avanzado desarrollado como parte del **Má
 - ✅ Categorías predefinidas por tienda
 - ✅ Asociación opcional de productos a categorías
 
-### Inteligencia Artificial (Fase 9 - Próximamente)
-- 🔄 Sugerencias de categorías por tienda mediante IA
-- 🔄 Análisis de hábitos de compra
-- 🔄 Integración con OpenAI/Anthropic/Google Gemini
+### 🤖 Inteligencia Artificial (IA)
+
+#### **Fase 9: IA Básica - Categorización Automática** ✅ **LISTO PARA IMPLEMENTAR**
+- 🎯 **CU-28: Sugerencias Automáticas de Categorías por Tienda**
+  - Categorización inteligente basada en contexto de tienda específica
+  - Aplicación automática sin confirmación para fluidez
+  - Integración con **Perplexity AI** (modelo Llama 3.1 Sonar)
+  - Cache inteligente para optimizar costos
+
+#### **Fase Extra: IA Avanzada - Funcionalidades Premium** 🚀 **FUTURO**
+- 🔄 **CU-29: Categorización Masiva Inteligente** - Procesamiento por lotes
+- 📊 **CU-30: Análisis de Hábitos de Compra** - Dashboard con insights
+- � **CU-31: Alertas Proactivas de Precios** - Monitoreo automático
+- 🎪 **CU-32: Listas por Ocasión** - "Barbacoa familiar", "Cena romántica"
+- 🤝 **CU-33: Recomendaciones Contextuales** - Productos complementarios
+
+#### **Configuración IA**
+- 🔑 **API Key**: Perplexity configurada (`$7.99 USD` crédito disponible)
+- ⚡ **Cache Redis**: Optimización de tokens y costos
+- 🛡️ **Rate Limiting**: Control de uso y presupuesto
+- 🎛️ **Configurable**: Automático vs manual por funcionalidad
 
 ### Administración
 - ✅ Impersonación de usuarios para testing
@@ -365,7 +382,7 @@ El servidor estará disponible en: **http://localhost:3000**
 │   │   └── errors/                  # Errores de dominio
 │   │
 │   ├── application/                 # Casos de uso
-│   │   ├── use-cases/               # 27 casos de uso organizados
+│   │   ├── use-cases/               # 33 casos de uso organizados
 │   │   ├── ports/                   # Interfaces (repositorios, servicios)
 │   │   ├── dto/                     # DTOs entrada/salida
 │   │   └── errors/                  # Errores de aplicación
@@ -386,7 +403,7 @@ El servidor estará disponible en: **http://localhost:3000**
 │   │   │   ├── outbox/              # Servicio outbox y worker
 │   │   │   └── consumers/           # Consumers específicos
 │   │   ├── external-services/
-│   │   │   ├── ai/                  # OpenAI, Gemini, etc.
+│   │   │   ├── ai/                  # 🤖 Perplexity AI, OpenAI, etc.
 │   │   │   ├── email/               # Nodemailer
 │   │   │   └── auth/                # JWT, bcrypt
 │   │   ├── observability/           # Logger, metrics, tracing
@@ -425,7 +442,7 @@ El servidor estará disponible en: **http://localhost:3000**
 
 ## 📝 Casos de Uso
 
-El sistema implementa **27 casos de uso** completos organizados en módulos:
+El sistema implementa **33 casos de uso** completos organizados en módulos:
 
 ### Autenticación (2)
 - CU-01: Registro de Usuario
@@ -458,9 +475,8 @@ El sistema implementa **27 casos de uso** completos organizados en módulos:
 ### Notificaciones (1)
 - CU-19: Procesar Notificación (Worker Outbox)
 
-### Inteligencia Artificial (2)
-- CU-20: Solicitar Sugerencias de IA para Categorías
-- CU-21: Analizar Hábitos de Compra
+### **⭐ Inteligencia Artificial Básica - Fase 9 (1)**
+- **CU-28: Sugerencias Automáticas de Categorías por Tienda**
 
 ### Blueprints/Plantillas (2)
 - CU-22: Crear Blueprint
@@ -473,6 +489,17 @@ El sistema implementa **27 casos de uso** completos organizados en módulos:
 ### Auxiliares (2)
 - CU-26: Obtener Tiendas Disponibles
 - CU-27: Validar Enlaces de Invitación (Proceso Automático)
+
+### **🚀 IA Avanzada - Fase Extra (5)**
+- **CU-29: Categorización Masiva Inteligente**
+- **CU-30: Análisis Inteligente de Hábitos de Compra**
+- **CU-31: Alertas Proactivas de Precios y Ofertas**
+- **CU-32: Listas Inteligentes por Ocasión**
+- **CU-33: Recomendaciones Contextuales Automáticas**
+
+### ~~Inteligencia Artificial Original (2)~~ *(Reorganizado)*
+- ~~CU-20: Solicitar Sugerencias de IA para Categorías~~ → **Evolucionado a CU-28**
+- ~~CU-21: Analizar Hábitos de Compra~~ → **Evolucionado a CU-30**
 
 📄 **[Ver casos de uso detallados](./Doc/casos-uso-completos.md)**
 
@@ -534,7 +561,7 @@ npm run test:email:integration  # ⚠️ Requiere conectividad SMTP
 
 ## 🗓️ Roadmap de Desarrollo
 
-El proyecto se desarrolla en **13 fases** a lo largo de **15 semanas**:
+El proyecto se desarrolla en **13 fases + Fase Extra** a lo largo de **15+ semanas**:
 
 | Fase | Duración | Descripción | Casos de Uso | Estado |
 |------|----------|-------------|--------------|--------|
@@ -544,15 +571,16 @@ El proyecto se desarrolla en **13 fases** a lo largo de **15 semanas**:
 | **Fase 4** | Semana 5 | Gestión de productos | CU-07 a CU-10 | ✅ **COMPLETADO** |
 | **Fase 5** | Semana 6 | Gestión de categorías y tiendas | CU-11 a CU-14, CU-26 | ✅ **COMPLETADO** |
 | **Fase 6** | Semana 7 | Patrón Outbox y RabbitMQ | CU-19 | ✅ **COMPLETADO** |
-| **Fase 7** | Semana 8 | **Compartición de listas** | **CU-15 a CU-18** | 🔄 **EN PROGRESO** |
-| **Fase 8** | Semana 9 | Notificaciones por email | CU-19 | ⏳ Pendiente |
-| **Fase 9** | Semanas 10-11 | Integración con IA | CU-20, CU-21 | ⏳ Pendiente |
-| **Fase 10** | Semana 12 | Blueprints/Plantillas | CU-22, CU-23 | ⏳ Pendiente |
-| **Fase 11** | Semana 13 | Funcionalidades de administrador | CU-24, CU-25 | ⏳ Pendiente |
-| **Fase 12** | Semana 14 | Validación y seguridad | CU-27 | ⏳ Pendiente |
-| **Fase 13** | Semana 15 | Documentación y testing final | - | ⏳ Pendiente |
+| **Fase 7** | Semana 8 | Compartición de listas | CU-15 a CU-18 | ✅ **COMPLETADO** |
+| **Fase 8** | Semana 9 | Notificaciones por email | CU-19 | ✅ **COMPLETADO** |
+| **Fase 9** | Semana 10 | **IA Básica - Categorización Automática** | **CU-28** | 🔄 **EN PROGRESO** |
+| **Fase 10** | Semana 11 | Blueprints/Plantillas | CU-22, CU-23 | ⏳ Pendiente |
+| **Fase 11** | Semana 12 | Funcionalidades de administrador | CU-24, CU-25 | ⏳ Pendiente |
+| **Fase 12** | Semana 13 | Validación y seguridad | CU-27 | ⏳ Pendiente |
+| **Fase 13** | Semana 14 | Documentación y testing final | - | ⏳ Pendiente |
+| **Fase Extra** | Semana 15+ | **IA Avanzada - Funcionalidades Premium** | **CU-29 a CU-33** | 🚀 **FUTURO** |
 
-📄 **[Ver roadmap completo](./AGENTS-v2.md#roadmap-de-implementación)**
+📄 **[Ver roadmap completo](./AGENTS.md#roadmap-de-implementación)**
 
 ---
 

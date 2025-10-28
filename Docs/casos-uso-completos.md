@@ -401,3 +401,103 @@
 **Alternativos**:
 - Error en proceso de limpieza: Se registra error y se programa reintento
 - Base de datos no disponible: Se omite ciclo de limpieza y se programa siguiente ejecución
+
+## Caso de Uso 28: Sugerencias Automáticas de Categorías por Tienda (IA)
+**Actor principal**: Usuario autenticado
+**Flujo principal**:
+1. El usuario agrega un producto a una lista que tiene tienda asignada
+2. El sistema consulta automáticamente la IA con contexto de tienda específica
+3. La IA analiza el producto y sugiere categoría apropiada según layout de la tienda
+4. El sistema aplica la categoría automáticamente al producto
+5. El usuario ve el producto ya categorizado según estructura real de la tienda
+6. Se optimiza la experiencia de compra con ubicaciones precisas
+**Alternativos**:
+- Lista sin tienda asignada: Se utiliza categorización genérica o se solicita asignación de tienda
+- IA no disponible: Se deja producto sin categoría o se usa categorización básica
+- Categoría sugerida no existe: Se crea automáticamente o se usa categoría similar
+- Error en API de IA: Se registra producto sin categoría para procesamiento posterior
+- Usuario modifica categoría: Se aprende preferencia para futuras sugerencias
+
+---
+
+# CASOS DE USO EXTRA - FUNCIONALIDADES AVANZADAS DE IA
+
+## Caso de Uso 29: Categorización Masiva Inteligente
+**Actor principal**: Usuario autenticado
+**Flujo principal**:
+1. El usuario accede a lista con múltiples productos sin categoría
+2. Selecciona opción "Categorizar con IA" desde interfaz de lista
+3. El sistema envía todos los productos sin categoría a la IA en una sola consulta
+4. La IA analiza todos los productos y sugiere categorías apropiadas
+5. El sistema aplica automáticamente todas las categorías sugeridas
+6. Se muestra resumen: "15 productos categorizados automáticamente"
+7. El usuario puede revisar resultados en vista detallada si lo desea
+**Alternativos**:
+- Error parcial en IA: Se categorizan productos exitosos y se reportan fallidos
+- Productos ambiguos: Se asigna categoría más probable con menor confianza
+- Sin productos para categorizar: Se informa que todos los productos ya tienen categoría
+- Límite de IA excedido: Se procesa por lotes más pequeños automáticamente
+
+## Caso de Uso 30: Análisis Inteligente de Hábitos de Compra
+**Actor principal**: Usuario autenticado
+**Flujo principal**:
+1. El usuario accede a sección "Mis Insights" desde dashboard principal
+2. El sistema recopila historial de compras de los últimos 3 meses
+3. Se consulta IA para análisis de patrones: frecuencias, tendencias, estacionalidad
+4. La IA genera insights personalizados sobre hábitos de compra
+5. Se presenta dashboard visual con análisis de frecuencias y optimizaciones
+6. El usuario puede explorar recomendaciones específicas generadas
+7. Se ofrecen sugerencias de mejora en eficiencia y presupuesto
+**Alternativos**:
+- Historial insuficiente: Se informa necesidad de más datos y se muestran insights básicos
+- Error en análisis IA: Se muestran estadísticas básicas sin análisis avanzado
+- Datos inconsistentes: Se filtran automáticamente y se analiza información confiable
+- Usuario nuevo: Se ofrecen consejos generales y se motiva a crear más listas
+
+## Caso de Uso 31: Alertas Proactivas de Precios y Ofertas
+**Actor principal**: Sistema (worker automático)
+**Flujo principal**:
+1. El worker del sistema monitorea precios de productos en listas activas
+2. La IA detecta cambios significativos de precios (>10% variación)
+3. Se generan alertas contextualizadas: "Aceite subió 15% esta semana"
+4. El sistema envía notificaciones push/email a usuarios afectados
+5. Se incluyen sugerencias de alternativas o recomendaciones de compra
+6. El usuario puede actuar sobre la alerta desde la notificación
+**Alternativos**:
+- Datos de precios no disponibles: Se omite monitoreo para esos productos
+- Usuario deshabilitó notificaciones: Se almacenan alertas para consulta posterior
+- Error en detección IA: Se usan reglas básicas de detección de cambios
+- Muchas alertas simultáneas: Se agrupan en resumen diario/semanal
+
+## Caso de Uso 32: Listas Inteligentes por Ocasión
+**Actor principal**: Usuario autenticado
+**Flujo principal**:
+1. El usuario selecciona "Crear Lista Inteligente" desde menú principal
+2. Especifica ocasión del menú predefinido: "Barbacoa familiar", "Cena romántica", etc.
+3. Proporciona detalles: número de personas, restricciones dietéticas, presupuesto
+4. La IA genera lista completa con productos apropiados para la ocasión
+5. Se incluyen cantidades estimadas y categorías organizadas por tienda
+6. El usuario revisa y personaliza la lista generada según preferencias
+7. Se crea lista funcional lista para usar en compras
+**Alternativos**:
+- Ocasión no reconocida: Se solicita descripción libre para análisis IA
+- Restricciones complejas: Se priorizan restricciones de salud sobre preferencias
+- Presupuesto muy limitado: Se sugieren alternativas económicas y productos básicos
+- Error en generación: Se ofrece lista base editable manualmente
+
+## Caso de Uso 33: Recomendaciones Contextuales Automáticas
+**Actor principal**: Sistema (en tiempo real)
+**Flujo principal**:
+1. El usuario agrega producto a lista (ej: "Pasta")
+2. La IA detecta contexto y analiza productos complementarios frecuentes
+3. Se generan sugerencias discretas: "¿Agregar tomate y queso parmesano?"
+4. Las sugerencias aparecen como botones de acción rápida en la interfaz
+5. El usuario puede aceptar sugerencias individuales con un clic
+6. Los productos se agregan automáticamente con categorías apropiadas
+7. El sistema aprende de las decisiones para mejorar futuras sugerencias
+**Alternativos**:
+- Usuario rechaza frecuentemente: Se reduce agresividad de sugerencias
+- Producto sin complementarios obvios: No se muestran sugerencias
+- Lista específica (ej: solo postres): Se contextualizan sugerencias al tema
+- Error en IA: Se usan reglas básicas de productos relacionados
+- Límite de sugerencias: Se priorizan las más relevantes según historial

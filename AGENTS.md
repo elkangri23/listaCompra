@@ -30,7 +30,7 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 - **Validación**: Zod o Joi
 - **Documentación**: Swagger/OpenAPI (swagger-ui-express)
 - **Code Quality**: ESLint, Prettier
-- **IA**: OpenAI API, Anthropic Claude, Google Gemini o Azure OpenAI
+- **IA**: Perplexity API (Llama 3.1 Sonar)
 
 ---
 
@@ -202,7 +202,7 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 │   │   │       └── AuditConsumer.ts
 │   │   ├── external-services/           # Servicios externos
 │   │   │   ├── ai/
-│   │   │   │   ├── OpenAIService.ts
+│   │   │   │   ├── PerplexityService.ts
 │   │   │   │   └── AIServiceAdapter.ts
 │   │   │   ├── email/
 │   │   │   │   ├── NodemailerService.ts
@@ -399,23 +399,23 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 
 ---
 
-### Fase 9: Integración con IA (Semanas 10-11)
-**Casos de uso**: CU-20, CU-21
+### Fase 9: IA Básica - Categorización Automática (Semana 10)
+**Casos de uso**: CU-28
 
 #### Entregables:
-1. Puerto IAIService en `src/application/ports/external/`
-2. Casos de uso en `src/application/use-cases/ai/`
-3. OpenAIService y AIServiceAdapter en `src/infrastructure/external-services/ai/`
-4. Configuración IA en `src/infrastructure/config/ai.config.ts`
+1. ✅ Puerto IAIService en `src/application/ports/external/IAIService.ts`
+2. ✅ Configuración Perplexity en `src/infrastructure/config/ai.config.ts`
+3. Caso de uso GetCategorySuggestions en `src/application/use-cases/ai/`
+4. PerplexityService en `src/infrastructure/external-services/ai/`
 5. AIController en `src/infrastructure/http/controllers/`
 6. Rutas en `src/infrastructure/http/routes/aiRoutes.ts`
-7. Caché de respuestas para optimizar costos
-8. Manejo de timeouts y fallbacks
-9. Tests con mocks de API externa
+7. Cache Redis para optimizar costos ($7.99 USD crédito)
+8. Integración automática en AddProduct use case
+9. Tests con mocks de Perplexity API
 
 ---
 
-### Fase 10: Blueprints/Plantillas (Semana 12)
+### Fase 10: Blueprints/Plantillas (Semana 11)
 **Casos de uso**: CU-22, CU-23
 
 #### Entregables:
@@ -429,7 +429,7 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 
 ---
 
-### Fase 11: Funcionalidades de Administrador (Semana 13)
+### Fase 11: Funcionalidades de Administrador (Semana 12)
 **Casos de uso**: CU-24, CU-25
 
 #### Entregables:
@@ -442,7 +442,7 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 
 ---
 
-### Fase 12: Validación y Seguridad (Semana 14)
+### Fase 12: Validación y Seguridad (Semana 13)
 **Casos de uso**: CU-27
 
 #### Entregables:
@@ -455,7 +455,7 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 
 ---
 
-### Fase 13: Documentación y Testing Final (Semana 15)
+### Fase 13: Documentación y Testing Final (Semana 14)
 #### Entregables:
 1. Documentación OpenAPI/Swagger completa
 2. Cobertura de tests >80%
@@ -463,6 +463,38 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 4. README detallado
 5. Documentación de arquitectura en `docs/architecture.md`
 6. Guía de setup y deployment
+
+---
+
+### 🚀 Fase Extra: IA Avanzada - Funcionalidades Premium (Semana 15+)
+**Casos de uso**: CU-29, CU-30, CU-31, CU-32, CU-33
+
+#### Entregables:
+1. **CU-29**: Categorización masiva inteligente
+   - Endpoint para procesamiento por lotes
+   - Optimización de tokens mediante batching
+   
+2. **CU-30**: Dashboard de análisis de hábitos
+   - Insights de frecuencia y patrones estacionales
+   - Visualizaciones y métricas personalizadas
+   
+3. **CU-31**: Sistema de alertas proactivas
+   - Worker para monitoreo de precios
+   - Notificaciones de ofertas y cambios
+   
+4. **CU-32**: Generador de listas por ocasión
+   - Templates inteligentes ("Barbacoa", "Cena romántica")
+   - Estimación de cantidades y presupuestos
+   
+5. **CU-33**: Recomendaciones contextuales
+   - Productos complementarios en tiempo real
+   - Aprendizaje de preferencias del usuario
+
+#### Consideraciones:
+- Funcionalidades premium opcionales
+- Mayor consumo de tokens IA
+- Requiere implementación de cache avanzado
+- Potencial monetización futura
 
 ---
 
@@ -552,19 +584,19 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 ### agente-infrastructure-external
 **Responsabilidad**: Servicios externos (IA, email, auth)
 
-**Herramientas**: OpenAI API, Nodemailer, JWT, bcrypt, TypeScript
+**Herramientas**: Perplexity API, OpenAI API, Nodemailer, JWT, bcrypt, TypeScript
 
 **Tareas**:
-- Integrar APIs de IA en `src/infrastructure/external-services/ai/`
+- ✅ Integrar Perplexity API en `src/infrastructure/external-services/ai/`
 - Implementar servicio de emails en `src/infrastructure/external-services/email/`
 - Implementar servicios de auth en `src/infrastructure/external-services/auth/`
 - Gestionar timeouts y fallbacks
-- Implementar caché de respuestas IA
-- Configuración en `src/infrastructure/config/`
+- Implementar caché Redis de respuestas IA para optimizar costos
+- ✅ Configuración en `src/infrastructure/config/ai.config.ts`
 - Escribir tests con mocks de APIs externas
 
 **Referencias**:
-- Casos de uso: CU-01, CU-02, CU-19, CU-20, CU-21
+- Casos de uso: CU-01, CU-02, CU-19, CU-28, CU-29, CU-30, CU-31, CU-32, CU-33
 
 ---
 
@@ -671,7 +703,8 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
     "zod": "^3.22.4",
     "amqplib": "^0.10.3",
     "nodemailer": "^6.9.7",
-    "openai": "^4.20.1",
+    "axios": "^1.6.0",
+    "redis": "^4.6.0",
     "dotenv": "^16.3.1",
     "helmet": "^7.1.0",
     "express-rate-limit": "^7.1.5",
@@ -752,6 +785,27 @@ docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
 ```bash
 docker run -d --name postgres -e POSTGRES_PASSWORD=password -p 5432:5432 postgres:15
 ```
+
+### Redis (Docker) - Para cache de IA
+```bash
+docker run -d --name redis -p 6379:6379 redis:alpine
+```
+
+---
+
+## Configuración de IA - Perplexity
+
+### Crédito Disponible
+- **API Key**: `pplx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` (configurada en .env)
+- **Crédito**: XXXX USD disponible
+- **Modelo optimizado**: `llama-3.1-sonar-small-128k-online` (costo eficiente)
+
+### Estrategia de Optimización
+- **Cache Redis**: TTL de 1-24h según funcionalidad
+- **Rate Limiting**: 10 requests/minuto
+- **Tokens limitados**: 1000 max por request
+- **Batching**: Procesamiento por lotes para CU-29
+- **Estimación**: 500-800 requests total con cache inteligente
 
 ---
 
