@@ -14,13 +14,35 @@ export class JWTTokenService implements ITokenService {
   private readonly algorithm: jwt.Algorithm = 'HS256';
 
   constructor() {
-    this.secret = process.env['JWT_SECRET'] || 'fallback-secret-change-in-production';
+    // Validación estricta del secreto JWT
+    const secret = process.env['JWT_SECRET'];
+    
+    if (!secret) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+    
+    if (secret.length < 32) {
+      throw new Error('JWT_SECRET must be at least 32 characters long for security');
+    }
+
+    // Validar que no sea un secreto débil común
+    const weakSecrets = [
+      'secret',
+      'jwt-secret',
+      'fallback-secret-change-in-production',
+      'your-secret-key',
+      'super-secret',
+      '123456',
+      'password'
+    ];
+    
+    if (weakSecrets.includes(secret.toLowerCase())) {
+      throw new Error('JWT_SECRET cannot be a common weak secret. Use a cryptographically secure random string.');
+    }
+
+    this.secret = secret;
     this.accessTokenExpiry = process.env['JWT_ACCESS_EXPIRES_IN'] || '1h';
     this.refreshTokenExpiry = process.env['JWT_REFRESH_EXPIRES_IN'] || '7d';
-
-    if (this.secret === 'fallback-secret-change-in-production') {
-      console.warn('⚠️  Using fallback JWT secret. Set JWT_SECRET environment variable.');
-    }
   }
 
   async generateAccessToken(payload: TokenPayload): Promise<Result<string, Error>> {

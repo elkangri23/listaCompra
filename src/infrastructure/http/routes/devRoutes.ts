@@ -4,10 +4,16 @@ import { DevController } from '../controllers/DevController';
 const router = Router();
 const devController = new DevController();
 
-// Solo disponible en modo development y test
-const isDevelopmentOrTest = process.env['NODE_ENV'] === 'development' || process.env['NODE_ENV'] === 'test';
+// Verificación estricta de entorno de desarrollo
+const nodeEnv = process.env['NODE_ENV'];
+const isProduction = nodeEnv === 'production';
+const isDevelopment = nodeEnv === 'development';
+const isTest = nodeEnv === 'test';
 
-if (isDevelopmentOrTest) {
+// Solo disponible en desarrollo o test, NUNCA en producción
+const isDevEnvironment = (isDevelopment || isTest) && !isProduction;
+
+if (isDevEnvironment) {
   
   /**
    * GET /api/v1/dev/events
@@ -29,12 +35,19 @@ if (isDevelopmentOrTest) {
 
   console.log('🔧 Rutas de desarrollo habilitadas en /api/v1/dev');
 } else {
-  // En producción, devolver 404 para todas las rutas de dev
+  // En producción o entorno no reconocido, bloquear TODAS las rutas de dev
   router.all('*', (_req, res) => {
     res.status(404).json({
       success: false,
-      message: 'Los endpoints de desarrollo no están disponibles en producción'
+      error: 'NOT_FOUND',
+      message: 'Endpoint no encontrado'
     });
+  });
+  
+  // Log de intento de acceso a rutas de desarrollo en producción
+  router.use((_req, _res, next) => {
+    console.warn(`⚠️ Intento de acceso a rutas de desarrollo en entorno: ${nodeEnv}`);
+    next();
   });
 }
 
