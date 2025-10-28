@@ -42,6 +42,7 @@
   "license": "MIT",
   "dependencies": {
     "@prisma/client": "^5.7.0",
+    "@types/winston": "^2.4.4",
     "amqplib": "^0.10.9",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
@@ -56,13 +57,13 @@
     "swagger-ui-express": "^5.0.0",
     "tsconfig-paths": "^4.2.0",
     "uuid": "^9.0.1",
-    "winston": "^3.11.0",
+    "winston": "^3.18.3",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.8",
     "@types/bcrypt": "^5.0.2",
-    "@types/cors": "^2.8.17",
+    "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.11",
     "@types/jsonwebtoken": "^9.0.5",

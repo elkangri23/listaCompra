@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { DevController } from '../controllers/DevController';
+import { Logger } from '../../observability/logger/Logger';
 
 const router = Router();
 const devController = new DevController();
+const logger = new Logger('DevRoutes');
 
 // Verificación estricta de entorno de desarrollo
 const nodeEnv = process.env['NODE_ENV'];
@@ -33,7 +35,7 @@ if (isDevEnvironment) {
    */
   router.post('/events/test', devController.publishTestEvent.bind(devController));
 
-  console.log('🔧 Rutas de desarrollo habilitadas en /api/v1/dev');
+  logger.debug('Rutas de desarrollo habilitadas en /api/v1/dev');
 } else {
   // En producción o entorno no reconocido, bloquear TODAS las rutas de dev
   router.all('*', (_req, res) => {
@@ -46,7 +48,7 @@ if (isDevEnvironment) {
   
   // Log de intento de acceso a rutas de desarrollo en producción
   router.use((_req, _res, next) => {
-    console.warn(`⚠️ Intento de acceso a rutas de desarrollo en entorno: ${nodeEnv}`);
+    logger.security(`Intento de acceso a rutas de desarrollo en entorno: ${nodeEnv}`);
     next();
   });
 }

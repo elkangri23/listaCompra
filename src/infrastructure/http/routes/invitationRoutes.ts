@@ -1,5 +1,6 @@
 import { Router, RequestHandler } from 'express';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
+import { sensitiveRateLimit } from '../middlewares/rateLimitMiddleware';
 import { z } from 'zod';
 import { InvitationController } from '../controllers/InvitationController';
 
@@ -129,6 +130,7 @@ export function createInvitationRoutes(dependencies: InvitationRoutesDependencie
    */
   router.post(
     '/:listaId/share',
+    sensitiveRateLimit, // Rate limiting estricto para compartir listas
     validationMiddleware(shareListSchema),
     invitationController.shareList.bind(invitationController)
   );
