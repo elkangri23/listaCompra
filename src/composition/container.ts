@@ -44,6 +44,9 @@ import { JWTTokenService } from '@infrastructure/external-services/auth/JWTToken
 import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
 import { PrismaOutboxService } from '@infrastructure/messaging/outbox/PrismaOutboxService';
 import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
+import { NodemailerService } from '@infrastructure/external-services/email/NodemailerService';
+// import { RabbitMQConsumer } from '@infrastructure/messaging/rabbitmq/RabbitMQConsumer';
+// import { NotificationConsumer } from '@infrastructure/messaging/consumers/NotificationConsumer';
 
 // HTTP Layer
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
@@ -67,6 +70,7 @@ import type { ITokenService } from '@application/ports/auth/ITokenService';
 import type { IEventPublisher } from '@application/ports/messaging/IEventPublisher';
 import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
 import type { IInvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
+import type { IEmailService } from '@application/ports/external/IEmailService';
 
 export class Container {
   private static instance: Container;
@@ -84,6 +88,7 @@ export class Container {
   // External Services
   private _passwordHasher!: IPasswordHasher;
   private _tokenService!: ITokenService;
+  private _emailService!: IEmailService;
   private _eventPublisher!: IEventPublisher;
   private _outboxService!: IOutboxService;
   private _hashGenerator!: IInvitationHashGenerator;
@@ -199,6 +204,22 @@ export class Container {
     this._tokenService = new JWTTokenService();
     this._hashGenerator = new InvitationHashGenerator();
     this._outboxService = new PrismaOutboxService(this._prisma);
+    
+    // Configurar EmailService con valores por defecto (configuración pendiente)
+    const emailConfig = {
+      service: 'gmail',
+      from: {
+        name: 'Lista de Compra',
+        email: process.env['EMAIL_USER'] || 'anthonymoles89@gmail.com'
+      },
+      auth: {
+        user: process.env['EMAIL_USER'] || 'anthonymoles89@gmail.com',
+        pass: process.env['EMAIL_PASS'] || 'snci srqq feok gkpp'
+      },
+      maxRetries: parseInt(process.env['EMAIL_MAX_RETRIES'] || '3'),
+      retryDelay: parseInt(process.env['EMAIL_RETRY_DELAY'] || '1000')
+    };
+    this._emailService = new NodemailerService(emailConfig);
     
     // Configurar EventPublisher según variables de entorno
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
@@ -416,6 +437,10 @@ export class Container {
 
   public get outboxService(): IOutboxService {
     return this._outboxService;
+  }
+
+  public get emailService(): IEmailService {
+    return this._emailService;
   }
 
   public get hashGenerator(): IInvitationHashGenerator {
