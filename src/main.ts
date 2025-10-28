@@ -16,11 +16,28 @@ async function bootstrap(): Promise<void> {
     console.log('🚀 Iniciando Lista de Compra Colaborativa...');
     
     // Validar variables de entorno críticas
-    const requiredEnvVars = ['NODE_ENV', 'DATABASE_URL'];
+    const requiredEnvVars = [
+      'NODE_ENV', 
+      'DATABASE_URL',
+      'JWT_SECRET'
+    ];
+    
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
     
     if (missingVars.length > 0) {
       throw new Error(`Variables de entorno faltantes: ${missingVars.join(', ')}`);
+    }
+
+    // Validar JWT_SECRET específicamente
+    const jwtSecret = process.env['JWT_SECRET'];
+    if (jwtSecret && jwtSecret.length < 32) {
+      throw new Error('JWT_SECRET debe tener al menos 32 caracteres para seguridad');
+    }
+
+    // Validar NODE_ENV
+    const validEnvironments = ['development', 'production', 'test'];
+    if (!validEnvironments.includes(process.env['NODE_ENV']!)) {
+      throw new Error(`NODE_ENV debe ser uno de: ${validEnvironments.join(', ')}`);
     }
 
     // Inicializar contenedor de dependencias
