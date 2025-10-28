@@ -1,0 +1,971 @@
+{
+  "info": {
+    "name": "Lista Compra API",
+    "description": "Colección completa de endpoints para la API de Lista de la Compra Colaborativa",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "listId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "storeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invitationHash",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Autenticación",
+      "item": [
+        {
+          "name": "Registrar Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"password\": \"MiPassword123!\",\n  \"nombre\": \"Juan\",\n  \"apellidos\": \"Pérez García\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registra un nuevo usuario en el sistema. La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 minúscula y 1 número."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.tokens) {",
+                  "        pm.collectionVariables.set('token', response.data.tokens.accessToken);",
+                  "        pm.collectionVariables.set('userId', response.data.user.id);",
+                  "        console.log('Token de acceso guardado:', response.data.tokens.accessToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"password\": \"MiPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica un usuario y devuelve tokens de acceso. El token se guarda automáticamente en las variables de colección."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Perfil Usuario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Obtiene la información del usuario autenticado actual."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"refresh_token_aqui\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Renueva un token de acceso usando el refresh token. (Pendiente de implementar)"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Cierra la sesión del usuario actual."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02. Listas de Compra",
+      "item": [
+        {
+          "name": "Crear Lista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.id) {",
+                  "        pm.collectionVariables.set('listId', response.data.id);",
+                  "        console.log('ID de lista guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Lista de la compra semanal\",\n  \"descripcion\": \"Compras para la semana del 28 de octubre\",\n  \"tiendaId\": \"{{storeId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lists",
+              "host": ["{{baseUrl}}"],
+              "path": ["lists"]
+            },
+            "description": "Crea una nueva lista de compra. Opcionalmente se puede asociar a una tienda específica."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Mis Listas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/lists?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["lists"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Obtiene todas las listas del usuario autenticado con paginación."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Lista por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/lists/{{listId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["lists", "{{listId}}"]
+            },
+            "description": "Obtiene los detalles de una lista específica por su ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Lista",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Lista de la compra semanal - Actualizada\",\n  \"descripcion\": \"Lista actualizada para incluir productos extra\",\n  \"tiendaId\": \"{{storeId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lists/{{listId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["lists", "{{listId}}"]
+            },
+            "description": "Actualiza los datos de una lista existente. Solo el propietario puede hacerlo."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Lista",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/lists/{{listId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["lists", "{{listId}}"]
+            },
+            "description": "Elimina permanentemente una lista y todos sus productos. Solo el propietario puede hacerlo."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03. Productos",
+      "item": [
+        {
+          "name": "Agregar Producto a Lista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.id) {",
+                  "        pm.collectionVariables.set('productId', response.data.id);",
+                  "        console.log('ID de producto guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Manzanas Fuji\",\n  \"descripcion\": \"Manzanas frescas para la semana\",\n  \"cantidad\": 2,\n  \"unidad\": \"kg\",\n  \"precio\": 3.50,\n  \"urgente\": false,\n  \"categoriaId\": \"{{categoryId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lists/{{listId}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["lists", "{{listId}}", "products"]
+            },
+            "description": "Agrega un nuevo producto a una lista específica."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Productos de Lista",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/lists/{{listId}}/products?comprado=false&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["lists", "{{listId}}", "products"],
+              "query": [
+                {
+                  "key": "comprado",
+                  "value": "false",
+                  "description": "Filtrar por estado de comprado"
+                },
+                {
+                  "key": "urgente",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "categoriaId",
+                  "value": "{{categoryId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "busqueda",
+                  "value": "manzana",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Obtiene todos los productos de una lista con filtros opcionales."
+          },
+          "response": []
+        },
+        {
+          "name": "Marcar Producto como Comprado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comprado\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lists/{{listId}}/products/{{productId}}/purchased",
+              "host": ["{{baseUrl}}"],
+              "path": ["lists", "{{listId}}", "products", "{{productId}}", "purchased"]
+            },
+            "description": "Marca o desmarca un producto como comprado."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Producto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Manzanas Golden - Actualizado\",\n  \"descripcion\": \"Manzanas golden en lugar de fuji\",\n  \"cantidad\": 3,\n  \"unidad\": \"kg\",\n  \"precio\": 2.80,\n  \"urgente\": true,\n  \"categoriaId\": \"{{categoryId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lists/{{listId}}/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["lists", "{{listId}}", "products", "{{productId}}"]
+            },
+            "description": "Actualiza la información de un producto existente."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Producto",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/lists/{{listId}}/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["lists", "{{listId}}", "products", "{{productId}}"]
+            },
+            "description": "Elimina un producto de la lista permanentemente."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04. Categorías",
+      "item": [
+        {
+          "name": "Crear Categoría",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.id) {",
+                  "        pm.collectionVariables.set('categoryId', response.data.id);",
+                  "        console.log('ID de categoría guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Frutas y Verduras\",\n  \"descripcion\": \"Productos frescos del huerto\",\n  \"color\": \"#4CAF50\",\n  \"icono\": \"🍎\",\n  \"tiendaId\": \"{{storeId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Crea una nueva categoría personalizada para organizar productos."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Categorías por Tienda",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories?tiendaId={{storeId}}&activas=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"],
+              "query": [
+                {
+                  "key": "tiendaId",
+                  "value": "{{storeId}}"
+                },
+                {
+                  "key": "activas",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Obtiene todas las categorías disponibles para una tienda específica."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Categoría",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Frutas y Verduras Frescas\",\n  \"descripcion\": \"Productos frescos y ecológicos\",\n  \"color\": \"#8BC34A\",\n  \"icono\": \"🥕\",\n  \"activa\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            },
+            "description": "Actualiza una categoría existente. Solo el creador puede hacerlo."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Categoría",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            },
+            "description": "Elimina una categoría. No se puede eliminar si tiene productos asociados."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05. Tiendas",
+      "item": [
+        {
+          "name": "Crear Tienda",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.id) {",
+                  "        pm.collectionVariables.set('storeId', response.data.id);",
+                  "        console.log('ID de tienda guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mercadona Centro\",\n  \"direccion\": \"Calle Principal 123, Madrid\",\n  \"telefono\": \"+34 912 345 678\",\n  \"sitioWeb\": \"https://mercadona.es\",\n  \"tipo\": \"supermercado\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/stores",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores"]
+            },
+            "description": "Crea una nueva tienda en el sistema."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Todas las Tiendas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stores?page=1&limit=20&activas=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "tipo",
+                  "value": "supermercado",
+                  "disabled": true
+                },
+                {
+                  "key": "activas",
+                  "value": "true"
+                },
+                {
+                  "key": "search",
+                  "value": "mercadona",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Obtiene la lista de todas las tiendas disponibles con filtros opcionales."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Tienda por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "{{storeId}}"]
+            },
+            "description": "Obtiene los detalles de una tienda específica."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Tienda",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mercadona Centro - Renovado\",\n  \"direccion\": \"Calle Principal 123, Madrid (entrada renovada)\",\n  \"telefono\": \"+34 912 345 679\",\n  \"sitioWeb\": \"https://mercadona.es\",\n  \"tipo\": \"supermercado\",\n  \"activa\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "{{storeId}}"]
+            },
+            "description": "Actualiza la información de una tienda existente."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Tienda",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "{{storeId}}"]
+            },
+            "description": "Elimina una tienda del sistema."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06. Invitaciones",
+      "item": [
+        {
+          "name": "Compartir Lista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.hash) {",
+                  "        pm.collectionVariables.set('invitationHash', response.data.hash);",
+                  "        console.log('Hash de invitación guardado:', response.data.hash);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invitado@ejemplo.com\",\n  \"permiso\": \"lectura-escritura\",\n  \"mensaje\": \"Te invito a colaborar en mi lista de la compra semanal\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/invitations/{{listId}}/share",
+              "host": ["{{baseUrl}}"],
+              "path": ["invitations", "{{listId}}", "share"]
+            },
+            "description": "Crea una invitación para compartir una lista con otro usuario."
+          },
+          "response": []
+        },
+        {
+          "name": "Acceder a Lista Compartida",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invitations/access/{{invitationHash}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["invitations", "access", "{{invitationHash}}"]
+            },
+            "description": "Accede a una lista compartida usando el hash de invitación. No requiere autenticación."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Invitaciones de Lista",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invitations/{{listId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["invitations", "{{listId}}"]
+            },
+            "description": "Obtiene todas las invitaciones activas de una lista. Solo el propietario puede hacerlo."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Permisos de Invitación",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permiso\": \"solo-lectura\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/invitations/{{listId}}/permissions/{{invitationHash}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["invitations", "{{listId}}", "permissions", "{{invitationHash}}"]
+            },
+            "description": "Actualiza los permisos de una invitación existente."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar Invitación",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invitations/{{listId}}/{{invitationHash}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["invitations", "{{listId}}", "{{invitationHash}}"]
+            },
+            "description": "Cancela una invitación activa, revocando el acceso inmediatamente."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07. Desarrollo y Testing",
+      "item": [
+        {
+          "name": "Info Sistema de Eventos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dev/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["dev", "events"]
+            },
+            "description": "Obtiene información sobre el estado del sistema de eventos RabbitMQ. Solo disponible en development."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Sistema de Eventos",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dev/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["dev", "events"]
+            },
+            "description": "Reinicia el sistema de eventos para testing. Solo disponible en development."
+          },
+          "response": []
+        },
+        {
+          "name": "Publicar Evento de Prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"TEST_EVENT\",\n  \"datos\": {\n    \"mensaje\": \"Evento de prueba desde Postman\",\n    \"timestamp\": \"2025-10-28T12:00:00Z\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dev/events/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["dev", "events", "test"]
+            },
+            "description": "Publica un evento de prueba para verificar el sistema de mensajería."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -671,7 +671,7 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 ### agente-documentation
 **Responsabilidad**: Documentación técnica y de API
 
-**Herramientas**: Swagger/OpenAPI, Markdown
+**Herramientas**: Swagger/OpenAPI, Markdown, Postman/Thunder Client
 
 **Tareas**:
 - Documentar todos los endpoints con OpenAPI
@@ -682,6 +682,16 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 - Documentar arquitectura en `docs/architecture.md`
 - Crear guía de setup y deployment
 - Documentar decisiones de diseño
+- **🔥 MANTENER ARCHIVOS DE TESTING**:
+  - `postman_collection.json` - Actualizar con cada nuevo endpoint
+  - `postman_environment.json` - Variables de entorno actualizadas
+  - `API_Testing_Guide.md` - Documentación de testing actualizada
+
+**⚠️ IMPORTANTE**: Cada vez que se complete una fase del proyecto, actualizar:
+1. Colección Postman con nuevos endpoints implementados
+2. Variables de entorno si se añaden nuevas
+3. Guía de testing con nuevos flujos y ejemplos
+4. Verificar que todos los endpoints funcionen correctamente
 
 **Referencias**:
 - Análisis de requisitos: `./Doc/Analisis-de-requisitos-ListaCompra.pdf`
@@ -821,6 +831,42 @@ Cada fase debe cumplir:
 
 ---
 
+## 📋 Protocolo de Mantenimiento de Testing
+
+### 🔄 **Al Completar Cada Fase**
+
+1. **Actualizar Colección Postman** (`postman_collection.json`):
+   - Añadir nuevos endpoints implementados
+   - Verificar que todos los ejemplos funcionen
+   - Actualizar scripts de automatización (Tests tab)
+   - Validar variables automáticas se guarden correctamente
+
+2. **Revisar Variables de Entorno** (`postman_environment.json`):
+   - Añadir nuevas variables si son necesarias
+   - Verificar valores por defecto actualizados
+   - Documentar nuevas variables en la guía
+
+3. **Actualizar Guía de Testing** (`API_Testing_Guide.md`):
+   - Documentar nuevos flujos de testing
+   - Añadir ejemplos específicos de la fase
+   - Actualizar troubleshooting si es necesario
+   - Verificar que los conteos de endpoints sean correctos
+
+4. **Verificación Final**:
+   - Importar colección en herramienta limpia
+   - Ejecutar flujo completo de testing
+   - Confirmar que todos los endpoints respondan correctamente
+   - Documentar cualquier endpoint pendiente de implementar
+
+### ✅ **Checklist por Fase**
+- [ ] Endpoints nuevos añadidos a colección
+- [ ] Variables actualizadas si es necesario  
+- [ ] Guía actualizada con nuevos flujos
+- [ ] Testing manual completado
+- [ ] Commit con mensaje descriptivo
+
+---
+
 ## Notas Finales
 
 - Priorizar **separación de responsabilidades** según arquitectura hexagonal
@@ -834,5 +880,6 @@ Cada fase debe cumplir:
 - Usar **Result/Either** para manejo de errores funcional
 - Mantener **inmutabilidad** en value objects
 - Aplicar **mappers** para aislar capas de persistencia
+- **🔥 Mantener archivos de testing actualizados** con cada fase completada
 
 Este roadmap está diseñado para cubrir todos los casos de uso definidos aplicando arquitectura limpia, SAGA/Outbox y buenas prácticas de desarrollo con una estructura de carpetas clara y escalable.
