@@ -14,18 +14,13 @@ const shareListSchema = z.object({
   })
 });
 
-const accessSharedListSchema = z.object({
-  body: z.object({
-    hash: z.string().min(1, 'Hash requerido')
-  })
-});
-
 const changePermissionsSchema = z.object({
   body: z.object({
     nuevoTipoPermiso: z.enum(['LECTURA', 'ESCRITURA'])
   }),
   params: z.object({
-    permisoId: z.string().uuid('ID de permiso debe ser un UUID válido')
+    listaId: z.string().uuid('ID de lista debe ser un UUID válido'),
+    targetUsuarioId: z.string().uuid('ID de usuario debe ser un UUID válido')
   })
 });
 
@@ -43,7 +38,8 @@ const listParamsSchema = z.object({
 
 const removePermissionSchema = z.object({
   params: z.object({
-    permisoId: z.string().uuid('ID de permiso debe ser un UUID válido')
+    listaId: z.string().uuid('ID de lista debe ser un UUID válido'),
+    targetUsuarioId: z.string().uuid('ID de usuario debe ser un UUID válido')
   })
 });
 
@@ -185,9 +181,9 @@ export function createInvitationRoutes(dependencies: InvitationRoutesDependencie
    *       404:
    *         description: Invitación no encontrada o expirada
    */
-  router.post(
-    '/access',
-    validationMiddleware(accessSharedListSchema),
+  // GET /:hash/access - Acceder a lista compartida con hash
+  router.get(
+    '/:hash/access',
     invitationController.accessSharedList.bind(invitationController)
   );
 
@@ -244,8 +240,9 @@ export function createInvitationRoutes(dependencies: InvitationRoutesDependencie
    *       404:
    *         description: Permiso no encontrado
    */
+  // PUT /:listaId/permissions/:targetUsuarioId - Cambiar permisos de usuario
   router.put(
-    '/permissions/:permisoId',
+    '/:listaId/permissions/:targetUsuarioId',
     validationMiddleware(changePermissionsSchema),
     invitationController.changePermissions.bind(invitationController)
   );
@@ -288,8 +285,9 @@ export function createInvitationRoutes(dependencies: InvitationRoutesDependencie
    *       404:
    *         description: Permiso no encontrado
    */
+  // DELETE /:listaId/permissions/:targetUsuarioId - Eliminar permisos de usuario
   router.delete(
-    '/permissions/:permisoId',
+    '/:listaId/permissions/:targetUsuarioId',
     validationMiddleware(removePermissionSchema),
     invitationController.removePermissions.bind(invitationController)
   );
@@ -332,8 +330,9 @@ export function createInvitationRoutes(dependencies: InvitationRoutesDependencie
    *       404:
    *         description: Invitación no encontrada
    */
+  // DELETE /:invitacionId - Cancelar invitación
   router.delete(
-    '/:invitacionId/cancel',
+    '/:invitacionId',
     validationMiddleware(invitationParamsSchema),
     invitationController.cancelInvitation.bind(invitationController)
   );
@@ -378,8 +377,9 @@ export function createInvitationRoutes(dependencies: InvitationRoutesDependencie
    *       404:
    *         description: Lista no encontrada
    */
+  // GET /:listaId/list - Obtener invitaciones de una lista  
   router.get(
-    '/:listaId',
+    '/:listaId/list',
     validationMiddleware(listParamsSchema),
     invitationController.getListInvitations.bind(invitationController)
   );
