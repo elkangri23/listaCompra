@@ -45,8 +45,7 @@ import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventP
 import { PrismaOutboxService } from '@infrastructure/messaging/outbox/PrismaOutboxService';
 import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import { NodemailerService } from '@infrastructure/external-services/email/NodemailerService';
-// import { RabbitMQConsumer } from '@infrastructure/messaging/rabbitmq/RabbitMQConsumer';
-// import { NotificationConsumer } from '@infrastructure/messaging/consumers/NotificationConsumer';
+import { WorkerService } from '@infrastructure/messaging/WorkerService';
 
 // HTTP Layer
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
@@ -92,6 +91,7 @@ export class Container {
   private _eventPublisher!: IEventPublisher;
   private _outboxService!: IOutboxService;
   private _hashGenerator!: IInvitationHashGenerator;
+  private _workerService!: WorkerService;
 
   // Use Cases
   private _registerUser!: RegisterUser;
@@ -238,6 +238,15 @@ export class Container {
       };
       console.log('🔄 EventPublisher deshabilitado');
     }
+
+    // Configurar WorkerService (consumers de RabbitMQ)
+    this._workerService = new WorkerService({
+      rabbitmqUrl,
+      enabled: rabbitmqEnabled,
+      emailService: this._emailService,
+      usuarioRepository: this._usuarioRepository,
+      listaRepository: this._listaRepository
+    });
   }
 
   private initializeUseCases(): void {
@@ -441,6 +450,10 @@ export class Container {
 
   public get emailService(): IEmailService {
     return this._emailService;
+  }
+
+  public get workerService(): WorkerService {
+    return this._workerService;
   }
 
   public get hashGenerator(): IInvitationHashGenerator {
