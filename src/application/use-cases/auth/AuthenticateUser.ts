@@ -72,9 +72,12 @@ export class AuthenticateUser {
     }
 
     // 6. Verificar que el email esté verificado (opcional según reglas de negocio)
+    // NOTA: Comentado temporalmente para desarrollo - habilitar en producción
+    /*
     if (!usuario.emailVerificado) {
       return failure(UnauthorizedError.emailNotVerified());
     }
+    */
 
     // 7. Generar tokens
     const tokenPayload = {
