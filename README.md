@@ -71,10 +71,27 @@ El proyecto es un ejercicio educativo avanzado desarrollado como parte del **Má
 
 | Documento | Descripción |
 |-----------|-------------|
-| [`./Doc/Analisis-de-requisitos-ListaCompra.pdf`](./Doc/Analisis-de-requisitos-ListaCompra.pdf) | Análisis de requisitos funcionales y no funcionales completo |
-| [`./Doc/DiagramaClases_V1-mermaid.md`](./Doc/DiagramaClases_V1-mermaid.md) | Diagrama de clases UML en formato Mermaid |
-| [`./Doc/casos-uso-completos.md`](./Doc/casos-uso-completos.md) | 33 casos de uso detallados con flujos principales y alternativos |
-| [`AGENTS-v2.md`](./AGENTS-v2.md) | Guía completa de arquitectura, roadmap y agentes de desarrollo |
+| [Analisis-de-requisitos-ListaCompra.pdf](Doc/Analisis-de-requisitos-ListaCompra.pdf) | Análisis de requisitos funcionales y no funcionales completo |
+| [DiagramaClases_V1-mermaid.md](Doc/DiagramaClases_V1-mermaid.md) | Diagrama de clases UML en formato Mermaid |
+| [casos-uso-completos.md](Doc/casos-uso-completos.md) | 33 casos de uso detallados con flujos principales y alternativos |
+| [AGENTS.md](AGENTS.md) | Guía completa de arquitectura, roadmap y agentes de desarrollo |
+| [API_Testing_Guide.md](API_Testing_Guide.md) | 🔥 **Guía de testing con Postman/Thunder Client** |
+
+## 🧪 Testing de API
+
+Para probar todos los endpoints de la API fácilmente:
+
+| Archivo | Herramienta | Descripción |
+|---------|-------------|-------------|
+| [postman_collection.json](postman_collection.json) | Postman/Thunder Client | **33+ endpoints** organizados en 7 categorías |
+| [postman_environment.json](postman_environment.json) | Postman/Thunder Client | Variables de entorno para desarrollo local |
+| [API_Testing_Guide.md](API_Testing_Guide.md) | Documentación | **Guía completa** con flujos de testing y ejemplos |
+
+### 🚀 Inicio Rápido de Testing
+1. **Importa** `postman_collection.json` en Postman/Thunder Client
+2. **Configura** el entorno con `postman_environment.json`
+3. **Sigue** la guía en [API_Testing_Guide.md](API_Testing_Guide.md)
+4. **Ejecuta** el flujo: Registro → Login → Crear Lista → Agregar Productos
 
 ---
 
@@ -434,7 +451,7 @@ El servidor estará disponible en: **http://localhost:3000**
 ├── package.json
 ├── tsconfig.json
 ├── jest.config.js
-├── AGENTS-v2.md
+├── AGENTS.md
 └── README.md
 ```
 
@@ -501,7 +518,7 @@ El sistema implementa **33 casos de uso** completos organizados en módulos:
 - ~~CU-20: Solicitar Sugerencias de IA para Categorías~~ → **Evolucionado a CU-28**
 - ~~CU-21: Analizar Hábitos de Compra~~ → **Evolucionado a CU-30**
 
-📄 **[Ver casos de uso detallados](./Doc/casos-uso-completos.md)**
+📄 **[Ver casos de uso detallados](Doc/casos-uso-completos.md)**
 
 ---
 
@@ -580,13 +597,24 @@ El proyecto se desarrolla en **13 fases + Fase Extra** a lo largo de **15+ seman
 | **Fase 13** | Semana 14 | Documentación y testing final | - | ⏳ Pendiente |
 | **Fase Extra** | Semana 15+ | **IA Avanzada - Funcionalidades Premium** | **CU-29 a CU-33** | 🚀 **FUTURO** |
 
-📄 **[Ver roadmap completo](./AGENTS.md#roadmap-de-implementación)**
+📄 **[Ver roadmap completo](AGENTS.md#roadmap-de-implementación)**
 
 ---
 
 ## 🧪 Testing
 
-### Ejecutar tests
+### 🔗 Testing de API (Postman/Thunder Client)
+
+**¡Prueba todos los endpoints fácilmente!** 
+
+**📋 Archivos disponibles**:
+- [postman_collection.json](postman_collection.json) - Colección completa (33+ endpoints)
+- [postman_environment.json](postman_environment.json) - Variables de entorno
+- [API_Testing_Guide.md](API_Testing_Guide.md) - Guía detallada de uso
+
+🚀 **Inicio rápido**: Importa la colección → Configura entorno → Sigue la guía
+
+### 🧪 Testing Automatizado
 
 ```bash
 # Todos los tests
@@ -729,7 +757,7 @@ Desarrollado como proyecto educativo del **Máster de Desarrollo con IA de Big S
 
 - 📧 Email: email-privado-eliminado@example.invalid
 - 💬 GitHub Issues: [Abrir issue](https://github.com/elkangri23/lista-compra-colaborativa/issues)
-- 📚 Documentación adicional: Ver carpeta `./docs/`
+- 📚 Documentación adicional: Ver carpeta `docs/`
 
 ---
 
