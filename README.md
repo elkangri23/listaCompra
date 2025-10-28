@@ -23,6 +23,16 @@
 - 🛠️ **MockNodemailerService**: Sistema de mocks completo para desarrollo
 - 📝 **Documentación actualizada**: PERFORMANCE_ANALYSIS.md con métricas detalladas
 
+### 📊 **Dashboard de Monitoreo Unificado (Objetivo 8/8 - Completado)**
+- 🎯 **DashboardController** - 4 endpoints REST para monitoreo completo
+- 📈 **GET /dashboard/metrics** - Métricas del sistema, endpoints y cache
+- 💚 **GET /dashboard/health** - Health checks automáticos con status
+- 🚨 **GET /dashboard/alerts** - Sistema de alertas inteligente (error rate, response time, cache)
+- ⚡ **GET /dashboard/performance** - Análisis detallado de endpoints lentos y con errores
+- 🔍 **RedisCacheAnalytics** - Análisis de hit ratios y optimización TTL
+- 📊 **MetricsCollector integrado** - Tracking de response time, throughput y success rate
+- 🧪 **8 tests dashboard + 15 tests cache** - Cobertura completa con mocks
+
 ### 🤖 **Inteligencia Artificial Implementada (Fase 9 - 100% Completada)**
 - 🧠 **Perplexity API integrada** - Categorización automática con Llama 3.1 Sonar
 - ⚡ **Redis Cache System** - TTL inteligente: 24h categorías, 1h análisis (optimización costos)
@@ -868,6 +878,14 @@ DELETE /api/categories/:id         # Eliminar categoría
 ```
 POST   /api/ai/category-suggestions  # Obtener sugerencias de categorías
 GET    /api/ai/habits-analysis       # Análisis de hábitos de compra
+```
+
+#### Dashboard de Monitoreo
+```
+GET    /api/dashboard/metrics        # Métricas completas del sistema
+GET    /api/dashboard/health         # Estado de salud de servicios
+GET    /api/dashboard/alerts         # Alertas activas del sistema
+GET    /api/dashboard/performance    # Análisis detallado de performance
 ```
 
 ---
