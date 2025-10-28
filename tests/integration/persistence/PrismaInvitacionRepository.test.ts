@@ -19,14 +19,16 @@ describe('PrismaInvitacionRepository Integration Tests', () => {
   // Helper para crear datos únicos por test
   const createTestData = async () => {
     testCounter++;
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(7);
     const usuarioId = uuidv4();
     const listaId = uuidv4();
     
     await prisma.usuario.create({
       data: {
         id: usuarioId,
-        nombre: `Test User ${testCounter}`,
-        email: `test${testCounter}@example.com`,
+        nombre: `Test User ${testCounter}-${timestamp}`,
+        email: `test-${testCounter}-${timestamp}-${randomId}@example.com`,
         password: 'hashedpassword',
         activo: true,
         emailVerificado: true
@@ -36,7 +38,7 @@ describe('PrismaInvitacionRepository Integration Tests', () => {
     await prisma.lista.create({
       data: {
         id: listaId,
-        nombre: `Lista de prueba ${testCounter}`,
+        nombre: `Lista de prueba ${testCounter}-${timestamp}`,
         propietarioId: usuarioId,
         activa: true
       }
