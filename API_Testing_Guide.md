@@ -129,7 +129,13 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 - ✅ Actualizar Permisos
 - ✅ Cancelar Invitación
 
-### 🔧 Desarrollo (3 endpoints)
+### � Dashboard de Monitoreo (4 endpoints)
+- ✅ Métricas del Sistema (`GET /dashboard/metrics`)
+- ✅ Estado de Salud (`GET /dashboard/health`)
+- ✅ Alertas Activas (`GET /dashboard/alerts`)
+- ✅ Performance Detallado (`GET /dashboard/performance`)
+
+### �🔧 Desarrollo (3 endpoints)
 - ✅ Info Sistema de Eventos
 - ✅ Reset Sistema de Eventos
 - ✅ Publicar Evento de Prueba

@@ -966,6 +966,67 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "08. Dashboard de Monitoreo",
+      "item": [
+        {
+          "name": "Métricas del Sistema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "metrics"]
+            },
+            "description": "Obtiene métricas completas del sistema: endpoints, cache y sistema."
+          },
+          "response": []
+        },
+        {
+          "name": "Estado de Salud",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "health"]
+            },
+            "description": "Obtiene el estado de salud de los servicios del sistema."
+          },
+          "response": []
+        },
+        {
+          "name": "Alertas Activas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/alerts",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "alerts"]
+            },
+            "description": "Obtiene alertas activas del sistema (error rate, response time, cache)."
+          },
+          "response": []
+        },
+        {
+          "name": "Performance Detallado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/performance",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "performance"]
+            },
+            "description": "Obtiene análisis detallado de performance: endpoints lentos y con errores."
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }
