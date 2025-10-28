@@ -3,6 +3,7 @@
  * Compone e inyecta todas las dependencias de la aplicación
  */
 
+import express from 'express';
 import { PrismaClient } from '@prisma/client';
 
 // Application Use Cases
@@ -51,6 +52,7 @@ import { ProductController } from '@infrastructure/http/controllers/ProductContr
 import { CategoryController } from '@infrastructure/http/controllers/CategoryController';
 import { StoreController } from '@infrastructure/http/controllers/StoreController';
 import { InvitationController } from '@infrastructure/http/controllers/InvitationController';
+import { createAuthMiddleware } from '@infrastructure/http/middlewares/authMiddleware';
 
 // Interfaces
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
@@ -118,6 +120,9 @@ export class Container {
   private _categoryController!: CategoryController;
   private _storeController!: StoreController;
   private _invitationController!: InvitationController;
+
+  // Middlewares
+  private _authMiddleware!: express.RequestHandler;
 
   private constructor() {
     this.initializeInfrastructure();
@@ -376,6 +381,11 @@ export class Container {
       this._managePermissions,
       this._cancelInvitation
     );
+
+    // Inicializar middleware de autenticación
+    this._authMiddleware = createAuthMiddleware({
+      tokenService: this._tokenService
+    });
   }
 
   // Getters para acceder a las dependencias
@@ -542,6 +552,10 @@ export class Container {
 
   public get invitationController(): InvitationController {
     return this._invitationController;
+  }
+
+  public get authMiddleware(): express.RequestHandler {
+    return this._authMiddleware;
   }
 
   /**
