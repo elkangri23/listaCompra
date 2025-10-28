@@ -36,7 +36,7 @@ export class ProductController {
   async addProductToList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
 
       if (!userId) {
         res.status(401).json({ success: false, error: 'Usuario no autenticado' });
@@ -79,7 +79,7 @@ export class ProductController {
   async updateProductInList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId, productId } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
 
       if (!userId) {
         res.status(401).json({ success: false, error: 'Usuario no autenticado' });
@@ -121,7 +121,7 @@ export class ProductController {
   async markProductAsPurchased(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId, productId } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
 
       if (!userId) {
         res.status(401).json({ success: false, error: 'Usuario no autenticado' });
@@ -157,7 +157,7 @@ export class ProductController {
   async deleteProductFromList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId, productId } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
 
       if (!userId) {
         res.status(401).json({ success: false, error: 'Usuario no autenticado' });
@@ -191,7 +191,7 @@ export class ProductController {
   async getProductsFromList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user?.userId;
 
       if (!userId) {
         res.status(401).json({ success: false, error: 'Usuario no autenticado' });

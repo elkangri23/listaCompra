@@ -3,7 +3,8 @@
  * Maneja las peticiones HTTP para compartir listas, acceder a listas compartidas y gestionar permisos
  */
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../types/express';
 import { ShareList } from '@application/use-cases/invitations/ShareList';
 import { AccessSharedList } from '@application/use-cases/invitations/AccessSharedList';
 import { ManagePermissions } from '@application/use-cases/invitations/ManagePermissions';
@@ -22,11 +23,11 @@ export class InvitationController {
    * POST /api/lists/:listaId/share
    * Compartir una lista creando una invitación
    */
-  async shareList(req: Request, res: Response): Promise<void> {
+  async shareList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId } = req.params;
       const { tipoPermiso, diasExpiracion } = req.body;
-      const usuarioComparteId = req.user?.id; // Asumiendo middleware de autenticación
+      const usuarioComparteId = req.user?.userId; // Asumiendo middleware de autenticación
 
       if (!listaId) {
         res.status(400).json({
@@ -73,10 +74,10 @@ export class InvitationController {
    * GET /api/invitations/:hash
    * Acceder a una lista compartida mediante hash de invitación
    */
-  async accessSharedList(req: Request, res: Response): Promise<void> {
+  async accessSharedList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { hash } = req.params;
-      const usuarioId = req.user?.id;
+      const usuarioId = req.user?.userId;
 
       if (!hash) {
         res.status(400).json({
@@ -121,11 +122,11 @@ export class InvitationController {
    * PUT /api/lists/:listaId/permissions/:targetUsuarioId
    * Cambiar permisos de un usuario sobre una lista
    */
-  async changePermissions(req: Request, res: Response): Promise<void> {
+  async changePermissions(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId, targetUsuarioId } = req.params;
       const { nuevoTipoPermiso } = req.body;
-      const adminUsuarioId = req.user?.id;
+      const adminUsuarioId = req.user?.userId;
 
       const validationError = this.validateParams({ listaId, targetUsuarioId }, adminUsuarioId);
       if (validationError) {
@@ -163,10 +164,10 @@ export class InvitationController {
    * DELETE /api/lists/:listaId/permissions/:targetUsuarioId
    * Eliminar permisos de un usuario sobre una lista
    */
-  async removePermissions(req: Request, res: Response): Promise<void> {
+  async removePermissions(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId, targetUsuarioId } = req.params;
-      const adminUsuarioId = req.user?.id;
+      const adminUsuarioId = req.user?.userId;
 
       const validationError = this.validateParams({ listaId, targetUsuarioId }, adminUsuarioId);
       if (validationError) {
@@ -203,10 +204,10 @@ export class InvitationController {
    * DELETE /api/invitations/:invitacionId
    * Cancelar una invitación
    */
-  async cancelInvitation(req: Request, res: Response): Promise<void> {
+  async cancelInvitation(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { invitacionId } = req.params;
-      const adminUsuarioId = req.user?.id;
+      const adminUsuarioId = req.user?.userId;
 
       const validationError = this.validateParams({ invitacionId }, adminUsuarioId);
       if (validationError) {
@@ -241,10 +242,10 @@ export class InvitationController {
    * GET /api/lists/:listaId/invitations
    * Obtener todas las invitaciones de una lista (solo para administradores)
    */
-  async getListInvitations(req: Request, res: Response): Promise<void> {
+  async getListInvitations(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId } = req.params;
-      const usuarioId = req.user?.id;
+      const usuarioId = req.user?.userId;
 
       if (!usuarioId) {
         res.status(401).json({
@@ -276,10 +277,10 @@ export class InvitationController {
    * GET /api/lists/:listaId/permissions
    * Obtener todos los permisos de una lista (solo para administradores)
    */
-  async getListPermissions(req: Request, res: Response): Promise<void> {
+  async getListPermissions(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId } = req.params;
-      const usuarioId = req.user?.id;
+      const usuarioId = req.user?.userId;
 
       if (!usuarioId) {
         res.status(401).json({
@@ -370,18 +371,5 @@ export class InvitationController {
     }
 
     return null;
-  }
-}
-
-// Tipos para el middleware de autenticación (esto debería estar en types.ts)
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        email: string;
-        rol: string;
-      };
-    }
   }
 }
