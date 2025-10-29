@@ -10,13 +10,16 @@ import { corsConfig, corsSecurityHeaders } from '../config/cors.config';
 import { errorMiddleware, notFoundMiddleware, requestIdMiddleware, httpLoggerMiddleware } from './middlewares/errorMiddleware';
 import type { AuthController } from './controllers/AuthController';
 import type { InvitationController } from './controllers/InvitationController';
+import type { AdminController } from './controllers/AdminController';
 import { createAuthRoutes } from './routes/authRoutes';
 import { createInvitationRoutes } from './routes/invitationRoutes';
+import { createAdminRoutes } from './routes/adminRoutes';
 import { devRoutes } from './routes/devRoutes';
 
 export interface ServerDependencies {
   authController: AuthController;
   invitationController: InvitationController;
+  adminController: AdminController;
   authMiddleware: express.RequestHandler;
 }
 
@@ -111,6 +114,11 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
     invitationController: dependencies.invitationController,
     authMiddleware: dependencies.authMiddleware
   }));
+  app.use('/api/v1/admin', createAdminRoutes(
+    dependencies.adminController,
+    dependencies.authMiddleware,
+    dependencies.authMiddleware // Por ahora usar authMiddleware en lugar de adminMiddleware
+  ));
   
   // Rutas de desarrollo (solo en development)
   app.use('/api/v1/dev', devRoutes);

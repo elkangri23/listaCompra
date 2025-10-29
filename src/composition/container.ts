@@ -30,6 +30,8 @@ import { ShareList } from '@application/use-cases/invitations/ShareList';
 import { AccessSharedList } from '@application/use-cases/invitations/AccessSharedList';
 import { ManagePermissions } from '@application/use-cases/invitations/ManagePermissions';
 import { CancelInvitation } from '@application/use-cases/invitations/CancelInvitation';
+import { ImpersonateUser } from '@application/use-cases/admin/ImpersonateUser';
+import { EndImpersonation } from '@application/use-cases/admin/EndImpersonation';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
@@ -56,6 +58,7 @@ import { ProductController } from '@infrastructure/http/controllers/ProductContr
 import { CategoryController } from '@infrastructure/http/controllers/CategoryController';
 import { StoreController } from '@infrastructure/http/controllers/StoreController';
 import { InvitationController } from '@infrastructure/http/controllers/InvitationController';
+import { AdminController } from '@infrastructure/http/controllers/AdminController';
 import { createAuthMiddleware } from '@infrastructure/http/middlewares/authMiddleware';
 
 // Interfaces
@@ -121,6 +124,8 @@ export class Container {
   private _accessSharedList!: AccessSharedList;
   private _managePermissions!: ManagePermissions;
   private _cancelInvitation!: CancelInvitation;
+  private _impersonateUser!: ImpersonateUser;
+  private _endImpersonation!: EndImpersonation;
 
   // Controllers
   private _authController!: AuthController;
@@ -129,6 +134,7 @@ export class Container {
   private _categoryController!: CategoryController;
   private _storeController!: StoreController;
   private _invitationController!: InvitationController;
+  private _adminController!: AdminController;
 
   // Middlewares
   private _authMiddleware!: express.RequestHandler;
@@ -394,6 +400,16 @@ export class Container {
       this._invitacionRepository,
       this._permisoRepository
     );
+
+    this._impersonateUser = new ImpersonateUser(
+      this._usuarioRepository,
+      this._tokenService
+    );
+
+    this._endImpersonation = new EndImpersonation(
+      this._usuarioRepository,
+      this._tokenService
+    );
   }
 
   private initializeControllers(): void {
@@ -436,6 +452,11 @@ export class Container {
       this._accessSharedList,
       this._managePermissions,
       this._cancelInvitation
+    );
+
+    this._adminController = new AdminController(
+      this._impersonateUser,
+      this._endImpersonation
     );
 
     // Inicializar middleware de autenticación
@@ -620,6 +641,10 @@ export class Container {
 
   public get invitationController(): InvitationController {
     return this._invitationController;
+  }
+
+  public get adminController(): AdminController {
+    return this._adminController;
   }
 
   public get authMiddleware(): express.RequestHandler {
