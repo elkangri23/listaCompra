@@ -5,7 +5,7 @@
 import express, { type Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { globalRateLimit } from './middlewares/rateLimitMiddleware';
+import { apiRateLimit } from './middlewares/rateLimitMiddleware';
 import { corsConfig, corsSecurityHeaders } from '../config/cors.config';
 import { errorMiddleware, notFoundMiddleware, requestIdMiddleware, httpLoggerMiddleware } from './middlewares/errorMiddleware';
 import type { AuthController } from './controllers/AuthController';
@@ -68,7 +68,7 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
   }));
 
   // 📊 Rate limiting global (protección DDoS)
-  app.use(globalRateLimit);
+  app.use(apiRateLimit);
   
   // 🌐 CORS estricto
   app.use(cors(corsConfig));

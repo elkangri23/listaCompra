@@ -46,9 +46,25 @@ const getAIConfig = (): PerplexityConfig => {
     }
   };
 
-  // Validaciones
+  // Validaciones robustas de seguridad
   if (!config.apiKey) {
     throw new Error('PERPLEXITY_API_KEY es requerido para usar servicios de IA');
+  }
+
+  // Validación de formato de API key (debe ser un string válido de longitud suficiente)
+  if (typeof config.apiKey !== 'string' || config.apiKey.length < 32) {
+    throw new Error('PERPLEXITY_API_KEY parece inválida - debe ser una cadena de al menos 32 caracteres');
+  }
+
+  // Validación que no sea una key por defecto o de ejemplo
+  const invalidKeys = ['default-key', 'your-api-key', 'example-key', 'test-key'];
+  if (invalidKeys.includes(config.apiKey.toLowerCase())) {
+    throw new Error('PERPLEXITY_API_KEY no puede ser un valor de ejemplo - configura una API key válida');
+  }
+
+  // Validación que tenga formato de API key de Perplexity (comienza con 'pplx-')
+  if (!config.apiKey.startsWith('pplx-')) {
+    throw new Error('PERPLEXITY_API_KEY debe comenzar con "pplx-" para ser válida');
   }
 
   if (config.temperature < 0 || config.temperature > 1) {

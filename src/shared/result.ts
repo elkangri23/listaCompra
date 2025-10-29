@@ -14,6 +14,15 @@ export class Success<T> {
   static create<T>(value: T): Success<T> {
     return new Success(value);
   }
+
+  // Métodos de compatibilidad
+  getValue(): T {
+    return this.value;
+  }
+
+  getError(): never {
+    throw new Error('Success result has no error');
+  }
 }
 
 export class Failure<E> {
@@ -24,6 +33,15 @@ export class Failure<E> {
 
   static create<E>(error: E): Failure<E> {
     return new Failure(error);
+  }
+
+  // Métodos de compatibilidad
+  getValue(): never {
+    throw new Error('Failure result has no value');
+  }
+
+  getError(): E {
+    return this.error;
   }
 }
 

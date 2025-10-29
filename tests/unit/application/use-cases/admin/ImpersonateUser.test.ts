@@ -37,7 +37,9 @@ describe('ImpersonateUser', () => {
       password: 'hashedPassword123',
       nombre: 'Admin',
       apellidos: 'Test',
-      rol: RolUsuario.ADMIN
+      rol: RolUsuario.ADMIN,
+      activo: true,
+      emailVerificado: true
     });
 
     const userResult = Usuario.create({
@@ -45,7 +47,9 @@ describe('ImpersonateUser', () => {
       password: 'hashedPassword456',
       nombre: 'Usuario',
       apellidos: 'Normal',
-      rol: RolUsuario.USUARIO
+      rol: RolUsuario.USUARIO,
+      activo: true,
+      emailVerificado: true
     });
 
     const anotherAdminResult = Usuario.create({
@@ -53,12 +57,14 @@ describe('ImpersonateUser', () => {
       password: 'hashedPassword789',
       nombre: 'Admin2',
       apellidos: 'Test',
-      rol: RolUsuario.ADMIN
+      rol: RolUsuario.ADMIN,
+      activo: true,
+      emailVerificado: true
     });
 
     if (!adminResult.isSuccess || !userResult.isSuccess || !anotherAdminResult.isSuccess) {
       console.log('Admin result:', adminResult);
-      console.log('User result:', userResult);
+      console.log('User result:', userResult);  
       console.log('Another admin result:', anotherAdminResult);
       throw new Error('Error creando usuarios de prueba');
     }

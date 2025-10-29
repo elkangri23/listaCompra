@@ -1,10 +1,19 @@
 /**
- * Middleware de Rate Limiting granular por endpoint
+ * Middleware de Rate Limiting granular por endpoint con soporte para usuarios
  * Protege contra ataques de fuerza bruta y DDoS
  */
 
 import rateLimit from 'express-rate-limit';
 import type { Request, Response } from 'express';
+
+// Interface para requests autenticados
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    rol: string;
+  };
+}
 
 /**
  * Rate limiter estricto para endpoints de autenticación
@@ -123,29 +132,91 @@ export const sensitiveRateLimit = rateLimit({
 });
 
 /**
- * Rate limiter global para toda la aplicación
- * Protección base contra DDoS
+ * Rate limiter específico para endpoints de IA
+ * Control granular por usuario individual para evitar abuso de costos
  */
-export const globalRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 1000, // máximo 1000 requests por IP por ventana
+export const aiRateLimitPerUser = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 20, // 20 requests por usuario por hora
   message: {
     success: false,
-    error: 'RATE_LIMIT_EXCEEDED',
-    message: 'Demasiadas peticiones desde esta IP. Intenta de nuevo más tarde.',
-    retryAfter: '15 minutos'
+    error: 'AI_RATE_LIMIT_EXCEEDED',
+    message: 'Límite de uso de IA excedido. Intenta de nuevo en una hora.',
+    retryAfter: '1 hora'
   },
   standardHeaders: true,
   legacyHeaders: false,
+  
+  // Key generator por usuario (si está autenticado) o IP (si no)
+  keyGenerator: (req: AuthenticatedRequest): string => {
+    const userReq = req as AuthenticatedRequest;
+    if (userReq.user?.id) {
+      return `ai-user:${userReq.user.id}`;
+    }
+    // Fallback a IP si no hay usuario autenticado
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    return `ai-ip:${ip}`;
+  },
 
-  handler: (req: Request, res: Response) => {
-    console.error(`🚨 Global rate limit exceeded - Posible DDoS - IP: ${req.ip}, UA: ${req.get('User-Agent')}`);
+  handler: (req: AuthenticatedRequest, res: Response) => {
+    const userReq = req as AuthenticatedRequest;
+    const identifier = userReq.user?.id ? `User: ${userReq.user.id}` : `IP: ${req.ip}`;
+    
+    console.warn(`🤖 AI Rate limit exceeded - ${identifier}, Endpoint: ${req.path}`);
+    
     res.status(429).json({
       success: false,
-      error: 'RATE_LIMIT_EXCEEDED',
-      message: 'Demasiadas peticiones desde esta IP. Intenta de nuevo más tarde.',
+      error: 'AI_RATE_LIMIT_EXCEEDED',
+      message: 'Límite de uso de IA excedido por usuario. Intenta de nuevo en una hora.',
       timestamp: new Date().toISOString(),
-      retryAfter: 900
+      retryAfter: 3600, // 1 hora
+      userId: userReq.user?.id || null
+    });
+  },
+
+  skip: (_req: Request) => {
+    return process.env['NODE_ENV'] === 'test';
+  }
+});
+
+/**
+ * Rate limiter más estricto para endpoints de IA costosos
+ * Para operaciones que consumen muchos tokens
+ */
+export const aiRateLimitStrict = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 horas
+  max: 50, // 50 requests por usuario por día
+  message: {
+    success: false,
+    error: 'AI_DAILY_LIMIT_EXCEEDED',
+    message: 'Límite diario de IA excedido. Intenta de nuevo mañana.',
+    retryAfter: '24 horas'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  
+  keyGenerator: (req: AuthenticatedRequest): string => {
+    const userReq = req as AuthenticatedRequest;
+    if (userReq.user?.id) {
+      return `ai-daily:${userReq.user.id}`;
+    }
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    return `ai-daily-ip:${ip}`;
+  },
+
+  handler: (req: AuthenticatedRequest, res: Response) => {
+    const userReq = req as AuthenticatedRequest;
+    const identifier = userReq.user?.id ? `User: ${userReq.user.id}` : `IP: ${req.ip}`;
+    
+    console.warn(`🚨 AI Daily limit exceeded - ${identifier}, Endpoint: ${req.path}`);
+    
+    res.status(429).json({
+      success: false,
+      error: 'AI_DAILY_LIMIT_EXCEEDED',
+      message: 'Límite diario de IA excedido. Intenta de nuevo mañana.',
+      timestamp: new Date().toISOString(),
+      retryAfter: 86400, // 24 horas
+      userId: userReq.user?.id || null
     });
   },
 
