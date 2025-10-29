@@ -98,6 +98,18 @@
 - ⚙️ **Integración completa** - DI Container, rutas, validaciones y DTOs
 - 🎯 **Límites de negocio** - Máximo 50 blueprints activos por usuario
 
+### 🎉 **Listas Inteligentes por Ocasión - NUEVA FUNCIONALIDAD (29 Oct 2025)** ✅
+- 🤖 **CU-32 Implementado** - Generación automática de listas completas con IA para ocasiones específicas
+- 🎯 **20 Ocasiones Predefinidas** - "Barbacoa familiar", "Cena romántica", "Cumpleaños infantil", etc.
+- 📊 **Parámetros Inteligentes** - Número de personas, presupuesto, restricciones dietéticas
+- 🧠 **Prompt Engineering** - IA optimizada para generar productos realistas con cantidades exactas
+- 💰 **Estimación de Costos** - Cálculo automático de presupuesto total estimado
+- 🏷️ **Categorización Automática** - Productos organizados por categorías de tienda
+- ✨ **APIs REST Completas** - 3 endpoints: ocasiones predefinidas, generación y vista previa
+- 📖 **Documentación Swagger** - Especificaciones completas con ejemplos interactivos
+- 🛡️ **Validaciones Robustas** - Input sanitization y manejo de errores de IA
+- 🔧 **Integración Completa** - PerplexityService + Container DI + logging empresarial
+
 ### 🏗️ **Sistema de Notificaciones (Fase 8)**
 - 🔥 **300+ tests pasando** (97% success rate en funcionalidades core + seguridad)
 - 📧 **Sistema de Email implementado** con arquitectura puerto-adaptador
@@ -216,12 +228,12 @@ Para probar todos los endpoints de la API fácilmente:
   - Integración con **Perplexity AI** (modelo Llama 3.1 Sonar)
   - Cache inteligente para optimizar costos
 
-#### **Fase Extra: IA Avanzada - Funcionalidades Premium** 🚀 **FUTURO**
-- 🔄 **CU-29: Categorización Masiva Inteligente** - Procesamiento por lotes
-- 📊 **CU-30: Análisis de Hábitos de Compra** - Dashboard con insights
-- 🚨 **CU-31: Alertas Proactivas de Precios** - Monitoreo automático
-- 🎪 **CU-32: Listas por Ocasión** - "Barbacoa familiar", "Cena romántica"
-- 🤝 **CU-33: Recomendaciones Contextuales** - Productos complementarios
+#### **Fase Extra: IA Avanzada - Funcionalidades Premium** � **EN CURSO**
+- 🔄 **CU-29: Categorización Masiva Inteligente** - Procesamiento por lotes ⏳ **PRÓXIMO**
+- 📊 **CU-30: Análisis de Hábitos de Compra** - Dashboard con insights 🚀 **FUTURO**
+- 🚨 **CU-31: Alertas Proactivas de Precios** - Monitoreo automático 🚀 **FUTURO**
+- ✅ **CU-32: Listas por Ocasión** - "Barbacoa familiar", "Cena romántica" **COMPLETADO (29 Oct)**
+- 🤝 **CU-33: Recomendaciones Contextuales** - Productos complementarios ⏳ **PRÓXIMO**
 
 #### **Configuración IA**
 - 🔑 **API Key**: Perplexity configurada
@@ -745,8 +757,9 @@ El sistema implementa **33 casos de uso** completos organizados en módulos:
 | **Fase 11** | ✅ **COMPLETADA** | Funcionalidades de administrador | CU-24, CU-25 |
 | **Fase 12** | ✅ **COMPLETADA** | Validación y seguridad | CU-27 |
 | **Fase 13** | ✅ **COMPLETADA** | Documentación y testing final | OpenAPI/Swagger |
+| **Fase 14** | ✅ **COMPLETADA** | IA Premium - Listas por Ocasión | CU-32 |
 
-**Progreso:** 11/13 fases completadas **(85%)**  
+**Progreso:** 14/15 fases completadas **(93%)**  
 **Tests:** 199+ pasando **(100% core features)**  
 **Arquitectura:** Hexagonal implementada ✅  
 **Eventos:** Sistema robusto con Outbox pattern ✅  
@@ -802,7 +815,8 @@ El proyecto se desarrolla en **13 fases + Fase Extra** a lo largo de **15+ seman
 | **Fase 11** | Semana 12 | Funcionalidades de administrador | CU-24, CU-25 | ✅ **COMPLETADO** |
 | **Fase 12** | Semana 13 | **Validación y seguridad** | **CU-27** | ✅ **COMPLETADO** |
 | **Fase 13** | Semana 14 | Documentación y testing final | OpenAPI/Swagger | ✅ **COMPLETADA** |
-| **Fase Extra** | Semana 15+ | **IA Avanzada - Funcionalidades Premium** | **CU-29 a CU-33** | 🚀 **FUTURO** |
+| **Fase 14** | Semana 15 | **IA Premium - Listas por Ocasión** | **CU-32** | ✅ **COMPLETADA** |
+| **Fase Extra** | Semana 16+ | **IA Avanzada - Funcionalidades Premium** | **CU-29, CU-30, CU-31, CU-33** | 🚀 **FUTURO** |
 
 📄 **[Ver roadmap completo](AGENTS.md#roadmap-de-implementación)**
 

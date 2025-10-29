@@ -83,6 +83,13 @@ export interface IAIService {
   ): Promise<ProductRecommendation[]>;
 
   /**
+   * Genera una lista de productos para una ocasión específica
+   * @param prompt Prompt detallado con la ocasión, personas, restricciones, etc.
+   * @returns Respuesta de IA con productos sugeridos en formato JSON
+   */
+  generateOccasionList(prompt: string): Promise<string>;
+
+  /**
    * Análisis genérico de IA con prompt personalizado
    * @param request Solicitud de análisis con prompt y contexto
    * @returns Respuesta del modelo de IA

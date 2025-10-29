@@ -116,6 +116,13 @@ export class CachedAIService implements IAIService {
   }
 
   /**
+   * Genera lista de productos para una ocasión específica
+   */
+  async generateOccasionList(prompt: string): Promise<string> {
+    return await this.perplexityService.generateOccasionList(prompt);
+  }
+
+  /**
    * Verifica disponibilidad del servicio
    */
   async isAvailable(): Promise<boolean> {
