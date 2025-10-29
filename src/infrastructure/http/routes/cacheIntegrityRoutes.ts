@@ -1,7 +1,5 @@
 import { Router } from 'express';
 import { CacheIntegrityController } from '../controllers/CacheIntegrityController';
-import { createAuthMiddleware } from '../middlewares/authMiddleware';
-import { requireAdmin } from '../middlewares/roleMiddleware';
 import { apiRateLimit } from '../middlewares/rateLimitMiddleware';
 
 /**

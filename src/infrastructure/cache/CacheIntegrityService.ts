@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { Result, success, failure, isSuccess, isFailure } from '../../shared/result';
+import { Result, success, failure } from '../../shared/result';
 import { Logger } from '../observability/logger/Logger';
 import { SecurityAuditService } from '../observability/audit/SecurityAuditService';
 
@@ -205,7 +205,7 @@ export class CacheIntegrityService {
       if (!config?.enabled) {
         // Si no está habilitado, recuperar normalmente
         const data = await redisClient.get(key);
-        return data ? Result.success(JSON.parse(data)) : Result.failure(new Error('Key not found'));
+        return data ? success(JSON.parse(data)) : failure(new Error('Key not found'));
       }
 
       // Recuperar datos y metadata
@@ -218,14 +218,14 @@ export class CacheIntegrityService {
       const [dataResult, checksumResult, metadataResult] = results;
 
       if (!dataResult[1]) {
-        return Result.failure(new Error('Key not found'));
+        return failure(new Error('Key not found'));
       }
 
       const data = JSON.parse(dataResult[1]);
       
       // Si no se requiere validación en lectura, devolver datos
       if (!config.validateOnRead) {
-        return Result.success(data);
+        return success(data);
       }
 
       const storedChecksum = checksumResult[1];
@@ -244,7 +244,7 @@ export class CacheIntegrityService {
           }
         );
 
-        return Result.success(data); // Permitir acceso pero registrar
+        return success(data); // Permitir acceso pero registrar
       }
 
       // Validar integridad
@@ -277,11 +277,11 @@ export class CacheIntegrityService {
         );
 
         if (config.criticalData || validation.corruptionLevel === 'CRITICAL') {
-          return Result.failure(new Error('Data integrity compromised'));
+          return failure(new Error('Data integrity compromised'));
         }
       }
 
-      return Result.success(data);
+      return success(data);
 
     } catch (error) {
       this.logger.error('Error al recuperar datos con integridad', {
@@ -290,7 +290,7 @@ export class CacheIntegrityService {
         error: error instanceof Error ? error.message : String(error)
       });
 
-      return Result.failure(
+      return failure(
         error instanceof Error ? error : new Error('Error recuperando datos con integridad')
       );
     }
@@ -376,7 +376,7 @@ export class CacheIntegrityService {
         
         const result = await this.retrieveWithIntegrity(redisClient, key, keyDataType);
         
-        if (result.isFailure()) {
+        if (!result.isSuccess) {
           results.push({
             isValid: false,
             dataType: keyDataType,
