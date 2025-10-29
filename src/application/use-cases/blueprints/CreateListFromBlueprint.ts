@@ -97,17 +97,12 @@ export class CreateListFromBlueprint {
     const blueprint = blueprintResult.value;
 
     // 3. Verificar permisos (solo el propietario puede usar el blueprint)
-    if (!blueprint.perteneceAUsuario(usuarioId)) {
+    if (blueprint.creadoPorId !== usuarioId) {
       return failure(new UnauthorizedError('No tienes permisos para usar este blueprint'));
     }
 
-    // 4. Verificar que el blueprint esté activo
-    if (!blueprint.activo) {
-      return failure(new BusinessRuleViolationError('No se puede usar un blueprint inactivo', 'BLUEPRINT_INACTIVE'));
-    }
-
-    // 5. Verificar que el blueprint no esté vacío
-    if (blueprint.estaVacia()) {
+    // 4. Verificar que el blueprint no esté vacío
+    if (blueprint.productos.length === 0) {
       return failure(new BusinessRuleViolationError('No se puede crear una lista desde un blueprint vacío', 'BLUEPRINT_EMPTY'));
     }
 
@@ -125,14 +120,24 @@ export class CreateListFromBlueprint {
       ));
     }
 
-    // 7. Crear la nueva lista
-    const listaResult = Lista.create({
+    // 6. Crear la nueva lista
+    const listaProps: any = {
       nombre: dto.nombreLista,
-      descripcion: dto.descripcionLista || undefined,
       propietarioId: usuarioId,
-      tiendaId: dto.tiendaId || undefined,
       activa: true
-    });
+    };
+
+    // Solo agregar descripción si existe
+    if (dto.descripcionLista) {
+      listaProps.descripcion = dto.descripcionLista;
+    }
+
+    // Solo agregar tiendaId si existe
+    if (dto.tiendaId) {
+      listaProps.tiendaId = dto.tiendaId;
+    }
+
+    const listaResult = Lista.create(listaProps);
 
     if (listaResult.isFailure) {
       return failure(listaResult.error);
@@ -151,15 +156,25 @@ export class CreateListFromBlueprint {
     const productosConError: string[] = [];
 
     for (const productoPlantilla of blueprint.productos) {
-      const productoResult = Producto.create({
+      const productoProps: any = {
         nombre: productoPlantilla.nombre,
-        descripcion: productoPlantilla.descripcion || undefined,
         cantidad: productoPlantilla.cantidad,
         listaId: lista.id,
-        categoriaId: productoPlantilla.categoriaId || undefined,
-        urgente: productoPlantilla.urgente,
-        creadoPorId: usuarioId
-      });
+        creadoPorId: usuarioId,
+        urgente: false
+      };
+
+      // Solo agregar descripcion si existe
+      if (productoPlantilla.notas) {
+        productoProps.descripcion = productoPlantilla.notas;
+      }
+
+      // Solo agregar categoriaId si existe
+      if (productoPlantilla.categoriaId) {
+        productoProps.categoriaId = productoPlantilla.categoriaId;
+      }
+
+      const productoResult = Producto.create(productoProps);
 
       if (productoResult.isFailure) {
         productosConError.push(`${productoPlantilla.nombre}: ${productoResult.error.message}`);

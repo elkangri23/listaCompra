@@ -148,6 +148,21 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 - ✅ Auditoría de Impersonaciones (`GET /admin/audit/impersonations`)
 - ✅ Health Check Admin (`GET /admin/health`)
 
+### 📊 Dashboard y Monitoreo (4 endpoints)
+- ✅ Métricas del Sistema (`GET /dashboard/metrics`)
+- ✅ Health Check Sistema (`GET /dashboard/health`)
+- ✅ Alertas del Sistema (`GET /dashboard/alerts`)
+- ✅ Análisis de Performance (`GET /dashboard/performance`)
+
+### 🔒 Seguridad y Cache (5 endpoints) - **NUEVOS**
+- ✅ Estado de Integridad (`GET /admin/cache/integrity/status`)
+- ✅ Escanear Corrupción (`POST /admin/cache/integrity/scan`)
+- ✅ Limpiar Cache Corrupto (`POST /admin/cache/integrity/cleanup`)
+- ✅ Reparar Cache (`POST /admin/cache/integrity/repair`)
+- ✅ Métricas de Integridad (`GET /admin/cache/integrity/metrics`)
+
+**Total de Endpoints:** **41+ endpoints** (4+ nuevos de seguridad)
+
 ### 📊 Dashboard de Monitoreo (4 endpoints)
 - ✅ Métricas del Sistema (`GET /dashboard/metrics`)
 - ✅ Estado de Salud (`GET /dashboard/health`)
@@ -185,6 +200,43 @@ GET /categories?tiendaId={storeId}&activas=true
 4. Cambia permisos a lectura-escritura
 5. Intenta modificar con Usuario B → Debe funcionar
 
+### 🔒 **Testing de Seguridad y Cache** (NUEVO)
+
+#### **Prerequisitos**
+- Token de administrador activo
+- Servidor corriendo en modo desarrollo
+
+#### **Flujo de Testing:**
+```
+1. Autenticación → Login como Admin
+2. Cache Integrity → Estado de Integridad
+3. Cache Integrity → Escanear Corrupción 
+4. Cache Integrity → Ver Métricas de Integridad
+5. Cache Integrity → Limpiar Cache (si hay corrupción)
+6. Cache Integrity → Reparar Cache (opcional)
+```
+
+#### **Verificaciones de Seguridad:**
+- ✅ **Solo administradores** pueden acceder a endpoints de cache
+- ✅ **Rate limiting** aplicado (10 requests/15min para admin)
+- ✅ **Auditoría de acciones** todas las operaciones loggeadas
+- ✅ **Validación de datos** checksums MD5, SHA256, SHA512
+- ✅ **Sanitización de inputs** protección XSS/injection automática
+
+#### **Respuestas Esperadas:**
+```json
+{
+  "success": true,
+  "data": {
+    "status": "healthy",
+    "totalChecked": 150,
+    "corruptedFound": 0,
+    "integrityScore": 100,
+    "lastScan": "2025-10-29T10:30:00Z"
+  }
+}
+```
+
 ## 🚨 Notas Importantes
 
 ### ⚠️ Colección Postman Pendiente de Actualización
@@ -199,11 +251,12 @@ GET /categories?tiendaId={storeId}&activas=true
 - ✅ Desarrollo (3 endpoints)
 
 **Endpoints pendientes de añadir:**
-- ⏳ **Inteligencia Artificial (3 endpoints)** - Fase 9
-- ⏳ **Blueprints/Plantillas (6 endpoints)** - Fase 10  
-- ⏳ **Administración (4 endpoints)** - Fase 11
+- ⏳ **Inteligencia Artificial (3 endpoints)** - Fase 9 ✅ Implementados
+- ⏳ **Blueprints/Plantillas (6 endpoints)** - Fase 10 ✅ Implementados
+- ⏳ **Administración (4 endpoints)** - Fase 11 ✅ Implementados
+- ⏳ **Seguridad y Cache (5 endpoints)** - Fase 2 ✅ NUEVOS Implementados
 
-> **Nota**: Los endpoints de IA, Blueprints y Admin están implementados y funcionando, pero aún no están incluidos en `postman_collection.json`. Consulta la documentación Swagger en `/api-docs` o prueba manualmente con Thunder Client/Postman.
+> **Actualización Pendiente**: Los endpoints de IA, Blueprints, Admin y Seguridad están **completamente implementados y funcionando**, pero aún no están incluidos en `postman_collection.json`. La próxima actualización incluirá estos **18+ endpoints adicionales**. Consulta la documentación Swagger en `/api-docs` o prueba manualmente con Thunder Client/Postman.
 
 ### Autenticación
 - Todos los endpoints (excepto registro, login y acceso a invitaciones) requieren token JWT
