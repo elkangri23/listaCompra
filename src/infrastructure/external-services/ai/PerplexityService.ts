@@ -243,6 +243,65 @@ export class PerplexityService implements IAIService {
   }
 
   /**
+   * Genera lista de productos para una ocasión específica (CU-32) - SECURIZADO
+   */
+  async generateOccasionList(prompt: string): Promise<string> {
+    try {
+      this.logger.ai('Generando lista por ocasión', { 
+        promptLength: prompt.length 
+      });
+
+      // 🛡️ SECURIZACIÓN DE INPUT
+      const sanitizedPrompt = AISecurityUtils.sanitizeUserInput(prompt, 3000);
+      
+      if (!sanitizedPrompt || sanitizedPrompt === '[INVALID_INPUT]') {
+        throw new Error('Prompt inválido después de sanitización');
+      }
+
+      // Construir prompt seguro para generación de listas
+      const systemPrompt = `Eres un experto asistente de cocina y compras que genera listas de compra realistas y completas.
+
+REGLAS ESTRICTAS:
+1. Responde ÚNICAMENTE con un JSON válido
+2. No incluyas texto adicional fuera del JSON
+3. Genera productos realistas y apropiados para la ocasión
+4. Incluye cantidades exactas considerando el número de personas
+5. Asigna categorías lógicas (Carnes, Verduras, Lácteos, etc.)
+6. Proporciona precios estimados aproximados en euros
+7. Prioriza productos: 1=esencial, 2=importante, 3=opcional
+8. Da razones claras para cada producto`;
+
+      const securePrompt = AISecurityUtils.buildSecurePrompt(
+        systemPrompt,
+        sanitizedPrompt
+      );
+
+      const response = await this.callPerplexityAPI(
+        securePrompt.system,
+        securePrompt.user,
+        0.3, // Temperatura baja para respuestas más consistentes
+        1500 // Tokens suficientes para lista completa
+      );
+
+      // Sanitizar la respuesta antes de devolverla
+      const sanitizedResponse = AISecurityUtils.sanitizeUserInput(response.content, 5000);
+      
+      this.logger.ai('Lista por ocasión generada exitosamente', {
+        responseLength: sanitizedResponse.length,
+        hasValidJSON: this.isValidJSON(sanitizedResponse)
+      });
+
+      return sanitizedResponse;
+
+    } catch (error) {
+      this.logger.error('Error generando lista por ocasión', error as Error);
+      
+      // Fallback con lista básica
+      return this.generateFallbackOccasionList();
+    }
+  }
+
+  /**
    * Análisis genérico con IA (SECURIZADO)
    */
   async analyzeWithAI(request: AIAnalysisRequest): Promise<AIAnalysisResponse> {
@@ -578,5 +637,57 @@ Proporciona insights sobre frecuencia, patrones y recomendaciones.`;
       confidence: 0.6,
       priority: 'medium'
     }];
+  }
+
+  /**
+   * Verifica si una cadena contiene JSON válido
+   */
+  private isValidJSON(str: string): boolean {
+    try {
+      JSON.parse(str);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Genera lista de fallback básica cuando falla la IA
+   */
+  private generateFallbackOccasionList(): string {
+    return JSON.stringify({
+      products: [
+        {
+          name: "Pan",
+          quantity: 1,
+          unit: "unidades",
+          category: "Panadería",
+          estimatedPrice: 1.5,
+          priority: 1,
+          reason: "Producto básico para cualquier ocasión",
+          alternatives: ["Pan integral", "Pan de molde"]
+        },
+        {
+          name: "Agua",
+          quantity: 2,
+          unit: "litros",
+          category: "Bebidas",
+          estimatedPrice: 1.0,
+          priority: 1,
+          reason: "Hidratación esencial",
+          alternatives: ["Agua con gas", "Agua mineral"]
+        },
+        {
+          name: "Fruta variada",
+          quantity: 1,
+          unit: "kg",
+          category: "Frutas",
+          estimatedPrice: 3.0,
+          priority: 2,
+          reason: "Opción saludable y versátil",
+          alternatives: ["Manzanas", "Plátanos", "Naranjas"]
+        }
+      ]
+    });
   }
 }
