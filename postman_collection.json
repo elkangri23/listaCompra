@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Lista Compra API",
-    "description": "Colección completa de endpoints para la API de Lista de la Compra Colaborativa",
-    "version": "1.0.0",
+    "description": "Colección completa de endpoints para la API de Lista de la Compra Colaborativa - 36 endpoints organizados en 9 categorías",
+    "version": "1.1.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -968,7 +968,89 @@
       ]
     },
     {
-      "name": "08. Dashboard de Monitoreo",
+      "name": "08. Inteligencia Artificial",
+      "item": [
+        {
+          "name": "Obtener Ocasiones Disponibles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/occasion-lists/occasions",
+              "host": ["{{baseUrl}}"],
+              "path": ["occasion-lists", "occasions"]
+            },
+            "description": "Obtiene la lista de 20 ocasiones predefinidas disponibles para generar listas inteligentes (barbacoa, cena romántica, etc.)."
+          },
+          "response": []
+        },
+        {
+          "name": "Generar Lista por Ocasión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.list && jsonData.data.list.id) {",
+                  "        pm.environment.set('listId', jsonData.data.list.id);",
+                  "        console.log('ListId guardado:', jsonData.data.list.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"occasion\": \"Barbacoa\",\n  \"numberOfPeople\": 8,\n  \"budget\": 150,\n  \"dietaryRestrictions\": [\"Sin gluten\"],\n  \"storeId\": \"{{storeId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/occasion-lists/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["occasion-lists", "generate"]
+            },
+            "description": "Genera automáticamente una lista completa de productos usando IA basándose en una ocasión específica. Requiere: occasion (una de las 20 disponibles), numberOfPeople (1-50), budget (1-10000€). Opcional: dietaryRestrictions (máx 10), storeId."
+          },
+          "response": []
+        },
+        {
+          "name": "Preview Lista por Ocasión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"occasion\": \"Cena romántica\",\n  \"numberOfPeople\": 2,\n  \"budget\": 80\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/occasion-lists/preview",
+              "host": ["{{baseUrl}}"],
+              "path": ["occasion-lists", "preview"]
+            },
+            "description": "Genera un preview de lista por ocasión SIN guardarla en la base de datos. Útil para ver qué productos sugeriría la IA antes de crear la lista real. Mismos parámetros que 'Generar Lista por Ocasión'."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09. Dashboard de Monitoreo",
       "item": [
         {
           "name": "Métricas del Sistema",
