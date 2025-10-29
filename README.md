@@ -174,6 +174,8 @@ El proyecto es un ejercicio educativo avanzado desarrollado como parte del **Má
 | [casos-uso-completos.md](Doc/casos-uso-completos.md) | 33 casos de uso detallados con flujos principales y alternativos |
 | [AGENTS.md](AGENTS.md) | Guía completa de arquitectura, roadmap y agentes de desarrollo |
 | [API_Testing_Guide.md](API_Testing_Guide.md) | 🔥 **Guía de testing con Postman/Thunder Client** |
+| [TERMS_AND_CONDITIONS.md](TERMS_AND_CONDITIONS.md) | 📜 **Términos y Condiciones del Servicio** |
+| [PRIVACY_POLICY.md](PRIVACY_POLICY.md) | 🔒 **Política de Privacidad y Protección de Datos** |
 
 ## 🧪 Testing de API
 
