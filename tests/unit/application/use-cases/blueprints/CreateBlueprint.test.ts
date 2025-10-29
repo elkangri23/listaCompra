@@ -2,11 +2,11 @@
  * Tests unitarios para CreateBlueprint use case
  */
 
-import { CreateBlueprint } from '../../../../../src/application/use-cases/blueprints/CreateBlueprint';
+import { CreateBlueprint, CreateBlueprintDto } from '../../../../../src/application/use-cases/blueprints/CreateBlueprint';
 import { IBlueprintRepository } from '../../../../../src/application/ports/repositories/IBlueprintRepository';
-import { CreateBlueprintDto } from '../../../../../src/application/dto/blueprints/CreateBlueprintDto';
+
 import { ValidationError } from '../../../../../src/application/errors/ValidationError';
-import { BusinessRuleViolationError } from '../../../../../src/application/errors/BusinessRuleViolationError';
+import { BusinessRuleViolationError } from '../../../../../src/domain/errors/DomainError';
 import { success, failure } from '../../../../../src/shared/result';
 
 describe('CreateBlueprint Use Case', () => {
@@ -34,16 +34,15 @@ describe('CreateBlueprint Use Case', () => {
   const validDto: CreateBlueprintDto = {
     nombre: 'Lista de prueba',
     descripcion: 'Descripción de prueba',
-    publico: false,
     productos: [
       {
         nombre: 'Producto 1',
         cantidad: 2,
-        notas: 'Notas del producto',
-        categoriaId: 'cat-001'
+        descripcion: 'Notas del producto',
+        categoriaId: '550e8400-e29b-41d4-a716-446655440000',
+        urgente: false
       }
-    ],
-    creadoPorId: 'user-001'
+    ]
   };
 
   describe('execute', () => {
@@ -51,19 +50,18 @@ describe('CreateBlueprint Use Case', () => {
       // Arrange
       mockRepository.existsByNombreAndUsuario.mockResolvedValue(success(false));
       mockRepository.countByUsuarioId.mockResolvedValue(success(10));
-      mockRepository.save.mockResolvedValue(success(expect.any(Object)));
+      mockRepository.save.mockImplementation(async (blueprint) => success(blueprint));
 
       // Act
-      const result = await useCase.execute(validDto);
+      const result = await useCase.execute(validDto, 'test-user-id');
 
       // Assert
-      expect(result.isSuccess()).toBe(true);
+      expect(result.isSuccess).toBe(true);
       expect(mockRepository.existsByNombreAndUsuario).toHaveBeenCalledWith(
         validDto.nombre,
-        validDto.creadoPorId,
-        undefined
+        'test-user-id'
       );
-      expect(mockRepository.countByUsuarioId).toHaveBeenCalledWith(validDto.creadoPorId);
+      expect(mockRepository.countByUsuarioId).toHaveBeenCalledWith('test-user-id', true);
       expect(mockRepository.save).toHaveBeenCalled();
     });
 
@@ -72,12 +70,14 @@ describe('CreateBlueprint Use Case', () => {
       mockRepository.existsByNombreAndUsuario.mockResolvedValue(success(true));
 
       // Act
-      const result = await useCase.execute(validDto);
+      const result = await useCase.execute(validDto, 'test-user-id');
 
       // Assert
-      expect(result.isSuccess()).toBe(false);
-      expect(result.getError()).toBeInstanceOf(ValidationError);
-      expect(result.getError().message).toContain('ya existe un blueprint con ese nombre');
+      expect(result.isSuccess).toBe(false);
+      if (!result.isSuccess) {
+        expect(result.error).toBeInstanceOf(ValidationError);
+        expect(result.error.message).toContain('Ya existe un blueprint con ese nombre');
+      }
     });
 
     it('debería fallar si el usuario ha alcanzado el límite de blueprints', async () => {
@@ -86,12 +86,14 @@ describe('CreateBlueprint Use Case', () => {
       mockRepository.countByUsuarioId.mockResolvedValue(success(50));
 
       // Act
-      const result = await useCase.execute(validDto);
+      const result = await useCase.execute(validDto, 'test-user-id');
 
       // Assert
-      expect(result.isSuccess()).toBe(false);
-      expect(result.getError()).toBeInstanceOf(BusinessRuleViolationError);
-      expect(result.getError().message).toContain('máximo de 50 blueprints');
+      expect(result.isSuccess).toBe(false);
+      if (!result.isSuccess) {
+        expect(result.error).toBeInstanceOf(BusinessRuleViolationError);
+        expect(result.error.message).toContain('máximo de 50 blueprints');
+      }
     });
 
     it('debería fallar con datos inválidos', async () => {
@@ -102,11 +104,13 @@ describe('CreateBlueprint Use Case', () => {
       };
 
       // Act
-      const result = await useCase.execute(invalidDto);
+      const result = await useCase.execute(invalidDto, 'test-user-id');
 
       // Assert
-      expect(result.isSuccess()).toBe(false);
-      expect(result.getError()).toBeInstanceOf(ValidationError);
+      expect(result.isSuccess).toBe(false);
+      if (!result.isSuccess) {
+        expect(result.error).toBeInstanceOf(ValidationError);
+      }
     });
 
     it('debería manejar errores del repositorio', async () => {
@@ -114,11 +118,13 @@ describe('CreateBlueprint Use Case', () => {
       mockRepository.existsByNombreAndUsuario.mockResolvedValue(failure(new Error('Database error')));
 
       // Act
-      const result = await useCase.execute(validDto);
+      const result = await useCase.execute(validDto, 'test-user-id');
 
       // Assert
-      expect(result.isSuccess()).toBe(false);
-      expect(result.getError().message).toBe('Database error');
+      expect(result.isSuccess).toBe(false);
+      if (!result.isSuccess) {
+        expect(result.error.message).toBe('Database error');
+      }
     });
   });
 });
