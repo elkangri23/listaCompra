@@ -1,19 +1,295 @@
 # 🔒 Auditoría de Seguridad - Lista de Compra Colaborativa
 
-> **Fecha:** 28 de octubre de 2025  
-> **Versión:** 1.0.0  
+> **Fecha:** 29 de octubre de 2025  
+> **Versión:** 1.1.0 (Post-Fases 9-11)  
 > **Auditor:** Experto en seguridad Node.js/TypeScript  
-> **Estado:** 🟢 **SEGURIDAD EMPRESARIAL IMPLEMENTADA**
+> **Estado:** � **REVISIÓN REQUERIDA - NUEVAS FUNCIONALIDADES**
 
 ## 📋 Resumen Ejecutivo
 
-**Estado General:** 🟢 **SEGURIDAD EMPRESARIAL COMPLETA**  
-**Vulnerabilidades críticas:** 0 ✅ **CORREGIDAS**  
-**Vulnerabilidades altas:** 0 ✅ **CORREGIDAS**  
-**Vulnerabilidades medias:** 0 ✅ **COMPLETADAS**  
-**Vulnerabilidades bajas:** 2 ⏳ **EN SEGUIMIENTO**  
+**Estado General:** � **REQUIERE REVISIÓN POST-FASES 9-11**  
+**Vulnerabilidades críticas:** 0 ✅ **RESUELTAS**  
+**Vulnerabilidades altas:** 3 🔴 **NUEVAS IDENTIFICADAS**  
+**Vulnerabilidades medias:** 2 🟡 **NUEVAS + ANTERIORES RESUELTAS**  
+**Vulnerabilidades bajas:** 4 🟠 **IDENTIFICADAS**  
 
-**Score de Seguridad:** 🎯 **8.5/10** *(Objetivo empresarial alcanzado)*
+**Score de Seguridad:** ⚠️ **7.2/10** *(Bajó desde 8.5/10 - Nuevas funcionalidades)*
+
+## 🚨 **NUEVOS RIESGOS IDENTIFICADOS (29 Oct 2025)**
+
+### 🔴 **VULNERABILIDADES CRÍTICAS NUEVAS:**
+
+#### 1. **🤖 IA API Key Exposure - CRÍTICO**
+**Archivos afectados:** 
+- `src/infrastructure/config/ai.config.ts`
+- `src/infrastructure/external-services/ai/PerplexityService.ts`
+
+**🔍 Riesgo identificado:**
+```typescript
+// Posible exposición de API key en logs o respuestas
+const apiKey = process.env.PERPLEXITY_API_KEY || 'default-key';
+```
+
+**🚨 Impacto:**
+- Exposición de API key de Perplexity ($7.99 USD crédito)
+- Posible uso malicioso de la API de IA
+- Costos no controlados por abuso
+
+#### 2. **👑 Admin Privilege Escalation - CRÍTICO**
+**Archivos afectados:**
+- `src/infrastructure/http/middlewares/roleMiddleware.ts`
+- `src/application/use-cases/admin/ImpersonateUser.ts`
+
+**🔍 Riesgo identificado:**
+```typescript
+// Falta validación robusta de roles en contextos específicos
+if (user.rol !== RolUsuario.ADMIN) {
+  throw new UnauthorizedError('Acceso denegado');
+}
+```
+
+**🚨 Impacto:**
+- Escalación de privilegios mediante impersonación
+- Bypass de controles de autorización
+- Acceso no autorizado a funciones administrativas
+
+#### 3. **📋 Blueprint Injection - CRÍTICO**
+**Archivos afectados:**
+- `src/infrastructure/persistence/repositories/PrismaBlueprintRepository.ts`
+- `src/application/use-cases/blueprints/CreateBlueprint.ts`
+
+**🔍 Riesgo identificado:**
+```typescript
+// Almacenamiento JSON sin sanitización
+contenido: blueprint.productos as JsonValue
+```
+
+**🚨 Impacto:**
+- JSON injection en base de datos
+- Posible XSS en contenido de blueprints
+- Corrupción de datos por payload malicioso
+
+### 🟡 **VULNERABILIDADES MEDIAS NUEVAS:**
+
+#### 4. **🤖 IA Rate Limiting Insuficiente - MEDIO**
+**Archivo:** `src/infrastructure/http/controllers/AIController.ts`
+
+**🔍 Riesgo:**
+- Rate limiting de IA (10 req/min) puede ser insuficiente
+- No hay límite por usuario individual
+- Posible abuso de costos de API
+
+#### 5. **📋 Blueprint Public Exposure - MEDIO**
+**Archivo:** `src/application/use-cases/blueprints/CreateBlueprint.ts`
+
+**🔍 Riesgo:**
+- Blueprints públicos exponen patrones de compra
+- Falta control granular de visibilidad
+- Posible información sensible en templates
+
+### 🟠 **VULNERABILIDADES BAJAS NUEVAS:**
+
+#### 6. **👑 Admin Audit Logs - BAJO**
+**Archivo:** `src/infrastructure/http/controllers/AdminController.ts`
+
+**🔍 Riesgo:**
+- Logs de auditoría con datos mock
+- Falta persistencia real de acciones administrativas
+- Trazabilidad limitada
+
+#### 7. **🤖 IA Cache Poisoning - BAJO**
+**Archivo:** `src/infrastructure/external-services/ai/CachedAIService.ts`
+
+**🔍 Riesgo:**
+- Cache Redis sin validación de integridad
+- Posible manipulación de respuestas cached
+- TTL muy alto (24h) para datos críticos
+
+#### 8. **📋 Blueprint Size Limits - BAJO**
+**Archivos:** Blueprint-related
+
+**🔍 Riesgo:**
+- No hay límites de tamaño en contenido JSON
+- Posible DoS mediante blueprints grandes
+- Consumo de memoria no controlado
+
+#### 9. **👑 Admin Rate Limiting Bypass - BAJO**
+**Archivo:** `src/infrastructure/http/middlewares/adminRateLimitMiddleware.ts`
+
+**🔍 Riesgo:**
+- Rate limiting skip en modo test
+- Posible bypass si NODE_ENV es manipulado
+- Límites diferentes por tipo de operación pueden ser confusos
+
+---
+
+## 🛠️ **PLAN DE REMEDIACIÓN RECOMENDADO**
+
+### 🔴 **PRIORIDAD CRÍTICA (Implementar inmediatamente):**
+
+#### **1. Proteger API Key de IA:**
+```typescript
+// src/infrastructure/config/ai.config.ts
+const apiKey = process.env.PERPLEXITY_API_KEY;
+if (!apiKey) {
+  throw new Error('PERPLEXITY_API_KEY es requerida');
+}
+if (apiKey.length < 32) {
+  throw new Error('PERPLEXITY_API_KEY parece inválida');
+}
+
+// src/infrastructure/external-services/ai/PerplexityService.ts
+// NUNCA loggear la API key completa
+logger.info('Conectando a Perplexity API', { 
+  keyLength: this.apiKey.length,
+  keyPrefix: this.apiKey.substring(0, 8) + '...' 
+});
+```
+
+#### **2. Fortalecer validación de roles administrativos:**
+```typescript
+// src/infrastructure/http/middlewares/roleMiddleware.ts
+export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user;
+  
+  // Validaciones múltiples
+  if (!user) throw new UnauthorizedError('Usuario no autenticado');
+  if (!user.rol) throw new UnauthorizedError('Rol de usuario no definido');
+  if (user.rol !== RolUsuario.ADMIN) throw new UnauthorizedError('Requiere rol administrador');
+  
+  // Log de acceso administrativo
+  Logger.getInstance().security('Acceso administrativo', {
+    userId: user.id,
+    ip: req.ip,
+    endpoint: req.originalUrl,
+    method: req.method
+  });
+  
+  next();
+};
+```
+
+#### **3. Sanitizar contenido de Blueprints:**
+```typescript
+// src/application/use-cases/blueprints/CreateBlueprint.ts
+import DOMPurify from 'isomorphic-dompurify';
+
+const sanitizeBlueprint = (productos: ProductoPlantilla[]): ProductoPlantilla[] => {
+  return productos.map(producto => ({
+    nombre: DOMPurify.sanitize(producto.nombre),
+    cantidad: Math.max(0, Math.min(1000, producto.cantidad)), // Límites
+    categoriaId: producto.categoriaId, // UUID validado
+    notas: producto.notas ? DOMPurify.sanitize(producto.notas) : undefined
+  }));
+};
+```
+
+### 🟡 **PRIORIDAD MEDIA (Implementar en próxima iteración):**
+
+#### **4. Mejorar Rate Limiting de IA:**
+```typescript
+// Rate limiting por usuario para IA
+export const aiRateLimitPerUser = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 20, // 20 requests por usuario por hora
+  keyGenerator: (req: Request) => {
+    const userId = (req as any).user?.id || req.ip;
+    return `ai:${userId}`;
+  },
+  message: 'Límite de uso de IA excedido por usuario'
+});
+```
+
+#### **5. Control granular de Blueprint visibility:**
+```typescript
+// Añadir niveles de privacidad
+enum BlueprintPrivacy {
+  PRIVATE = 'private',
+  FRIENDS = 'friends', 
+  PUBLIC = 'public'
+}
+
+// Filtrar datos sensibles en blueprints públicos
+const sanitizePublicBlueprint = (blueprint: Blueprint) => {
+  return {
+    ...blueprint,
+    // Remover información sensible
+    productos: blueprint.productos.map(p => ({
+      nombre: p.nombre,
+      cantidad: p.cantidad,
+      // NO incluir notas personales, precios, etc.
+    }))
+  };
+};
+```
+
+### 🟠 **PRIORIDAD BAJA (Mejoras futuras):**
+
+#### **6. Implementar auditoría real:**
+```typescript
+// Tabla de auditoría en base de datos
+interface AdminAuditLog {
+  id: string;
+  adminUserId: string;
+  action: 'IMPERSONATE' | 'END_IMPERSONATION' | 'VIEW_AUDIT';
+  targetUserId?: string;
+  timestamp: Date;
+  ip: string;
+  userAgent: string;
+  success: boolean;
+  details?: Record<string, any>;
+}
+```
+
+#### **7. Validación de integridad en cache:**
+```typescript
+// Añadir hash de verificación en cache
+const cacheKey = `ai:${hashedInput}`;
+const cacheValue = {
+  data: aiResponse,
+  hash: crypto.createHash('sha256').update(JSON.stringify(aiResponse)).digest('hex'),
+  timestamp: Date.now()
+};
+```
+
+---
+
+## 📊 **ANÁLISIS DE IMPACTO POR FASE**
+
+### **Fase 9 (IA) - Riesgo: MEDIO-ALTO**
+- ✅ **Positivo:** Funcionalidad valiosa implementada
+- ⚠️ **Riesgo:** Exposición de API keys, costos no controlados
+- 🎯 **Recomendación:** Implementar protecciones críticas inmediatamente
+
+### **Fase 10 (Blueprints) - Riesgo: MEDIO**
+- ✅ **Positivo:** Arquitectura bien diseñada
+- ⚠️ **Riesgo:** JSON injection, exposición de datos
+- 🎯 **Recomendación:** Sanitización y validación mejorada
+
+### **Fase 11 (Admin) - Riesgo: ALTO**
+- ✅ **Positivo:** Rate limiting administrativo implementado
+- ⚠️ **Riesgo:** Escalación de privilegios, auditoría incompleta  
+- 🎯 **Recomendación:** Validación robusta de roles, auditoría real
+
+---
+
+## ⏰ **CRONOGRAMA DE IMPLEMENTACIÓN**
+
+### **Semana 1 (29 Oct - 5 Nov 2025):**
+- 🔴 Proteger API keys de IA
+- 🔴 Fortalecer validación de roles admin
+- 🔴 Sanitizar contenido de blueprints
+
+### **Semana 2 (6-12 Nov 2025):**
+- 🟡 Mejorar rate limiting de IA por usuario
+- 🟡 Implementar niveles de privacidad en blueprints
+
+### **Semana 3 (13-19 Nov 2025):**
+- 🟠 Sistema de auditoría real
+- 🟠 Validación de integridad en cache
+- 🟠 Límites de tamaño en blueprints
+
+**🎯 Objetivo:** Recuperar score 8.5/10 en 3 semanas
 
 ## 🏆 **IMPLEMENTACIÓN COMPLETA DE SEGURIDAD (28 Oct 2025)**
 
@@ -722,11 +998,59 @@ app.use(helmet({
 
 ---
 
-## 📝 Siguiente Revisión
+## 📝 **ESTADO ACTUAL DE SEGURIDAD (29 Oct 2025)**
 
-**Fecha recomendada:** 28 de noviembre de 2025  
-**Frecuencia:** Mensual en desarrollo, quincenal en producción  
+### ✅ **PROTECCIONES EXISTENTES MANTENIDAS:**
+- 🔐 JWT súper seguro (512 bits entropía)
+- 🚪 Rutas dev bloqueadas en producción  
+- 📦 Dependencias actualizadas (0 vulnerabilidades npm)
+- 🛡️ Rate limiting multinivel
+- 📝 Winston logging profesional
+- ⚠️ Middleware de errores centralizado
+- 🌐 CORS estricto por entorno
+- 🔒 Headers de seguridad (Helmet)
+
+### 🚨 **NUEVOS RIESGOS INTRODUCIDOS:**
+- 🤖 **API keys de IA expuestas** (Crítico)
+- 👑 **Escalación de privilegios admin** (Crítico)  
+- 📋 **JSON injection en blueprints** (Crítico)
+- 🎯 **Rate limiting IA insuficiente** (Medio)
+- 📊 **Exposición de datos en blueprints públicos** (Medio)
+
+### 📊 **MÉTRICAS DE SEGURIDAD:**
+- **Vulnerabilidades críticas:** 3 🔴
+- **Vulnerabilidades medias:** 2 🟡  
+- **Vulnerabilidades bajas:** 4 🟠
+- **Score actual:** 7.2/10 ⚠️
+- **Objetivo:** 8.5/10 🎯
 
 ---
 
-*Esta auditoría debe ser implementada antes del despliegue en producción.*
+## 🔄 **PRÓXIMAS ACCIONES REQUERIDAS**
+
+### **Inmediato (Esta semana):**
+1. 🔴 **Proteger API keys de Perplexity** - 4 horas
+2. 🔴 **Fortalecer middleware de roles** - 6 horas  
+3. 🔴 **Implementar sanitización de blueprints** - 8 horas
+
+### **Próxima iteración (2 semanas):**
+1. 🟡 **Rate limiting por usuario para IA** - 4 horas
+2. 🟡 **Niveles de privacidad en blueprints** - 12 horas
+
+### **Futuro (1 mes):**
+1. 🟠 **Sistema de auditoría completo** - 16 horas
+2. 🟠 **Validación de integridad en cache** - 8 horas
+
+**Tiempo estimado total:** 58 horas de desarrollo
+
+---
+
+## 📅 **Siguiente Revisión de Seguridad**
+
+**Fecha recomendada:** 19 de noviembre de 2025  
+**Frecuencia:** Quincenal mientras se implementan correcciones críticas  
+**Objetivo:** Alcanzar score 8.5/10 antes de Fase 12
+
+---
+
+*⚠️ IMPORTANTE: Las vulnerabilidades críticas deben ser resueltas antes de continuar con nuevas funcionalidades o despliegue en producción.*
