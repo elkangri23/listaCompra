@@ -96,7 +96,7 @@ export class CacheIntegrityController {
         dataType as ValidatableDataType
       );
 
-      if (result.isFailure()) {
+      if (!result.isSuccess) {
         res.status(400).json({
           success: false,
           error: result.error.message,
@@ -298,7 +298,7 @@ export class CacheIntegrityController {
             dataType as ValidatableDataType
           );
 
-          if (result.isSuccess()) {
+          if (result.isSuccess) {
             repairedKeys.push(key);
           } else {
             failedKeys.push({ key, error: result.error.message });
@@ -360,7 +360,7 @@ export class CacheIntegrityController {
         recommendations.push('ℹ️ Tasa de corrupción baja - monitoreo regular recomendado');
       }
 
-      if (stats.byCorruptionLevel.CRITICAL > 0) {
+      if (stats.byCorruptionLevel['CRITICAL'] && stats.byCorruptionLevel['CRITICAL'] > 0) {
         recommendations.push('🔥 Datos críticos corruptos detectados - acción inmediata requerida');
       }
     }

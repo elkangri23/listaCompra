@@ -161,8 +161,8 @@ describe('Entidad Producto', () => {
     });
 
     it('debería actualizar el nombre correctamente', async () => {
-      // Pequeño delay para asegurar que las fechas sean diferentes
-      await new Promise(resolve => setTimeout(resolve, 1));
+      // Delay más largo para asegurar que las fechas sean diferentes
+      await new Promise(resolve => setTimeout(resolve, 10));
       
       const result = producto.actualizarNombre('Leche Desnatada');
 
