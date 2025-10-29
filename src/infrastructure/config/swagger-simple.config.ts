@@ -95,14 +95,33 @@ const swaggerOptions: swaggerJSDoc.Options = {
     security: [{ bearerAuth: [] }],
     tags: [
       { name: 'Autenticación', description: 'Endpoints de registro, login y gestión de autenticación' },
-      { name: 'Listas', description: 'CRUD de listas de compra' },
-      { name: 'Productos', description: 'Gestión de productos' },
-      { name: 'Inteligencia Artificial', description: 'Categorización automática y sugerencias' }
+      { name: 'Listas', description: 'CRUD de listas de compra y colaboración' },
+      { name: 'Productos', description: 'Gestión de productos dentro de listas' },
+      { name: 'Categorías', description: 'Gestión de categorías de productos' },
+      { name: 'Tiendas', description: 'Gestión de tiendas y localizaciones' },
+      { name: 'Invitaciones', description: 'Sistema de colaboración e invitaciones' },
+      { name: 'Plantillas', description: 'Gestión de blueprints y plantillas de listas' },
+      { name: 'Inteligencia Artificial', description: 'Categorización automática y sugerencias' },
+      { name: 'Administración', description: 'Funciones administrativas y auditoría' },
+      { name: 'Dashboard', description: 'Métricas y análisis de datos' },
+      { name: 'Cache', description: 'Gestión y análisis de cache' },
+      { name: 'Desarrollo', description: 'Herramientas de desarrollo y testing' }
     ]
   },
   apis: [
     './src/infrastructure/http/routes/authRoutes.ts',
-    './src/infrastructure/http/routes/aiRoutes.ts'
+    './src/infrastructure/http/routes/listRoutes.ts',
+    './src/infrastructure/http/routes/productRoutes.ts',
+    './src/infrastructure/http/routes/categoryRoutes.ts',
+    './src/infrastructure/http/routes/storeRoutes.ts',
+    './src/infrastructure/http/routes/invitationRoutes.ts',
+    './src/infrastructure/http/routes/blueprintRoutes.ts',
+    './src/infrastructure/http/routes/aiRoutes.ts',
+    './src/infrastructure/http/routes/adminRoutes.ts',
+    './src/infrastructure/http/routes/dashboardRoutes.ts',
+    './src/infrastructure/http/routes/cacheAnalyticsRoutes.ts',
+    './src/infrastructure/http/routes/cacheIntegrityRoutes.ts',
+    './src/infrastructure/http/routes/devRoutes.ts'
   ]
 };
 

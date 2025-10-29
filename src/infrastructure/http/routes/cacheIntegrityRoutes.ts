@@ -1,27 +1,25 @@
 import { Router } from 'express';
 import { CacheIntegrityController } from '../controllers/CacheIntegrityController';
-import { authMiddleware } from '../middlewares/authMiddleware';
-import { roleMiddleware } from '../middlewares/roleMiddleware';
-import { rateLimitMiddleware } from '../middlewares/rateLimitMiddleware';
+import { createAuthMiddleware } from '../middlewares/authMiddleware';
+import { requireAdmin } from '../middlewares/roleMiddleware';
+import { apiRateLimit } from '../middlewares/rateLimitMiddleware';
 
 /**
  * Rutas para monitoreo y gestión de integridad de cache
  * Requiere privilegios de administrador
  */
 export function createCacheIntegrityRoutes(
-  integrityController: CacheIntegrityController
+  integrityController: CacheIntegrityController,
+  authMiddleware: any,
+  adminMiddleware: any
 ): Router {
   const router = Router();
 
   // Middleware común: autenticación + rol admin + rate limiting
   const adminOnly = [
     authMiddleware,
-    roleMiddleware(['admin']),
-    rateLimitMiddleware({
-      windowMs: 5 * 60 * 1000, // 5 minutos
-      max: 20, // 20 requests por ventana
-      message: 'Demasiadas solicitudes a endpoints de integridad'
-    })
+    adminMiddleware,
+    apiRateLimit
   ];
 
   /**
