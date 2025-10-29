@@ -187,6 +187,24 @@ GET /categories?tiendaId={storeId}&activas=true
 
 ## 🚨 Notas Importantes
 
+### ⚠️ Colección Postman Pendiente de Actualización
+**Endpoints disponibles en la colección actual:**
+- ✅ Autenticación (5 endpoints)
+- ✅ Listas de Compra (5 endpoints)  
+- ✅ Productos (5 endpoints)
+- ✅ Categorías (4 endpoints)
+- ✅ Tiendas (5 endpoints)
+- ✅ Invitaciones (5 endpoints)
+- ✅ Dashboard de Monitoreo (4 endpoints)
+- ✅ Desarrollo (3 endpoints)
+
+**Endpoints pendientes de añadir:**
+- ⏳ **Inteligencia Artificial (3 endpoints)** - Fase 9
+- ⏳ **Blueprints/Plantillas (6 endpoints)** - Fase 10  
+- ⏳ **Administración (4 endpoints)** - Fase 11
+
+> **Nota**: Los endpoints de IA, Blueprints y Admin están implementados y funcionando, pero aún no están incluidos en `postman_collection.json`. Consulta la documentación Swagger en `/api-docs` o prueba manualmente con Thunder Client/Postman.
+
 ### Autenticación
 - Todos los endpoints (excepto registro, login y acceso a invitaciones) requieren token JWT
 - El token se incluye automáticamente si usas la variable `{{token}}`
