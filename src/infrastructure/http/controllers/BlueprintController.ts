@@ -1,41 +1,19 @@
 import { Request, Response } from 'express';
-import '../types/express.d.ts';
-import { CreateBlueprint } from '../../../application/use-cases/blueprints/CreateBlueprint';
-import { CreateListFromBlueprint } from '../../../application/use-cases/blueprints/CreateListFromBlueprint';
-import { IBlueprintRepository } from '../../../application/ports/repositories/IBlueprintRepository';
-import { CreateBlueprintDto } from '../../../application/dto/blueprints/CreateBlueprintDto';
-import { CreateListFromBlueprintDto } from '../../../application/dto/blueprints/CreateListFromBlueprintDto';
-import { ValidationError } from '../../../application/errors/ValidationError';
-import { NotFoundError } from '../../../application/errors/NotFoundError';
-import { UnauthorizedError } from '../../../application/errors/UnauthorizedError';
-import { z } from 'zod';
+import { CreateBlueprint } from '@application/use-cases/blueprints/CreateBlueprint';
+import type { CreateListFromBlueprint } from '@application/use-cases/blueprints/CreateListFromBlueprint';
+import type { IBlueprintRepository } from '@application/ports/repositories/IBlueprintRepository';
+import { ValidationError } from '@application/errors/ValidationError';
+import { NotFoundError } from '@application/errors/NotFoundError';
+import { UnauthorizedError } from '@application/errors/UnauthorizedError';
 
 // Interface para requests autenticados
 interface AuthenticatedRequest extends Request {
-  user?: {
+  user: {
     id: string;
     email: string;
     rol: string;
   };
 }
-
-// Esquemas de validación
-const createBlueprintSchema = z.object({
-  nombre: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es muy largo'),
-  descripcion: z.string().max(500, 'La descripción es muy larga').optional(),
-  publico: z.boolean().default(false),
-  productos: z.array(z.object({
-    nombre: z.string().min(1, 'El nombre del producto es requerido'),
-    cantidad: z.number().min(1, 'La cantidad debe ser mayor a 0'),
-    notas: z.string().optional(),
-    categoriaId: z.string().optional()
-  })).min(1, 'Debe incluir al menos un producto')
-});
-
-const createListFromBlueprintSchema = z.object({
-  nombre: z.string().min(1, 'El nombre de la lista es requerido').max(100, 'El nombre es muy largo'),
-  descripcion: z.string().max(500, 'La descripción es muy larga').optional()
-});
 
 export class BlueprintController {
   constructor(
@@ -50,30 +28,33 @@ export class BlueprintController {
    */
   async crear(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const authReq = req as AuthenticatedRequest; const userId = authReq.user?.id;
       if (!userId) {
         res.status(401).json({ error: 'Usuario no autenticado' });
         return;
       }
 
-      // Validar datos de entrada
-      const validationResult = createBlueprintSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        res.status(400).json({
-          error: 'Datos inválidos',
-          details: validationResult.error.errors
-        });
+      // Validación simple
+      if (!req.body.nombre || !req.body.productos) {
+        res.status(400).json({ error: 'Datos inválidos' });
         return;
       }
 
-      const dto: CreateBlueprintDto = {
-        ...validationResult.data,
-        creadoPorId: userId
+      const dto = {
+        nombre: req.body.nombre,
+        descripcion: req.body.descripcion,
+        productos: req.body.productos.map((p: any) => ({
+          nombre: p.nombre,
+          descripcion: p.notas,
+          cantidad: p.cantidad,
+          categoriaId: p.categoriaId,
+          urgente: false
+        }))
       };
 
-      const result = await this.createBlueprintUseCase.execute(dto);
+      const result = await this.createBlueprintUseCase.execute(dto, userId);
 
-      if (!result.isSuccess()) {
+      if (!result.isSuccess) {
         const error = result.getError();
         if (error instanceof ValidationError) {
           res.status(400).json({ error: error.message });
@@ -97,21 +78,16 @@ export class BlueprintController {
    */
   async obtenerPorUsuario(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const authReq = req as AuthenticatedRequest;
+      const userId = authReq.user?.id;
       if (!userId) {
         res.status(401).json({ error: 'Usuario no autenticado' });
         return;
       }
 
-      const pagina = parseInt(req.query['pagina'] as string) || 1;
-      const limite = Math.min(parseInt(req.query['limite'] as string) || 10, 50);
+      const result = await this.blueprintRepository.findByUsuarioId(userId);
 
-      const result = await this.blueprintRepository.findByUsuarioId(
-        userId, 
-        { page: pagina, limit: limite }
-      );
-
-      if (!result.isSuccess()) {
+      if (!result.isSuccess) {
         res.status(500).json({ error: 'Error obteniendo blueprints' });
         return;
       }
@@ -129,11 +105,7 @@ export class BlueprintController {
       }));
 
       res.json({ 
-        blueprints, 
-        pagina: paginatedResult.page, 
-        limite: paginatedResult.limit,
-        total: paginatedResult.total,
-        totalPages: paginatedResult.totalPages
+        blueprints
       });
     } catch (error) {
       console.error('Error obteniendo blueprints:', error);
@@ -152,10 +124,10 @@ export class BlueprintController {
 
       const result = await this.blueprintRepository.findAll(
         { page: pagina, limit: limite },
-        { publico: true }
+        { activo: true }
       );
 
-      if (!result.isSuccess()) {
+      if (!result.isSuccess) {
         res.status(500).json({ error: 'Error obteniendo blueprints públicos' });
         return;
       }
@@ -191,12 +163,12 @@ export class BlueprintController {
    */
   async obtenerPorId(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const userId = req.user?.id;
+      const { id } = req.params; if (!id) { res.status(400).json({ error: "ID requerido" }); return; }
+      const authReq = req as AuthenticatedRequest; const userId = authReq.user?.id;
 
       const result = await this.blueprintRepository.findById(id);
 
-      if (!result.isSuccess()) {
+      if (!result.isSuccess) {
         res.status(500).json({ error: 'Error obteniendo blueprint' });
         return;
       }
@@ -241,7 +213,7 @@ export class BlueprintController {
         return;
       }
 
-      const userId = req.user?.id;
+      const authReq = req as AuthenticatedRequest; const userId = authReq.user?.id;
       const pagina = parseInt(req.query['pagina'] as string) || 1;
       const limite = Math.min(parseInt(req.query['limite'] as string) || 10, 50);
 
@@ -251,7 +223,7 @@ export class BlueprintController {
         { page: pagina, limit: limite }
       );
 
-      if (!result.isSuccess()) {
+      if (!result.isSuccess) {
         res.status(500).json({ error: 'Error realizando búsqueda' });
         return;
       }
@@ -288,34 +260,30 @@ export class BlueprintController {
    */
   async crearListaDesdeBlueprint(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const userId = req.user?.id;
+      const { id } = req.params; if (!id) { res.status(400).json({ error: "ID requerido" }); return; }
+      const authReq = req as AuthenticatedRequest; const userId = authReq.user?.id;
 
       if (!userId) {
         res.status(401).json({ error: 'Usuario no autenticado' });
         return;
       }
 
-      // Validar datos de entrada
-      const validationResult = createListFromBlueprintSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        res.status(400).json({
-          error: 'Datos inválidos',
-          details: validationResult.error.errors
-        });
+      // Validación simple
+      if (!req.body.nombreLista) {
+        res.status(400).json({ error: 'Datos inválidos' });
         return;
       }
 
-      const dto: CreateListFromBlueprintDto = {
+      const dto = {
         blueprintId: id,
-        nombre: validationResult.data.nombre,
-        descripcion: validationResult.data.descripcion,
-        usuarioId: userId
+        nombreLista: req.body.nombreLista,
+        descripcionLista: req.body.descripcionLista,
+        tiendaId: req.body.tiendaId
       };
 
-      const result = await this.createListFromBlueprintUseCase.execute(dto);
+      const result = await this.createListFromBlueprintUseCase.execute(dto, userId);
 
-      if (!result.isSuccess()) {
+      if (!result.isSuccess) {
         const error = result.getError();
         if (error instanceof NotFoundError) {
           res.status(404).json({ error: error.message });
@@ -347,27 +315,23 @@ export class BlueprintController {
    */
   async actualizar(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const userId = req.user?.id;
+      const { id } = req.params; if (!id) { res.status(400).json({ error: "ID requerido" }); return; }
+      const authReq = req as AuthenticatedRequest; const userId = authReq.user?.id;
 
       if (!userId) {
         res.status(401).json({ error: 'Usuario no autenticado' });
         return;
       }
 
-      // Validar datos de entrada
-      const validationResult = createBlueprintSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        res.status(400).json({
-          error: 'Datos inválidos',
-          details: validationResult.error.errors
-        });
+      // Validación simple
+      if (!req.body.nombre || !req.body.productos) {
+        res.status(400).json({ error: 'Datos inválidos' });
         return;
       }
 
       // Verificar que existe y pertenece al usuario
       const existingResult = await this.blueprintRepository.findById(id);
-      if (!existingResult.isSuccess()) {
+      if (!existingResult.isSuccess) {
         res.status(500).json({ error: 'Error verificando blueprint' });
         return;
       }
@@ -385,13 +349,13 @@ export class BlueprintController {
 
       // Actualizar
       const updateResult = existing.actualizar(
-        validationResult.data.nombre,
-        validationResult.data.descripcion,
-        validationResult.data.publico,
-        validationResult.data.productos
+        req.body.nombre,
+        req.body.descripcion,
+        req.body.publico,
+        req.body.productos
       );
 
-      if (!updateResult.isSuccess()) {
+      if (!updateResult.isSuccess) {
         res.status(400).json({ error: updateResult.getError().message });
         return;
       }
@@ -399,7 +363,7 @@ export class BlueprintController {
       const updatedBlueprint = updateResult.getValue();
       const saveResult = await this.blueprintRepository.save(updatedBlueprint);
 
-      if (!saveResult.isSuccess()) {
+      if (!saveResult.isSuccess) {
         res.status(500).json({ error: 'Error guardando cambios' });
         return;
       }
@@ -427,8 +391,8 @@ export class BlueprintController {
    */
   async eliminar(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const userId = req.user?.id;
+      const { id } = req.params; if (!id) { res.status(400).json({ error: "ID requerido" }); return; }
+      const authReq = req as AuthenticatedRequest; const userId = authReq.user?.id;
 
       if (!userId) {
         res.status(401).json({ error: 'Usuario no autenticado' });
@@ -437,7 +401,7 @@ export class BlueprintController {
 
       // Verificar que existe y pertenece al usuario
       const existingResult = await this.blueprintRepository.findById(id);
-      if (!existingResult.isSuccess()) {
+      if (!existingResult.isSuccess) {
         res.status(500).json({ error: 'Error verificando blueprint' });
         return;
       }
@@ -454,7 +418,7 @@ export class BlueprintController {
       }
 
       const deleteResult = await this.blueprintRepository.deleteById(id);
-      if (!deleteResult.isSuccess()) {
+      if (!deleteResult.isSuccess) {
         res.status(500).json({ error: 'Error eliminando blueprint' });
         return;
       }

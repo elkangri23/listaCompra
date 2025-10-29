@@ -5,6 +5,7 @@
 
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { success } from '@shared/result';
 
 // Application Use Cases
 import { RegisterUser } from '@application/use-cases/auth/RegisterUser';
@@ -173,7 +174,7 @@ export class Container {
         this._eventPublisher = {
           publish: async (event: any) => {
             console.log(`📝 EventPublisher fallback - ${event.eventType} (${event.eventId})`);
-            return { isSuccess: true, isFailure: false, value: undefined, error: null };
+            return success(undefined);
           }
         };
         console.log('🔄 Usando EventPublisher fallback por error de conexión');
@@ -262,7 +263,7 @@ export class Container {
       this._eventPublisher = {
         publish: async (event: any) => {
           console.log(`📝 EventPublisher deshabilitado - ${event.eventType} (${event.eventId})`);
-          return { isSuccess: true, isFailure: false, value: undefined, error: null };
+          return success(undefined);
         }
       };
       console.log('🔄 EventPublisher deshabilitado');
