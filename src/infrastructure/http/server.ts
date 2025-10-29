@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import { apiRateLimit } from './middlewares/rateLimitMiddleware';
 import { corsConfig, corsSecurityHeaders } from '../config/cors.config';
 import { errorMiddleware, notFoundMiddleware, requestIdMiddleware, httpLoggerMiddleware } from './middlewares/errorMiddleware';
+import { setupSwagger } from '../config/swagger-simple.config';
 import type { AuthController } from './controllers/AuthController';
 import type { InvitationController } from './controllers/InvitationController';
 import type { AdminController } from './controllers/AdminController';
@@ -35,8 +36,8 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"], // Solo para Swagger UI
-        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Para Swagger UI
+        scriptSrc: ["'self'", "'unsafe-inline'"], // Para Swagger UI
         imgSrc: ["'self'", "data:", "https:"],
         fontSrc: ["'self'"],
         connectSrc: ["'self'"],
@@ -90,6 +91,9 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true }));
 
+  // 📚 Documentación Swagger (debe ir después de parsers)
+  setupSwagger(app);
+
   // Health check
   app.get('/health', (_req, res) => {
     res.status(200).json({
@@ -103,8 +107,9 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
   app.get('/', (_req, res) => {
     res.json({
       message: '🛒 Lista de Compra Colaborativa API',
-      version: '1.0.0',
-      documentation: '/api-docs',
+      version: '2.0.0',
+      documentation: '/api/docs',
+      openapi: '/api/docs.json'
     });
   });
 
