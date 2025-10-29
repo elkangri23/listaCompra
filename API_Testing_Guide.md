@@ -129,13 +129,32 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 - ✅ Actualizar Permisos
 - ✅ Cancelar Invitación
 
-### � Dashboard de Monitoreo (4 endpoints)
+### 🤖 Inteligencia Artificial (3 endpoints)
+- ✅ Sugerencias de Categorías (`POST /ai/category-suggestions`)
+- ✅ Health Check IA (`GET /ai/health`)
+- ✅ Información de Uso (`GET /ai/usage` - Solo Admin)
+
+### 📋 Blueprints/Plantillas (6 endpoints)
+- ✅ Crear Blueprint (`POST /blueprints`)
+- ✅ Obtener Mis Blueprints (`GET /blueprints/my`)
+- ✅ Obtener Blueprints Públicos (`GET /blueprints/public`)
+- ✅ Obtener Blueprint por ID (`GET /blueprints/:id`)
+- ✅ Crear Lista desde Blueprint (`POST /blueprints/:id/create-list`)
+- ✅ Actualizar/Eliminar Blueprint (`PUT/DELETE /blueprints/:id`)
+
+### 👑 Administración (4 endpoints)
+- ✅ Impersonar Usuario (`POST /admin/impersonate/:targetUserId`)
+- ✅ Finalizar Impersonación (`POST /admin/end-impersonation`)
+- ✅ Auditoría de Impersonaciones (`GET /admin/audit/impersonations`)
+- ✅ Health Check Admin (`GET /admin/health`)
+
+### 📊 Dashboard de Monitoreo (4 endpoints)
 - ✅ Métricas del Sistema (`GET /dashboard/metrics`)
 - ✅ Estado de Salud (`GET /dashboard/health`)
 - ✅ Alertas Activas (`GET /dashboard/alerts`)
 - ✅ Performance Detallado (`GET /dashboard/performance`)
 
-### �🔧 Desarrollo (3 endpoints)
+### 🔧 Desarrollo (3 endpoints)
 - ✅ Info Sistema de Eventos
 - ✅ Reset Sistema de Eventos
 - ✅ Publicar Evento de Prueba
@@ -197,7 +216,36 @@ GET /categories?tiendaId={storeId}&activas=true
 }
 ```
 
+#### Paso 5: Inteligencia Artificial (🤖 IA)
+```
+11. AI → Sugerencias de Categorías (nombre producto)
+11. AI → Health Check IA
+11. AI → Información de Uso (solo admin)
+```
+
+#### Paso 6: Blueprints/Plantillas (📋 Templates)
+```
+12. Blueprints → Crear Blueprint (desde lista existente)
+12. Blueprints → Obtener Mis Blueprints
+12. Blueprints → Obtener Blueprints Públicos
+12. Blueprints → Crear Lista desde Blueprint
+12. Blueprints → Actualizar/Eliminar Blueprint
+```
+
 #### Paso 7: Funcionalidades Administrativas (⚠️ Solo Admins)
+```
+13. Admin → Impersonar Usuario
+13. Admin → Consultar Auditoría (filtros: fecha, usuario)
+13. Admin → Finalizar Impersonación
+13. Admin → Health Check Admin
+```
+
+### Probar Permisos
+1. Crea lista con Usuario A
+2. Comparte con Usuario B (solo lectura)
+3. Intenta modificar con Usuario B → Debe fallar
+4. Cambia permisos a lectura-escritura
+5. Intenta modificar con Usuario B → Debe funcionar
 ```
 13. Admin → Impersonar Usuario
 13. Admin → Consultar Auditoría (filtros: fecha, usuario)

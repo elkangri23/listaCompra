@@ -399,33 +399,33 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 
 ---
 
-### Fase 9: IA Básica - Categorización Automática (Semana 10)
+### Fase 9: IA Básica - Categorización Automática (Semana 10) ✅ **COMPLETADA**
 **Casos de uso**: CU-28
 
-#### Entregables:
+#### Entregables ✅:
 1. ✅ Puerto IAIService en `src/application/ports/external/IAIService.ts`
 2. ✅ Configuración Perplexity en `src/infrastructure/config/ai.config.ts`
-3. Caso de uso GetCategorySuggestions en `src/application/use-cases/ai/`
-4. PerplexityService en `src/infrastructure/external-services/ai/`
-5. AIController en `src/infrastructure/http/controllers/`
-6. Rutas en `src/infrastructure/http/routes/aiRoutes.ts`
-7. Cache Redis para optimizar costos ($7.99 USD crédito)
-8. Integración automática en AddProduct use case
-9. Tests con mocks de Perplexity API
+3. ✅ Caso de uso GetCategorySuggestions en `src/application/use-cases/ai/`
+4. ✅ PerplexityService en `src/infrastructure/external-services/ai/`
+5. ✅ AIController en `src/infrastructure/http/controllers/`
+6. ✅ Rutas en `src/infrastructure/http/routes/aiRoutes.ts`
+7. ✅ Cache Redis para optimizar costos con CachedAIService
+8. ✅ Integración automática en AddProduct use case
+9. ✅ Tests con mocks de Perplexity API (17 tests pasando)
 
 ---
 
-### Fase 10: Blueprints/Plantillas (Semana 11)
+### Fase 10: Blueprints/Plantillas (Semana 11) ✅ **COMPLETADA**
 **Casos de uso**: CU-22, CU-23
 
-#### Entregables:
-1. Entidad Blueprint en `src/domain/entities/Blueprint.ts`
-2. Casos de uso en `src/application/use-cases/blueprints/`
-3. IBlueprintRepository en `src/application/ports/repositories/`
-4. PrismaBlueprintRepository en `src/infrastructure/persistence/repositories/`
-5. BlueprintController en `src/infrastructure/http/controllers/`
-6. Rutas en `src/infrastructure/http/routes/blueprintRoutes.ts`
-7. Tests completos
+#### Entregables ✅:
+1. ✅ Entidad Blueprint en `src/domain/entities/Blueprint.ts`
+2. ✅ Casos de uso en `src/application/use-cases/blueprints/`
+3. ✅ IBlueprintRepository en `src/application/ports/repositories/`
+4. ✅ PrismaBlueprintRepository en `src/infrastructure/persistence/repositories/`
+5. ✅ BlueprintController en `src/infrastructure/http/controllers/`
+6. ✅ Rutas en `src/infrastructure/http/routes/blueprintRoutes.ts`
+7. ✅ Tests completos con validaciones de negocio
 
 ---
 
