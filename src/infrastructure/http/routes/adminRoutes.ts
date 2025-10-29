@@ -6,6 +6,7 @@
 import { Router } from 'express';
 import { AdminController } from '@infrastructure/http/controllers/AdminController';
 import { validationMiddleware } from '@infrastructure/http/middlewares/validationMiddleware';
+import { createAdminRateLimitMiddleware } from '@infrastructure/http/middlewares/adminRateLimitMiddleware';
 import { z } from 'zod';
 
 // Esquemas de validación
@@ -29,6 +30,9 @@ export function createAdminRoutes(
   adminMiddleware: any
 ): Router {
   const router = Router();
+  
+  // Aplicar rate limiting específico para endpoints administrativos
+  const adminRateLimitMiddleware = createAdminRateLimitMiddleware();
 
   /**
    * @swagger
@@ -142,6 +146,7 @@ export function createAdminRoutes(
     '/impersonate',
     authMiddleware,
     adminMiddleware,
+    adminRateLimitMiddleware,
     validationMiddleware(impersonateUserSchema),
     (req: any, res: any) => adminController.impersonateUser(req, res)
   );
@@ -219,6 +224,7 @@ export function createAdminRoutes(
   router.delete(
     '/impersonate',
     authMiddleware,
+    adminRateLimitMiddleware,
     // Nota: No validamos rol aquí porque el token debe ser de impersonación
     validationMiddleware(endImpersonationSchema),
     (req: any, res: any) => adminController.endImpersonation(req, res)
@@ -275,6 +281,7 @@ export function createAdminRoutes(
   router.get(
     '/impersonate/status',
     authMiddleware,
+    adminRateLimitMiddleware,
     (req: any, res: any) => adminController.getImpersonationStatus(req, res)
   );
 
@@ -349,6 +356,7 @@ export function createAdminRoutes(
     '/audit/impersonations',
     authMiddleware,
     adminMiddleware,
+    adminRateLimitMiddleware,
     (req: any, res: any) => adminController.getImpersonationAuditLog(req, res)
   );
 

@@ -15,6 +15,7 @@ describe('Development Endpoints Integration', () => {
     app = await createServer({
       authController: container.authController,
       invitationController: container.invitationController,
+      adminController: container.adminController,
       authMiddleware: container.authMiddleware
     });
   });

@@ -197,12 +197,31 @@ GET /categories?tiendaId={storeId}&activas=true
 }
 ```
 
+#### Paso 7: Funcionalidades Administrativas (⚠️ Solo Admins)
+```
+13. Admin → Impersonar Usuario
+13. Admin → Consultar Auditoría (filtros: fecha, usuario)
+13. Admin → Finalizar Impersonación
+13. Admin → Health Check Admin
+```
+
 ## 🔍 Troubleshooting
 
 ### Error 401 - Unauthorized
 - Verifica que el token esté configurado en `{{token}}`
 - Ejecuta Login de nuevo para obtener token fresco
 - Revisa que el header Authorization esté presente
+
+### Error 403 - Forbidden (Admin Endpoints)
+- Confirma que el usuario tenga rol ADMIN
+- Verifica que el middleware de roles esté funcionando
+- Revisa los logs del servidor para debugging
+
+### Error 429 - Too Many Requests (Rate Limiting)
+- **Admin General**: Espera 15 minutos (máx 10 requests)
+- **Admin Impersonación**: Espera 1 hora (máx 5 requests)
+- **Admin Auditoría**: Espera 5 minutos (máx 20 requests)
+- Verifica headers X-RateLimit-* para detalles
 
 ### Error 404 - Not Found
 - Verifica que las variables (listId, productId, etc.) estén configuradas
@@ -230,4 +249,4 @@ Si encuentras algún endpoint que falta o algún error en la colección:
 
 **¡Happy Testing! 🎉**
 
-Última actualización: 28 de octubre de 2025
+Última actualización: 29 de octubre de 2025 - Fase 11 Admin Completada
