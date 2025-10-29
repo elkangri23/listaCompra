@@ -129,10 +129,13 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 - ✅ Actualizar Permisos
 - ✅ Cancelar Invitación
 
-### 🤖 Inteligencia Artificial (3 endpoints)
+### 🤖 Inteligencia Artificial (6 endpoints)
 - ✅ Sugerencias de Categorías (`POST /ai/category-suggestions`)
 - ✅ Health Check IA (`GET /ai/health`)
 - ✅ Información de Uso (`GET /ai/usage` - Solo Admin)
+- ✅ **NUEVO:** Obtener Ocasiones Disponibles (`GET /occasion-lists/occasions`)
+- ✅ **NUEVO:** Generar Lista por Ocasión (`POST /occasion-lists/generate`)
+- ✅ **NUEVO:** Preview Lista por Ocasión (`POST /occasion-lists/preview`)
 
 ### 📋 Blueprints/Plantillas (6 endpoints)
 - ✅ Crear Blueprint (`POST /blueprints`)
@@ -161,7 +164,7 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 - ✅ Reparar Cache (`POST /admin/cache/integrity/repair`)
 - ✅ Métricas de Integridad (`GET /admin/cache/integrity/metrics`)
 
-**Total de Endpoints:** **41+ endpoints** (4+ nuevos de seguridad)
+**Total de Endpoints:** **44+ endpoints** (3 nuevos de IA - CU-32)
 
 ### 📊 Dashboard de Monitoreo (4 endpoints)
 - ✅ Métricas del Sistema (`GET /dashboard/metrics`)
@@ -251,12 +254,12 @@ GET /categories?tiendaId={storeId}&activas=true
 - ✅ Desarrollo (3 endpoints)
 
 **Endpoints pendientes de añadir:**
-- ⏳ **Inteligencia Artificial (3 endpoints)** - Fase 9 ✅ Implementados
+- ⏳ **Inteligencia Artificial (6 endpoints)** - Fases 9 y 15 ✅ Implementados (CU-28, CU-32)
 - ⏳ **Blueprints/Plantillas (6 endpoints)** - Fase 10 ✅ Implementados
 - ⏳ **Administración (4 endpoints)** - Fase 11 ✅ Implementados
-- ⏳ **Seguridad y Cache (5 endpoints)** - Fase 2 ✅ NUEVOS Implementados
+- ⏳ **Seguridad y Cache (5 endpoints)** - Fase 12 ✅ Implementados
 
-> **Actualización Pendiente**: Los endpoints de IA, Blueprints, Admin y Seguridad están **completamente implementados y funcionando**, pero aún no están incluidos en `postman_collection.json`. La próxima actualización incluirá estos **18+ endpoints adicionales**. Consulta la documentación Swagger en `/api-docs` o prueba manualmente con Thunder Client/Postman.
+> **Actualización Pendiente**: Los endpoints de IA (incluye **Listas Inteligentes por Ocasión**), Blueprints, Admin y Seguridad están **completamente implementados y funcionando**, pero aún no están incluidos en `postman_collection.json`. La próxima actualización incluirá estos **21+ endpoints adicionales**. Consulta la documentación Swagger en `/api-docs` o prueba manualmente con Thunder Client/Postman.
 
 ### Autenticación
 - Todos los endpoints (excepto registro, login y acceso a invitaciones) requieren token JWT
@@ -292,6 +295,9 @@ GET /categories?tiendaId={storeId}&activas=true
 11. AI → Sugerencias de Categorías (nombre producto)
 11. AI → Health Check IA
 11. AI → Información de Uso (solo admin)
+11. AI → Obtener Ocasiones Disponibles (20+ ocasiones)
+11. AI → Generar Lista por Ocasión (barbacoa, cena romántica, etc.)
+11. AI → Preview Lista por Ocasión (sin guardar en DB)
 ```
 
 #### Paso 6: Blueprints/Plantillas (📋 Templates)
@@ -317,6 +323,41 @@ GET /categories?tiendaId={storeId}&activas=true
 3. Intenta modificar con Usuario B → Debe fallar
 4. Cambia permisos a lectura-escritura
 5. Intenta modificar con Usuario B → Debe funcionar
+
+### Probar Listas Inteligentes por Ocasión (🎉 NUEVO - CU-32)
+```json
+// 1. Ver ocasiones disponibles
+GET /occasion-lists/occasions
+// Respuesta: 20 ocasiones predefinidas
+
+// 2. Generar lista para barbacoa (8 personas, 150€)
+POST /occasion-lists/generate
+{
+  "occasion": "Barbacoa",
+  "numberOfPeople": 8,
+  "budget": 150,
+  "dietaryRestrictions": ["Sin gluten"]
+}
+
+// 3. Preview sin guardar
+POST /occasion-lists/preview
+{
+  "occasion": "Cena romántica",
+  "numberOfPeople": 2,
+  "budget": 80
+}
+```
+
+**Ocasiones disponibles:**
+- Barbacoa, Cena romántica, Fiesta infantil
+- Desayuno fitness, Cena navideña, Picnic
+- Brunch dominical, Cena vegana, Noche de películas
+- Aperitivo con amigos, Comida familiar, Cena de negocios
+- Comida saludable semanal, Fiesta de cumpleaños
+- Cena de San Valentín, Halloween, Domingo de fútbol
+- Tarde de juegos de mesa, Cena de Acción de Gracias
+- Comida de playa
+
 ```
 13. Admin → Impersonar Usuario
 13. Admin → Consultar Auditoría (filtros: fecha, usuario)
