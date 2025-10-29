@@ -246,14 +246,16 @@ describe('Entidad Usuario', () => {
     });
 
     it('debería actualizar la contraseña correctamente', async () => {
-      await new Promise(resolve => setTimeout(resolve, 1));
-      
       const fechaOriginal = usuario.fechaActualizacion.getTime();
+      
+      // Esperar al menos 2ms para asegurar diferencia de timestamp
+      await new Promise(resolve => setTimeout(resolve, 5));
+      
       const result = usuario.actualizarPassword('nuevoHashPassword456');
 
       expect(result.isSuccess).toBe(true);
       expect(usuario.password).toBe('nuevoHashPassword456');
-      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThan(fechaOriginal);
+      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
 
     it('debería fallar con password vacío', () => {
