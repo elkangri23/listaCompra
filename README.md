@@ -7,7 +7,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/)
 [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.x-orange.svg)](https://www.rabbitmq.com/)
 [![Security](https://img.shields.io/badge/Security-9.1%2F10-brightgreen.svg)](./SECURITY_AUDIT.md)
-[![Tests](https://img.shields.io/badge/Tests-300%2B%20passing-brightgreen.svg)](https://github.com)
+[![Tests](https://img.shields.io/badge/Tests-380%2B%20passing-brightgreen.svg)](https://github.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🎯 **Logros Recientes Completados (Octubre 2025)**
@@ -859,7 +859,25 @@ El proyecto mantiene una cobertura mínima del **80%** en todas las capas:
   - Database integration y conexiones ✅
 - 🔄 **Tests E2E**: Flujos completos de usuario (en desarrollo)
 
-### Estado Actual: **260+ tests pasando** ✅
+### Estado Actual: **380+ tests pasando** ✅
+
+### 🧪 **Consolidación de Testing Completada (29 Oct 2025)**
+
+✅ **Coverage mejorado significativamente**: 16.25% → **18.94%** (+2.69 puntos)
+
+#### 📊 **Tests Unitarios Agregados**
+- 🎯 **Usuario Entity**: 90% coverage (26 tests) - Business rules, validaciones, métodos completos
+- 📧 **Email Value Object**: 100% coverage (19 tests) - Validación formato, normalización, utilidades
+- 🔐 **PermissionType**: 97.05% coverage (20 tests) - Niveles, factory methods, comparaciones
+- 🔑 **Hash Value Object**: 66.66% coverage (19 tests) - Algoritmos, máscaras, edge cases
+
+#### 🚀 **Total: 84 tests nuevos funcionando**
+- ✅ Tests independientes y bien estructurados
+- ✅ Verificación de interfaces reales (no asumidas)
+- ✅ Cobertura de casos edge y business rules
+- ✅ Base sólida para future scaling
+
+### Estado Anterior: **260+ tests pasando** ✅
 
 ## 📊 Performance Analysis & Optimizations (Octubre 2025)
 
