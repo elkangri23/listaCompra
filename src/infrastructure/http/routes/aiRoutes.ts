@@ -6,6 +6,8 @@
 import { Router } from 'express';
 import { createAuthMiddleware } from '../middlewares/authMiddleware';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
+import { aiRateLimitPerUser, aiRateLimitStrict } from '../middlewares/rateLimitMiddleware';
+import { requireAdmin } from '../middlewares/roleMiddleware';
 import { AIController } from '../controllers/AIController';
 import { z } from 'zod';
 
@@ -40,8 +42,10 @@ export function createAIRoutes(dependencies: {
   /**
    * POST /api/ai/category-suggestions
    * Obtener sugerencias de categorías para un producto
+   * Rate limiting: 20 requests por usuario por hora
    */
   router.post('/category-suggestions',
+    aiRateLimitPerUser, // Rate limiting por usuario
     authMiddleware, // Verificar autenticación
     validationMiddleware(categorySuggestionsSchema), // Validar entrada
     aiController.suggestCategories.bind(aiController)
@@ -50,6 +54,7 @@ export function createAIRoutes(dependencies: {
   /**
    * GET /api/ai/health
    * Health check del servicio de IA
+   * Sin rate limiting para health checks
    */
   router.get('/health',
     aiController.healthCheck.bind(aiController)
@@ -58,9 +63,12 @@ export function createAIRoutes(dependencies: {
   /**
    * GET /api/ai/usage
    * Información de uso de la API de IA (solo administradores)
+   * Rate limiting estricto por la naturaleza sensible
    */
   router.get('/usage',
+    aiRateLimitStrict, // Rate limiting diario más estricto
     authMiddleware, // Verificar autenticación
+    (req, res, next) => requireAdmin(req as any, res, next), // Solo administradores
     aiController.getUsageInfo.bind(aiController)
   );
 

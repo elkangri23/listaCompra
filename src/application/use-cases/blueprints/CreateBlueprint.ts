@@ -25,7 +25,7 @@ export interface CreateBlueprintDto {
 export interface CreateBlueprintResponseDto {
   id: string;
   nombre: string;
-  descripcion?: string;
+  descripcion?: string; // Cambiar a opcional
   productos: Array<{
     nombre: string;
     descripcion?: string;
@@ -90,22 +90,50 @@ export class CreateBlueprint {
     }
 
     if (countResult.value >= 50) {
-      return failure(new BusinessRuleViolationError('Has alcanzado el límite máximo de 50 blueprints activos'));
+      return failure(new BusinessRuleViolationError('Has alcanzado el límite máximo de 50 blueprints activos', 'BLUEPRINT_LIMIT_EXCEEDED'));
     }
 
-    // 4. Crear entidad Blueprint
-    const blueprintResult = Blueprint.create({
-      nombre: dto.nombre,
-      descripcion: dto.descripcion,
-      usuarioId,
-      productos: dto.productos.map(p => ({
-        nombre: p.nombre,
-        descripcion: p.descripcion,
-        cantidad: p.cantidad,
-        categoriaId: p.categoriaId,
-        urgente: p.urgente
-      }))
+    // 4. Sanitizar y validar productos antes de crear entidad
+    const productosSanitizados = dto.productos.map(p => {
+      // Validación adicional de tipos
+      if (!p || typeof p !== 'object') {
+        throw new ValidationError('Producto inválido', 'productos', p);
+      }
+
+      return {
+        nombre: p.nombre?.toString() || '',
+        descripcion: p.descripcion?.toString(),
+        cantidad: Number(p.cantidad) || 0,
+        categoriaId: p.categoriaId?.toString(),
+        urgente: Boolean(p.urgente)
+      };
     });
+
+    // 5. Crear entidad Blueprint (que aplicará sanitización adicional)
+    const productosProcesados = productosSanitizados.map(p => {
+      const producto: any = {
+        nombre: p.nombre,
+        cantidad: p.cantidad
+      };
+      
+      if (p.descripcion) {
+        producto.notas = p.descripcion;
+      }
+      
+      if (p.categoriaId) {
+        producto.categoriaId = p.categoriaId;
+      }
+      
+      return producto;
+    });
+
+    const blueprintResult = Blueprint.crear(
+      dto.nombre,
+      dto.descripcion,
+      false, // Por defecto privado para seguridad
+      productosProcesados,
+      usuarioId
+    );
 
     if (blueprintResult.isFailure) {
       return failure(blueprintResult.error);
@@ -119,15 +147,38 @@ export class CreateBlueprint {
 
     const blueprint = saveResult.value;
 
-    // 6. Retornar respuesta
-    return success({
+    // 7. Retornar respuesta
+    const responseProductos = blueprint.productos.map(p => {
+      const producto: any = {
+        nombre: p.nombre,
+        cantidad: p.cantidad,
+        urgente: false // Blueprint no tiene urgente, por defecto false
+      };
+      
+      if (p.notas) {
+        producto.descripcion = p.notas;
+      }
+      
+      if (p.categoriaId) {
+        producto.categoriaId = p.categoriaId;
+      }
+      
+      return producto;
+    });
+
+    const response: any = {
       id: blueprint.id,
       nombre: blueprint.nombre,
-      descripcion: blueprint.descripcion,
-      productos: blueprint.productos,
-      activo: blueprint.activo,
+      productos: responseProductos,
+      activo: true, // Los blueprints creados están activos por defecto
       fechaCreacion: blueprint.fechaCreacion.toISOString(),
-      conteoProductos: blueprint.obtenerConteoProductos()
-    });
+      conteoProductos: blueprint.productos.length
+    };
+
+    if (blueprint.descripcion) {
+      response.descripcion = blueprint.descripcion;
+    }
+
+    return success(response);
   }
 }

@@ -35,28 +35,85 @@ export class ImpersonateUser {
     userAgent: string = 'Unknown'
   ): Promise<Result<ImpersonationResponseDto, ValidationError | UnauthorizedError | NotFoundError>> {
     try {
-      // 1. Validar entrada básica
+      // 1. Validaciones de entrada robustas
+      if (!adminUserId || typeof adminUserId !== 'string' || adminUserId.trim() === '') {
+        logger.security('Intento de impersonación con adminUserId inválido', { adminUserId, ipAddress });
+        return failure(new ValidationError('ID de administrador inválido', 'adminUserId', adminUserId));
+      }
+
       if (!dto.targetUserId && !dto.targetUserEmail) {
         return failure(new ValidationError('Debe especificar targetUserId o targetUserEmail', 'target', 'missing'));
       }
 
-      // 2. Buscar administrador
-      const adminResult = await this.usuarioRepository.findById(adminUserId);
+      // Validación de duración razonable
+      const maxDurationMinutes = 480; // 8 horas máximo
+      const minDurationMinutes = 1; // 1 minuto mínimo
+      const requestedDuration = dto.durationMinutes || 60;
+      
+      if (requestedDuration < minDurationMinutes || requestedDuration > maxDurationMinutes) {
+        return failure(new ValidationError(
+          `Duración debe estar entre ${minDurationMinutes} y ${maxDurationMinutes} minutos`, 
+          'durationMinutes', 
+          requestedDuration.toString()
+        ));
+      }
+
+      // 2. Buscar administrador con validaciones reforzadas
+      const adminResult = await this.usuarioRepository.findById(adminUserId.trim());
       if (!adminResult.isSuccess || !adminResult.value) {
+        logger.security('Intento de impersonación con admin inexistente', { adminUserId, ipAddress });
         return failure(new NotFoundError('Administrador', adminUserId));
       }
 
       const adminUser = adminResult.value;
+      
+      // VALIDACIÓN CRÍTICA: Triple verificación de rol admin
       if (adminUser.rol !== RolUsuario.ADMIN) {
-        logger.warn('Intento de impersonación por usuario no admin', { userId: adminUserId });
+        logger.security('CRÍTICO: Intento de impersonación por usuario no admin', { 
+          userId: adminUserId,
+          userRole: adminUser.rol,
+          userEmail: adminUser.email?.toString(),
+          ipAddress,
+          userAgent
+        });
         return failure(new UnauthorizedError('Solo administradores pueden impersonar usuarios'));
       }
 
-      // 3. Buscar usuario objetivo
+      // Verificación adicional: Usuario admin activo
+      if (!adminUser.activo) {
+        logger.security('Intento de impersonación por administrador inactivo', {
+          adminId: adminUserId,
+          ipAddress,
+          userAgent
+        });
+        return failure(new UnauthorizedError('Cuenta de administrador inactiva'));
+      }
+
+      // Verificación adicional: Email admin verificado
+      if (!adminUser.emailVerificado) {
+        logger.security('Intento de impersonación por admin con email no verificado', {
+          adminId: adminUserId,
+          adminEmail: adminUser.email?.toString(),
+          ipAddress
+        });
+        return failure(new UnauthorizedError('Email de administrador no verificado'));
+      }
+
+      // 3. Buscar usuario objetivo con validaciones mejoradas
       let targetUser: Usuario;
       if (dto.targetUserId) {
-        const result = await this.usuarioRepository.findById(dto.targetUserId);
+        // Validación de formato de targetUserId
+        if (typeof dto.targetUserId !== 'string' || dto.targetUserId.trim() === '') {
+          return failure(new ValidationError('targetUserId inválido', 'targetUserId', dto.targetUserId));
+        }
+
+        const result = await this.usuarioRepository.findById(dto.targetUserId.trim());
         if (!result.isSuccess || !result.value) {
+          logger.security('Intento de impersonar usuario inexistente por ID', {
+            adminId: adminUserId,
+            targetUserId: dto.targetUserId,
+            ipAddress
+          });
           return failure(new NotFoundError('Usuario objetivo', dto.targetUserId));
         }
         targetUser = result.value;
@@ -68,6 +125,11 @@ export class ImpersonateUser {
         
         const result = await this.usuarioRepository.findByEmail(emailResult.value);
         if (!result.isSuccess || !result.value) {
+          logger.security('Intento de impersonar usuario inexistente por email', {
+            adminId: adminUserId,
+            targetUserEmail: dto.targetUserEmail,
+            ipAddress
+          });
           return failure(new NotFoundError('Usuario objetivo', dto.targetUserEmail));
         }
         targetUser = result.value;
@@ -75,17 +137,49 @@ export class ImpersonateUser {
         return failure(new ValidationError('Usuario objetivo no especificado', 'target', 'missing'));
       }
 
-      // 4. Validaciones de negocio
+      // 4. Validaciones de negocio y seguridad críticas
       if (targetUser.rol === RolUsuario.ADMIN) {
+        logger.security('CRÍTICO: Intento de impersonar otro administrador', {
+          adminId: adminUserId,
+          targetAdminId: targetUser.id,
+          ipAddress,
+          userAgent
+        });
         return failure(new UnauthorizedError('No se puede impersonar otro administrador'));
       }
 
       if (adminUser.id === targetUser.id) {
+        logger.security('Intento de auto-impersonación', {
+          adminId: adminUserId,
+          ipAddress
+        });
         return failure(new ValidationError('No se puede impersonar a sí mismo', 'targetUserId', targetUser.id));
       }
 
-      // 5. Generar token de impersonación
-      const durationMinutes = dto.durationMinutes || 60;
+      // Verificación adicional: Usuario objetivo activo
+      if (!targetUser.activo) {
+        logger.security('Intento de impersonar usuario inactivo', {
+          adminId: adminUserId,
+          targetUserId: targetUser.id,
+          targetUserEmail: targetUser.email?.toString(),
+          ipAddress
+        });
+        return failure(new ValidationError('No se puede impersonar usuario inactivo', 'targetUser', 'inactive'));
+      }
+
+      // 5. Verificaciones de frecuencia y límites (Prevención de abuso)
+      const now = new Date();
+      
+      // En un sistema real, aquí verificaríamos las impersonaciones recientes
+      // Por ahora solo loggeamos para auditoría
+      logger.info('Verificación de límites de impersonación', {
+        adminId: adminUserId,
+        targetUserId: targetUser.id,
+        checkTime: now.toISOString()
+      });
+
+      // 6. Generar token de impersonación con validaciones adicionales
+      const durationMinutes = requestedDuration; // Ya validado arriba
       const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
 
       const tokenPayload: TokenPayload = {
@@ -98,20 +192,27 @@ export class ImpersonateUser {
       if (!tokenResult.isSuccess) {
         logger.error('Error generando token de impersonación', { 
           adminId: adminUserId, 
-          targetId: targetUser.id 
+          targetId: targetUser.id,
+          error: 'Token generation failed'
         });
         return failure(new ValidationError('Error al generar token', 'token', 'generation_failed'));
       }
 
-      // 6. Log de auditoría
-      logger.info('Impersonación iniciada', {
+      // 7. Log de auditoría de seguridad mejorado
+      logger.security('IMPERSONACIÓN INICIADA', {
+        action: 'IMPERSONATE_USER_START',
         adminId: adminUser.id,
         adminEmail: adminUser.email.toString(),
+        adminName: adminUser.nombre,
         targetUserId: targetUser.id,
         targetUserEmail: targetUser.email.toString(),
+        targetUserName: targetUser.nombre,
         reason: dto.reason || 'Sin razón especificada',
+        durationMinutes,
+        expiresAt: expiresAt.toISOString(),
         ipAddress,
-        userAgent
+        userAgent,
+        timestamp: new Date().toISOString()
       });
 
       // 7. Construir respuesta

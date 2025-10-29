@@ -10,6 +10,15 @@ import { NotFoundError } from '../../../application/errors/NotFoundError';
 import { UnauthorizedError } from '../../../application/errors/UnauthorizedError';
 import { z } from 'zod';
 
+// Interface para requests autenticados
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    rol: string;
+  };
+}
+
 // Esquemas de validación
 const createBlueprintSchema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es muy largo'),

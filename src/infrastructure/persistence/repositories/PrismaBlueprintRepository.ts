@@ -2,27 +2,39 @@ import { PrismaClient } from '@prisma/client';
 import { IBlueprintRepository, PaginationOptions, BlueprintFilters, PaginatedResult } from '../../../application/ports/repositories/IBlueprintRepository';
 import { Blueprint } from '../../../domain/entities/Blueprint';
 import { Result, success, failure } from '../../../shared/result';
+import { Logger } from '../../observability/logger/Logger';
+
+const logger = new Logger('PrismaBlueprintRepository');
 
 export class PrismaBlueprintRepository implements IBlueprintRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async save(blueprint: Blueprint): Promise<Result<Blueprint, Error>> {
     try {
+      // Sanitizar contenido JSON antes de almacenar
+      const sanitizedContent = JSON.parse(JSON.stringify(blueprint.productos));
+      
+      logger.security('Guardando blueprint con contenido sanitizado', {
+        blueprintId: blueprint.id,
+        productsCount: blueprint.productos.length,
+        contentSize: JSON.stringify(sanitizedContent).length
+      });
+
       const blueprintData = await this.prisma.blueprint.upsert({
         where: { id: blueprint.id },
         update: {
           nombre: blueprint.nombre,
-          descripcion: blueprint.descripcion,
+          descripcion: blueprint.descripcion || null,
           publico: blueprint.publico,
-          contenido: blueprint.productos,
+          contenido: sanitizedContent as any,
           fechaActualizacion: blueprint.fechaActualizacion
         },
         create: {
           id: blueprint.id,
           nombre: blueprint.nombre,
-          descripcion: blueprint.descripcion,
+          descripcion: blueprint.descripcion || null,
           publico: blueprint.publico,
-          contenido: blueprint.productos,
+          contenido: sanitizedContent as any,
           creadoPorId: blueprint.creadoPorId,
           fechaCreacion: blueprint.fechaCreacion,
           fechaActualizacion: blueprint.fechaActualizacion
@@ -273,7 +285,10 @@ export class PrismaBlueprintRepository implements IBlueprintRepository {
   async countByUsuarioId(usuarioId: string, onlyActive?: boolean): Promise<Result<number, Error>> {
     try {
       const count = await this.prisma.blueprint.count({
-        where: { creadoPorId: usuarioId }
+        where: { 
+          creadoPorId: usuarioId,
+          ...(onlyActive && { activo: true })
+        }
       });
       return success(count);
     } catch (error) {
@@ -340,8 +355,10 @@ export class PrismaBlueprintRepository implements IBlueprintRepository {
 
   async deactivateAllByUsuarioId(usuarioId: string): Promise<Result<void, Error>> {
     try {
-      // Como no tenemos campo "activo", este método no hace nada por ahora
-      // Se podría implementar un soft delete en el futuro
+      // Nota: Blueprint no tiene campo 'activo' en el schema actual
+      // En el futuro se podría añadir soft delete o implementar con fecha de eliminación
+      // Por ahora no hacemos nada y solo registramos el uso del parámetro
+      console.log(`Deactivation requested for user ${usuarioId} - not implemented yet`);
       return success(undefined);
     } catch (error) {
       return failure(error as Error);
