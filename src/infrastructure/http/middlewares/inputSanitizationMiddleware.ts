@@ -47,9 +47,8 @@ const SANITIZATION_CONFIG = {
   ]
 } as const;
 
-// Tipos de datos soportados para sanitización
-type SanitizableValue = string | number | boolean | null | undefined | Date;
-type SanitizableObject = { [key: string]: SanitizableValue | SanitizableValue[] | SanitizableObject };
+// Tipos de datos soportados para sanitización (eliminamos alias no usados)
+// Nota: tipo previo no utilizado eliminado para evitar warning de compilación
 
 interface SanitizationResult {
   sanitized: any;
@@ -117,8 +116,9 @@ export class InputSanitizationService {
     } else {
       // Allow specific HTML tags only
       sanitized = DOMPurify.sanitize(sanitized, {
-        ALLOWED_TAGS: SANITIZATION_CONFIG.HTML_ALLOWED_TAGS,
-        ALLOWED_ATTR: SANITIZATION_CONFIG.HTML_ALLOWED_ATTRIBUTES
+        // Copias mutables para cumplir con la firma de tipos
+        ALLOWED_TAGS: [...SANITIZATION_CONFIG.HTML_ALLOWED_TAGS],
+        ALLOWED_ATTR: [...SANITIZATION_CONFIG.HTML_ALLOWED_ATTRIBUTES]
       });
     }
     
@@ -172,7 +172,7 @@ export class InputSanitizationService {
         obj = obj.slice(0, SANITIZATION_CONFIG.MAX_ARRAY_LENGTH);
       }
       
-      const sanitizedArray = obj.map(item => {
+      const sanitizedArray = obj.map((item: any) => {
         const result = this.sanitizeObject(item, options, depth + 1);
         warnings.push(...result.warnings);
         blocked.push(...result.blocked);
@@ -367,11 +367,12 @@ export const inputSanitizationMiddleware = (options: SanitizationOptions = {}) =
       
       // En caso de error, rechazar request si está en modo estricto
       if (options.strict) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'INPUT_SANITIZATION_ERROR',
           message: 'Request could not be safely processed'
         });
+        return;
       }
       
       // Si no es estricto, continuar
