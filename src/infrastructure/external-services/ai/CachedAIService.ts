@@ -123,6 +123,26 @@ export class CachedAIService implements IAIService {
   }
 
   /**
+   * Genera recomendaciones contextuales de productos complementarios
+   * CU-33: Recomendaciones Contextuales Automáticas
+   */
+  async getProductRecommendations(
+    productsInList: ProductInList[],
+    context?: string,
+    specificProductName?: string,
+    maxRecommendations?: number,
+    creativityLevel?: 'conservative' | 'balanced' | 'creative'
+  ): Promise<string> {
+    return await this.perplexityService.getProductRecommendations(
+      productsInList,
+      context,
+      specificProductName,
+      maxRecommendations,
+      creativityLevel
+    );
+  }
+
+  /**
    * Verifica disponibilidad del servicio
    */
   async isAvailable(): Promise<boolean> {

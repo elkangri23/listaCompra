@@ -90,6 +90,24 @@ export interface IAIService {
   generateOccasionList(prompt: string): Promise<string>;
 
   /**
+   * Genera recomendaciones contextuales de productos complementarios
+   * CU-33: Recomendaciones Contextuales Automáticas
+   * @param productsInList Productos actuales en la lista
+   * @param context Contexto adicional (opcional: "desayuno", "cena", "vegano", etc.)
+   * @param specificProductName Producto específico para recomendaciones focalizadas (opcional)
+   * @param maxRecommendations Número máximo de recomendaciones (por defecto: 5)
+   * @param creativityLevel Nivel de creatividad: "conservative" | "balanced" | "creative"
+   * @returns Respuesta de IA con productos recomendados en formato JSON
+   */
+  getProductRecommendations(
+    productsInList: ProductInList[],
+    context?: string,
+    specificProductName?: string,
+    maxRecommendations?: number,
+    creativityLevel?: 'conservative' | 'balanced' | 'creative'
+  ): Promise<string>;
+
+  /**
    * Análisis genérico de IA con prompt personalizado
    * @param request Solicitud de análisis con prompt y contexto
    * @returns Respuesta del modelo de IA
