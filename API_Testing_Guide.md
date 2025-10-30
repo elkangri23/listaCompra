@@ -129,13 +129,14 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 - ✅ Actualizar Permisos
 - ✅ Cancelar Invitación
 
-### 🤖 Inteligencia Artificial (6 endpoints)
+### 🤖 Inteligencia Artificial (7 endpoints)
 - ✅ Sugerencias de Categorías (`POST /ai/category-suggestions`)
 - ✅ Health Check IA (`GET /ai/health`)
 - ✅ Información de Uso (`GET /ai/usage` - Solo Admin)
-- ✅ **NUEVO:** Obtener Ocasiones Disponibles (`GET /occasion-lists/occasions`)
-- ✅ **NUEVO:** Generar Lista por Ocasión (`POST /occasion-lists/generate`)
-- ✅ **NUEVO:** Preview Lista por Ocasión (`POST /occasion-lists/preview`)
+- ✅ **CU-29:** Categorización Masiva (`POST /ai/bulk-categorize`) - 🆕 **30 Oct 2025**
+- ✅ **CU-32:** Obtener Ocasiones Disponibles (`GET /occasion-lists/occasions`)
+- ✅ **CU-32:** Generar Lista por Ocasión (`POST /occasion-lists/generate`)
+- ✅ **CU-32:** Preview Lista por Ocasión (`POST /occasion-lists/preview`)
 
 ### 📋 Blueprints/Plantillas (6 endpoints)
 - ✅ Crear Blueprint (`POST /blueprints`)
@@ -257,14 +258,14 @@ GET /categories?tiendaId={storeId}&activas=true
 - ✅ Invitaciones (5 endpoints)
 - ✅ Dashboard de Monitoreo (4 endpoints)
 - ✅ Desarrollo (3 endpoints)
+- ✅ **Inteligencia Artificial (7 endpoints)** - Fases 9, 15, 17 ✅ Implementados (CU-28, CU-29, CU-32)
+- ✅ **Blueprints/Plantillas (6 endpoints)** - Fase 10 ✅ Implementados
+- ✅ **Administración (4 endpoints)** - Fase 11 ✅ Implementados
+- ✅ **Seguridad y Cache (5 endpoints)** - Fase 12 ✅ Implementados
 
-**Endpoints pendientes de añadir:**
-- ⏳ **Inteligencia Artificial (6 endpoints)** - Fases 9 y 15 ✅ Implementados (CU-28, CU-32)
-- ⏳ **Blueprints/Plantillas (6 endpoints)** - Fase 10 ✅ Implementados
-- ⏳ **Administración (4 endpoints)** - Fase 11 ✅ Implementados
-- ⏳ **Seguridad y Cache (5 endpoints)** - Fase 12 ✅ Implementados
+**Total: 42 endpoints completamente documentados** ✅
 
-> **Actualización Pendiente**: Los endpoints de IA (incluye **Listas Inteligentes por Ocasión**), Blueprints, Admin y Seguridad están **completamente implementados y funcionando**, pero aún no están incluidos en `postman_collection.json`. La próxima actualización incluirá estos **21+ endpoints adicionales**. Consulta la documentación Swagger en `/api-docs` o prueba manualmente con Thunder Client/Postman.
+> **✅ Actualizado**: Todos los endpoints de IA (incluye **Categorización Masiva CU-29**, **Listas Inteligentes por Ocasión CU-32**), Blueprints, Admin y Seguridad están completamente implementados, funcionando y **documentados en esta colección**. También disponibles en Swagger UI: `/api/docs`
 
 ### Autenticación
 - Todos los endpoints (excepto registro, login y acceso a invitaciones) requieren token JWT
@@ -298,6 +299,7 @@ GET /categories?tiendaId={storeId}&activas=true
 #### Paso 5: Inteligencia Artificial (🤖 IA)
 ```
 11. AI → Sugerencias de Categorías (nombre producto)
+11. AI → 🆕 Categorización Masiva (hasta 50 productos)
 11. AI → Health Check IA
 11. AI → Información de Uso (solo admin)
 11. AI → Obtener Ocasiones Disponibles (20+ ocasiones)
@@ -476,6 +478,119 @@ GET /api/v1/recommendations/{listId}?categoryId={catId}&storeId={storeId}
 - Verifica que estés usando el entorno correcto
 - Revisa la pestaña "Tests" de los requests para ver los scripts
 - Confirma que la respuesta sea exitosa (200/201)
+
+---
+
+## 🆕 Nuevo: Categorización Masiva con IA (CU-29)
+
+### 📦 Descripción
+Endpoint que permite categorizar hasta **50 productos simultáneamente** usando IA (Perplexity Llama 3.1 Sonar), optimizando costos mediante batching inteligente y cache Redis.
+
+### 🎯 Endpoint
+```
+POST /api/v1/ai/bulk-categorize
+```
+
+### 📝 Request Body Ejemplo
+```json
+{
+  "products": [
+    {
+      "nombre": "Leche entera Pascual 1L",
+      "descripcion": "Leche pasteurizada botella 1 litro"
+    },
+    {
+      "nombre": "Pan integral"
+    },
+    {
+      "nombre": "Coca Cola 2L"
+    },
+    {
+      "nombre": "Pechuga de pollo",
+      "descripcion": "Pollo fresco de granja"
+    },
+    {
+      "nombre": "Tomates cherry"
+    }
+  ],
+  "tiendaId": "{{storeId}}",
+  "enrichWithExistingCategories": true
+}
+```
+
+### ✅ Respuesta Exitosa (200 OK)
+```json
+{
+  "success": true,
+  "data": {
+    "categorizedProducts": [
+      {
+        "nombre": "Leche entera Pascual 1L",
+        "suggestedCategory": {
+          "nombre": "Lácteos",
+          "tiendaId": "uuid-tienda",
+          "confidence": 95
+        },
+        "alternativeCategories": [
+          { "nombre": "Bebidas", "confidence": 60 }
+        ],
+        "source": "ai",
+        "processingTimeMs": 1250
+      }
+    ],
+    "batchStats": {
+      "totalProducts": 5,
+      "successful": 5,
+      "failed": 0,
+      "fromCache": 2,
+      "fromAI": 3,
+      "fromExisting": 0,
+      "averageConfidence": 88.5,
+      "totalProcessingTimeMs": 3200,
+      "estimatedTokens": 450
+    }
+  }
+}
+```
+
+### 🔑 Características Clave
+- **📦 Batching Inteligente**: División automática en sub-lotes de 20 productos
+- **💾 Cache Redis**: TTL 24h para reducir costos de API
+- **📊 Enriquecimiento BD**: Usa categorías existentes de la tienda
+- **🛡️ Validación 3 Niveles**: DTO Zod + Use Case + Service Layer
+- **📈 Estadísticas Completas**: Confidence, sources, timing detallados
+- **⚠️ Fallos Parciales**: Código 207 si algunos productos fallan
+- **🔐 Rate Limiting**: 5 requests/hora por usuario
+
+### 🎯 Casos de Uso
+1. **Onboarding de usuarios**: Categorizar productos masivamente al crear cuenta
+2. **Importación de listas**: Categorizar productos importados de otras apps
+3. **Optimización de BD**: Re-categorizar productos existentes con baja confianza
+4. **Testing IA**: Validar calidad de categorización en lote
+
+### ⚠️ Validaciones
+- **Mínimo**: 1 producto
+- **Máximo**: 50 productos por batch
+- **Nombre producto**: 1-100 caracteres (requerido)
+- **Descripción**: 0-500 caracteres (opcional)
+- **tiendaId**: UUID válido (opcional)
+
+### 📊 Códigos de Respuesta
+- `200 OK`: Todos categorizados exitosamente
+- `207 Multi-Status`: Algunos productos fallaron (ver `batchStats.failed`)
+- `400 Bad Request`: Validación fallida (>50 productos, nombres inválidos)
+- `401 Unauthorized`: Token JWT faltante o inválido
+- `429 Too Many Requests`: Rate limit excedido (5 req/hora)
+- `500 Internal Server Error`: Error del servidor
+
+### 💡 Tips de Uso
+- Usa `tiendaId` para mejor precisión con categorías existentes
+- Activa `enrichWithExistingCategories: true` para priorizar categorías de BD
+- Monitorea `batchStats.averageConfidence` (ideal >85%)
+- Cache Redis evita llamadas duplicadas (ahorro de costos)
+- Revisa `warnings` en respuesta para optimizaciones
+
+---
 
 ## 🤝 Contribución
 
