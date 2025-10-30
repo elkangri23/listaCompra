@@ -13,6 +13,9 @@ import type { AuthController } from './controllers/AuthController';
 import type { InvitationController } from './controllers/InvitationController';
 import type { AdminController } from './controllers/AdminController';
 import type { AIController } from './controllers/AIController';
+import type { ListController } from './controllers/ListController';
+import type { ProductController } from './controllers/ProductController';
+import type { CategoryController } from './controllers/CategoryController';
 import { createAuthRoutes } from './routes/authRoutes';
 import { createInvitationRoutes } from './routes/invitationRoutes';
 import { createAdminRoutes } from './routes/adminRoutes';
@@ -26,6 +29,9 @@ export interface ServerDependencies {
   adminController: AdminController;
   aiController: AIController;
   authMiddleware: express.RequestHandler;
+  listController: ListController;
+  productController: ProductController;
+  categoryController: CategoryController;
 }
 
 export async function createServer(dependencies: ServerDependencies): Promise<Application> {
@@ -117,6 +123,7 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
     });
   });
 
+
   // Rutas de la aplicación
   app.use('/api/v1/auth', createAuthRoutes(dependencies.authController));
   app.use('/api/v1/invitations', createInvitationRoutes({
@@ -133,7 +140,17 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
     authMiddleware: dependencies.authMiddleware
   }));
   app.use('/api/v1/recommendations', recommendationsRoutes);
-  
+
+  // NUEVO: Rutas de listas
+  const { listController, productController, categoryController, authMiddleware } = dependencies;
+  const { createListRoutes } = require('./routes/listRoutes');
+  const { createProductRoutes } = require('./routes/productRoutes');
+  const { createCategoryRoutes } = require('./routes/categoryRoutes');
+
+  app.use('/api/v1/lists', createListRoutes(listController, authMiddleware));
+  app.use('/api/v1/lists', createProductRoutes(productController, authMiddleware));
+  app.use('/api/v1/categories', createCategoryRoutes(categoryController));
+
   // Rutas de desarrollo (solo en development)
   app.use('/api/v1/dev', devRoutes);
 
