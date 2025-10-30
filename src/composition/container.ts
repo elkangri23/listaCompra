@@ -19,6 +19,7 @@ import { UpdateProduct } from '@application/use-cases/products/UpdateProduct';
 import { MarkProductAsPurchased } from '@application/use-cases/products/MarkProductAsPurchased';
 import { DeleteProduct } from '@application/use-cases/products/DeleteProduct';
 import { GetProducts } from '@application/use-cases/products/GetProducts';
+import { GetProductRecommendations } from '@application/use-cases/products/GetProductRecommendations';
 import { CreateCategory } from '@application/use-cases/categories/CreateCategory';
 import { GetCategoriesByStore } from '@application/use-cases/categories/GetCategoriesByStore';
 import { UpdateCategory } from '@application/use-cases/categories/UpdateCategory';
@@ -60,6 +61,7 @@ import { CategoryController } from '@infrastructure/http/controllers/CategoryCon
 import { StoreController } from '@infrastructure/http/controllers/StoreController';
 import { InvitationController } from '@infrastructure/http/controllers/InvitationController';
 import { AdminController } from '@infrastructure/http/controllers/AdminController';
+import { RecommendationsController } from '@infrastructure/http/controllers/RecommendationsController';
 import { createAuthMiddleware } from '@infrastructure/http/middlewares/authMiddleware';
 
 // Interfaces
@@ -113,6 +115,7 @@ export class Container {
   private _markProductAsPurchased!: MarkProductAsPurchased;
   private _deleteProduct!: DeleteProduct;
   private _getProducts!: GetProducts;
+  private _getProductRecommendations!: GetProductRecommendations;
   private _createCategory!: CreateCategory;
   private _getCategoriesByStore!: GetCategoriesByStore;
   private _updateCategory!: UpdateCategory;
@@ -136,6 +139,7 @@ export class Container {
   private _storeController!: StoreController;
   private _invitationController!: InvitationController;
   private _adminController!: AdminController;
+  private _recommendationsController!: RecommendationsController;
 
   // Middlewares
   private _authMiddleware!: express.RequestHandler;
@@ -334,6 +338,13 @@ export class Container {
       this._listaRepository
     );
 
+    this._getProductRecommendations = new GetProductRecommendations(
+      this._listaRepository,
+      this._productoRepository,
+      this._categoriaRepository,
+      this._aiService
+    );
+
     // Category use cases
     this._createCategory = new CreateCategory(
       this._categoriaRepository,
@@ -458,6 +469,10 @@ export class Container {
     this._adminController = new AdminController(
       this._impersonateUser,
       this._endImpersonation
+    );
+
+    this._recommendationsController = new RecommendationsController(
+      this._getProductRecommendations
     );
 
     // Inicializar middleware de autenticación
@@ -646,6 +661,10 @@ export class Container {
 
   public get adminController(): AdminController {
     return this._adminController;
+  }
+
+  public get recommendationsController(): RecommendationsController {
+    return this._recommendationsController;
   }
 
   public get authMiddleware(): express.RequestHandler {
