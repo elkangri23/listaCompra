@@ -7,6 +7,7 @@ import { Router } from 'express';
 import { AdminController } from '@infrastructure/http/controllers/AdminController';
 import { validationMiddleware } from '@infrastructure/http/middlewares/validationMiddleware';
 import { createAdminRateLimitMiddleware } from '@infrastructure/http/middlewares/adminRateLimitMiddleware';
+import { securityTestEndpoint } from '../../security/SecurityTestingService';
 import { z } from 'zod';
 
 // Esquemas de validación
@@ -358,6 +359,82 @@ export function createAdminRoutes(
     adminMiddleware,
     adminRateLimitMiddleware,
     (req: any, res: any) => adminController.getImpersonationAuditLog(req, res)
+  );
+
+  /**
+   * @swagger
+   * /api/v1/admin/security/test:
+   *   get:
+   *     summary: Ejecutar tests de seguridad automáticos
+   *     description: Ejecuta una suite completa de tests de seguridad y devuelve un reporte con score y recomendaciones
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Reporte de seguridad generado exitosamente
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 securityScore:
+   *                   type: number
+   *                   minimum: 0
+   *                   maximum: 100
+   *                 totalTests:
+   *                   type: number
+   *                 passedTests:
+   *                   type: number
+   *                 failedTests:
+   *                   type: number
+   *                 summary:
+   *                   type: object
+   *                   properties:
+   *                     critical:
+   *                       type: number
+   *                     high:
+   *                       type: number
+   *                     medium:
+   *                       type: number
+   *                     low:
+   *                       type: number
+   *                 report:
+   *                   type: string
+   *                 results:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       testName:
+   *                         type: string
+   *                       passed:
+   *                         type: boolean
+   *                       details:
+   *                         type: string
+   *                       severity:
+   *                         type: string
+   *                         enum: [LOW, MEDIUM, HIGH, CRITICAL]
+   *                       recommendation:
+   *                         type: string
+   *                 timestamp:
+   *                   type: string
+   *                   format: date-time
+   *       401:
+   *         description: Token no válido
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.get(
+    '/security/test',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    securityTestEndpoint
   );
 
   return router;

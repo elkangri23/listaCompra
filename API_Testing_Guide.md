@@ -263,7 +263,7 @@ GET /categories?tiendaId={storeId}&activas=true
 - ✅ **Administración (4 endpoints)** - Fase 11 ✅ Implementados
 - ✅ **Seguridad y Cache (5 endpoints)** - Fase 12 ✅ Implementados
 
-**Total: 42 endpoints completamente documentados** ✅
+**Total: 48 endpoints completamente documentados** ✅
 
 > **✅ Actualizado**: Todos los endpoints de IA (incluye **Categorización Masiva CU-29**, **Listas Inteligentes por Ocasión CU-32**), Blueprints, Admin y Seguridad están completamente implementados, funcionando y **documentados en esta colección**. También disponibles en Swagger UI: `/api/docs`
 
@@ -592,6 +592,87 @@ POST /api/v1/ai/bulk-categorize
 
 ---
 
+## 🛡️ 11. Admin & Security
+
+### Security Test - Vulnerability Scan
+
+**Endpoint**: `GET /admin/security/test`
+**Autenticación**: Bearer Token (Rol Admin requerido)
+
+### 🔍 Descripción
+Ejecuta una suite completa de tests de seguridad automáticos para validar la postura de seguridad de la aplicación.
+
+### 📊 Response Format
+```json
+{
+  "success": true,
+  "securityScore": 95,
+  "totalTests": 24,
+  "passedTests": 23,
+  "failedTests": 1,
+  "summary": {
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 23
+  },
+  "report": "🔐 === SECURITY SCAN REPORT ===\n📊 Overall Security Score: 95/100\n✅ GOOD: Security posture is good with minor improvements needed.",
+  "results": [
+    {
+      "testName": "HTTPS Enforcement",
+      "passed": false,
+      "details": "HTTPS not enforced (development environment)",
+      "severity": "MEDIUM",
+      "recommendation": "Enable HTTPS for production deployment"
+    }
+  ],
+  "timestamp": "2025-10-30T23:45:00.000Z"
+}
+```
+
+### 🧪 Tests Incluidos
+1. **XSS Protection** (6 vectores): Script injection, JavaScript URLs, event handlers
+2. **SQL Injection Protection** (7 vectores): Union attacks, DROP commands, OR conditions
+3. **Rate Limiting**: Validación de configuración Redis
+4. **Security Headers**: X-Frame-Options, HSTS, CSP, X-XSS-Protection
+5. **HTTPS Configuration**: SSL enforcement, certificados
+6. **Authentication Security**: JWT tokens, password hashing
+7. **Database Security**: SSL connections, credential exposure
+
+### 🎯 Interpretación del Score
+- **90-100**: 🏆 EXCELLENT - Listo para producción
+- **80-89**: ✅ GOOD - Mejoras menores necesarias
+- **70-79**: ⚠️ MODERATE - Mejoras requeridas antes de producción
+- **<70**: 🚨 POOR - Issues críticos de seguridad
+
+### 🔑 Características Clave
+- **⚡ Ejecución Rápida**: ~2-3 segundos para suite completa
+- **📊 Scoring Inteligente**: Algoritmo weighted por severidad
+- **🎯 Solo Fallos**: Response muestra solo tests que fallaron
+- **📋 Recomendaciones**: Acciones específicas para cada fallo
+- **🔐 Admin Only**: Requiere rol de administrador
+
+### ⚠️ Validaciones
+- **Autenticación**: JWT Bearer token válido
+- **Autorización**: Rol 'admin' requerido
+- **Rate Limiting**: Aplicado por `adminRateLimitMiddleware`
+
+### 📊 Códigos de Respuesta
+- `200 OK`: Tests ejecutados exitosamente (independiente del score)
+- `401 Unauthorized`: Token JWT faltante o inválido
+- `403 Forbidden`: Usuario sin rol de administrador
+- `429 Too Many Requests`: Rate limit administrativo excedido
+- `500 Internal Server Error`: Error en la ejecución de tests
+
+### 💡 Tips de Uso
+- Ejecuta antes de deployments a producción
+- Monitorea el score regularmente (objetivo >90%)
+- Usa las recomendaciones para priorizar mejoras de seguridad
+- Los tests en desarrollo pueden fallar por configuraciones locales
+- Revisa el `report` completo para contexto detallado
+
+---
+
 ## 🤝 Contribución
 
 Si encuentras algún endpoint que falta o algún error en la colección:
@@ -604,4 +685,4 @@ Si encuentras algún endpoint que falta o algún error en la colección:
 
 **¡Happy Testing! 🎉**
 
-Última actualización: 29 de octubre de 2025 - Fase 11 Admin Completada
+Última actualización: 30 de octubre de 2025 - CU-27 Security Production-Ready Completado

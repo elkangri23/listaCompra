@@ -5,7 +5,7 @@
 
 import { Router, RequestHandler } from 'express';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
-import { aiRateLimitPerUser, aiRateLimitStrict } from '../middlewares/rateLimitMiddleware';
+import { aiStandardAdvancedRateLimit, aiPremiumAdvancedRateLimit } from '../middlewares/advancedRateLimitMiddleware';
 import { requireAdmin } from '../middlewares/roleMiddleware';
 import { AIController } from '../controllers/AIController';
 import { z } from 'zod';
@@ -185,7 +185,7 @@ export function createAIRoutes(dependencies: {
    *               timestamp: 2024-10-29T10:30:00Z
    */
   router.post('/category-suggestions',
-    aiRateLimitPerUser, // Rate limiting por usuario
+    aiStandardAdvancedRateLimit, // Rate limiting por usuario IA estándar
     authMiddleware, // Verificar autenticación
     validationMiddleware(categorySuggestionsSchema), // Validar entrada
     aiController.suggestCategories.bind(aiController)
@@ -460,14 +460,14 @@ export function createAIRoutes(dependencies: {
    *         description: Rate limit excedido (5 req/hora)
    */
   router.post('/bulk-categorize',
-    aiRateLimitStrict, // Rate limiting: 5 req/hora
+    aiPremiumAdvancedRateLimit, // Rate limiting IA premium: operaciones costosas
     authMiddleware, // Verificar autenticación
     validationMiddleware(bulkCategorizationSchema),
     aiController.bulkCategorize.bind(aiController)
   );
 
   router.get('/usage',
-    aiRateLimitStrict, // Rate limiting diario más estricto
+    aiPremiumAdvancedRateLimit, // Rate limiting diario más estricto para bulk ops
     authMiddleware, // Verificar autenticación
     (req, res, next) => requireAdmin(req as any, res, next), // Solo administradores
     aiController.getUsageInfo.bind(aiController)
