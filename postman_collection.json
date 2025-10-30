@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Lista Compra API",
-    "description": "Colección completa de endpoints para la API de Lista de la Compra Colaborativa - 36 endpoints organizados en 9 categorías",
-    "version": "1.1.0",
+    "description": "Colección completa de endpoints para la API de Lista de la Compra Colaborativa - 41 endpoints organizados en 10 categorías (incluye CU-33: Recomendaciones IA)",
+    "version": "1.2.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -1105,6 +1105,240 @@
               "path": ["dashboard", "performance"]
             },
             "description": "Obtiene análisis detallado de performance: endpoints lentos y con errores."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10. Recomendaciones IA",
+      "item": [
+        {
+          "name": "Ejemplos de Contexto (Público)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/recommendations/context-examples",
+              "host": ["{{baseUrl}}"],
+              "path": ["recommendations", "context-examples"]
+            },
+            "description": "📚 Endpoint público (sin autenticación) que devuelve ejemplos de contextos útiles para mejorar recomendaciones: 'Cena romántica', 'Barbacoa familiar', 'Desayuno fitness', etc. con tips de uso."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta tiene ejemplos', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.examples).to.be.an('array');",
+                  "    pm.expect(jsonData.data.examples.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recomendaciones Generales",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/recommendations/{{listId}}?creativityLevel=balanced&maxRecommendations=10&excludeExisting=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["recommendations", "{{listId}}"],
+              "query": [
+                {
+                  "key": "creativityLevel",
+                  "value": "balanced",
+                  "description": "Conservative (seguro) | Balanced (equilibrado) | Creative (innovador)"
+                },
+                {
+                  "key": "maxRecommendations",
+                  "value": "10",
+                  "description": "Cantidad de sugerencias (5-50)"
+                },
+                {
+                  "key": "excludeExisting",
+                  "value": "true",
+                  "description": "Excluir productos ya en lista"
+                },
+                {
+                  "key": "context",
+                  "value": "",
+                  "description": "Contexto opcional: 'Cena italiana', 'Desayuno fitness'",
+                  "disabled": true
+                },
+                {
+                  "key": "categoryId",
+                  "value": "",
+                  "description": "Filtrar por categoría específica",
+                  "disabled": true
+                },
+                {
+                  "key": "includeUserHistory",
+                  "value": "true",
+                  "description": "Incluir historial de usuario",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "🎯 Obtiene recomendaciones generales de productos complementarios para una lista completa. La IA analiza todos los productos actuales y sugiere items que complementan bien.\n\n**Niveles de creatividad:**\n- Conservative: Solo muy relacionados\n- Balanced: Mix equilibrado (recomendado)\n- Creative: Sugerencias innovadoras"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 o 400 (lista vacía)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 403, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Respuesta tiene recomendaciones', function () {",
+                  "        const jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.success).to.eql(true);",
+                  "        pm.expect(jsonData.data).to.have.property('recommendations');",
+                  "        pm.expect(jsonData.data).to.have.property('detectedContext');",
+                  "        pm.expect(jsonData.data.metadata).to.have.property('averageConfidence');",
+                  "    });",
+                  "",
+                  "    pm.test('Recomendaciones tienen estructura correcta', function () {",
+                  "        const jsonData = pm.response.json();",
+                  "        if (jsonData.data.recommendations.length > 0) {",
+                  "            const rec = jsonData.data.recommendations[0];",
+                  "            pm.expect(rec).to.have.property('name');",
+                  "            pm.expect(rec).to.have.property('reason');",
+                  "            pm.expect(rec).to.have.property('confidenceScore');",
+                  "            pm.expect(rec).to.have.property('recommendationType');",
+                  "        }",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recomendaciones Específicas por Producto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/recommendations/{{listId}}/for-product/{{productId}}?creativityLevel=balanced&maxRecommendations=8",
+              "host": ["{{baseUrl}}"],
+              "path": ["recommendations", "{{listId}}", "for-product", "{{productId}}"],
+              "query": [
+                {
+                  "key": "creativityLevel",
+                  "value": "balanced"
+                },
+                {
+                  "key": "maxRecommendations",
+                  "value": "8"
+                },
+                {
+                  "key": "context",
+                  "value": "",
+                  "description": "Contexto opcional para afinar sugerencias",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "🔍 Obtiene recomendaciones enfocadas en un producto específico de la lista. Por ejemplo, si seleccionas 'Pasta', sugerirá 'Salsa de tomate', 'Queso parmesano', 'Albahaca', etc.\n\n**Casos de uso:**\n- Complementar un producto que acabas de añadir\n- Ver qué va bien con un ingrediente específico\n- Descubrir combinaciones que no conocías"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code válido', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 403, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Recomendaciones relacionadas con producto', function () {",
+                  "        const jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.data.recommendations).to.be.an('array');",
+                  "        // Las recomendaciones deberían incluir relatedProducts",
+                  "        if (jsonData.data.recommendations.length > 0) {",
+                  "            const rec = jsonData.data.recommendations[0];",
+                  "            pm.expect(rec).to.have.property('relatedProducts');",
+                  "        }",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recomendaciones con Contexto Específico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/recommendations/{{listId}}?context=Cena italiana&creativityLevel=creative&maxRecommendations=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["recommendations", "{{listId}}"],
+              "query": [
+                {
+                  "key": "context",
+                  "value": "Cena italiana",
+                  "description": "Contexto para afinar recomendaciones"
+                },
+                {
+                  "key": "creativityLevel",
+                  "value": "creative"
+                },
+                {
+                  "key": "maxRecommendations",
+                  "value": "12"
+                }
+              ]
+            },
+            "description": "🎨 Ejemplo de recomendaciones con contexto específico. El contexto ayuda a la IA a entender mejor la ocasión y sugerir productos más apropiados.\n\n**Ejemplos de contextos:**\n- 'Cena italiana' → Sugerirá vino, pan, postre italiano\n- 'Desayuno fitness' → Frutas, yogurt, avena\n- 'Barbacoa familiar' → Carbón, salsas, bebidas\n- 'Cena romántica' → Velas, vino premium, postre"
+          },
+          "response": []
+        },
+        {
+          "name": "Recomendaciones por Categoría",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/recommendations/{{listId}}?categoryId={{categoryId}}&maxRecommendations=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["recommendations", "{{listId}}"],
+              "query": [
+                {
+                  "key": "categoryId",
+                  "value": "{{categoryId}}",
+                  "description": "Filtrar solo esta categoría"
+                },
+                {
+                  "key": "maxRecommendations",
+                  "value": "15"
+                }
+              ]
+            },
+            "description": "🗂️ Filtra recomendaciones para obtener solo productos de una categoría específica. Útil cuando quieres completar una sección particular de tu lista.\n\n**Ejemplo:**\nSi tienes productos de 'Verduras' y filtras por categoryId de 'Verduras', obtendrás más sugerencias de vegetales que complementen los que ya tienes."
           },
           "response": []
         }
