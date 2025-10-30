@@ -3,8 +3,7 @@
  * Define los endpoints para categorización automática y análisis IA
  */
 
-import { Router } from 'express';
-import { createAuthMiddleware } from '../middlewares/authMiddleware';
+import { Router, RequestHandler } from 'express';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { aiRateLimitPerUser, aiRateLimitStrict } from '../middlewares/rateLimitMiddleware';
 import { requireAdmin } from '../middlewares/roleMiddleware';
@@ -31,10 +30,34 @@ const categorySuggestionsSchema = z.object({
   })
 });
 
+// Schema de validación para categorización masiva (CU-29)
+const bulkCategorizationSchema = z.object({
+  body: z.object({
+    products: z.array(z.object({
+      nombre: z.string()
+        .trim()
+        .min(1, 'El nombre del producto no puede estar vacío')
+        .max(100, 'El nombre del producto no puede exceder 100 caracteres'),
+      descripcion: z.string()
+        .trim()
+        .max(500, 'La descripción no puede exceder 500 caracteres')
+        .optional()
+    }))
+      .min(1, 'Se requiere al menos 1 producto')
+      .max(50, 'Máximo 50 productos por batch'),
+    tiendaId: z.string()
+      .trim()
+      .uuid('tiendaId debe ser un UUID válido')
+      .optional(),
+    enrichWithExistingCategories: z.boolean()
+      .optional()
+  })
+});
+
 // Función factory para crear las rutas con dependencias
 export function createAIRoutes(dependencies: {
   aiController: AIController;
-  authMiddleware: ReturnType<typeof createAuthMiddleware>;
+  authMiddleware: RequestHandler;
 }) {
   const router = Router();
   const { aiController, authMiddleware } = dependencies;
@@ -387,6 +410,62 @@ export function createAIRoutes(dependencies: {
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
+
+  /**
+   * @swagger
+   * /api/v1/ai/bulk-categorize:
+   *   post:
+   *     tags: [Inteligencia Artificial]
+   *     summary: Categorización masiva de productos (CU-29)
+   *     description: Categoriza múltiples productos en lote con IA
+   *     operationId: bulkCategorizeProducts
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - products
+   *             properties:
+   *               products:
+   *                 type: array
+   *                 minItems: 1
+   *                 maxItems: 50
+   *                 items:
+   *                   type: object
+   *                   required:
+   *                     - nombre
+   *                   properties:
+   *                     nombre:
+   *                       type: string
+   *                       example: Leche entera Pascual 1L
+   *                     descripcion:
+   *                       type: string
+   *                       example: Leche pasteurizada botella 1L
+   *               tiendaId:
+   *                 type: string
+   *                 format: uuid
+   *               enrichWithExistingCategories:
+   *                 type: boolean
+   *                 default: true
+   *     responses:
+   *       200:
+   *         description: Categorización completada
+   *       207:
+   *         description: Categorización parcial (algunos productos fallaron)
+   *       400:
+   *         $ref: '#/components/responses/ValidationError'
+   *       429:
+   *         description: Rate limit excedido (5 req/hora)
+   */
+  router.post('/bulk-categorize',
+    aiRateLimitStrict, // Rate limiting: 5 req/hora
+    authMiddleware, // Verificar autenticación
+    validationMiddleware(bulkCategorizationSchema),
+    aiController.bulkCategorize.bind(aiController)
+  );
+
   router.get('/usage',
     aiRateLimitStrict, // Rate limiting diario más estricto
     authMiddleware, // Verificar autenticación

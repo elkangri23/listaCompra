@@ -12,9 +12,11 @@ import { setupSwagger } from '../config/swagger-simple.config';
 import type { AuthController } from './controllers/AuthController';
 import type { InvitationController } from './controllers/InvitationController';
 import type { AdminController } from './controllers/AdminController';
+import type { AIController } from './controllers/AIController';
 import { createAuthRoutes } from './routes/authRoutes';
 import { createInvitationRoutes } from './routes/invitationRoutes';
 import { createAdminRoutes } from './routes/adminRoutes';
+import { createAIRoutes } from './routes/aiRoutes';
 import recommendationsRoutes from './routes/recommendationsRoutes';
 import { devRoutes } from './routes/devRoutes';
 
@@ -22,6 +24,7 @@ export interface ServerDependencies {
   authController: AuthController;
   invitationController: InvitationController;
   adminController: AdminController;
+  aiController: AIController;
   authMiddleware: express.RequestHandler;
 }
 
@@ -125,6 +128,10 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
     dependencies.authMiddleware,
     dependencies.authMiddleware // Por ahora usar authMiddleware en lugar de adminMiddleware
   ));
+  app.use('/api/v1/ai', createAIRoutes({
+    aiController: dependencies.aiController,
+    authMiddleware: dependencies.authMiddleware
+  }));
   app.use('/api/v1/recommendations', recommendationsRoutes);
   
   // Rutas de desarrollo (solo en development)

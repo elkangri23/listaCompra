@@ -108,6 +108,18 @@ export interface IAIService {
   ): Promise<string>;
 
   /**
+   * Categoriza múltiples productos en lote de forma optimizada
+   * CU-29: Categorización Masiva Inteligente
+   * @param products Array de productos a categorizar (máximo 50)
+   * @param existingCategories Categorías existentes de la tienda para contexto
+   * @returns Respuesta de IA con productos categorizados en formato JSON
+   */
+  bulkCategorizeProducts(
+    products: Array<{ nombre: string; descripcion?: string }>,
+    existingCategories?: string[]
+  ): Promise<string>;
+
+  /**
    * Análisis genérico de IA con prompt personalizado
    * @param request Solicitud de análisis con prompt y contexto
    * @returns Respuesta del modelo de IA

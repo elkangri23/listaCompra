@@ -977,6 +977,253 @@ Responde SOLO con el JSON, sin texto adicional.`;
   }
 
   /**
+   * Categoriza múltiples productos en lote de forma optimizada
+   * CU-29: Categorización Masiva Inteligente
+   */
+  async bulkCategorizeProducts(
+    products: Array<{ nombre: string; descripcion?: string }>,
+    existingCategories?: string[]
+  ): Promise<string> {
+    const startTime = Date.now();
+
+    try {
+      // Validar inputs
+      if (!products || products.length === 0) {
+        throw new Error('Se requiere al menos un producto para categorizar');
+      }
+
+      if (products.length > 50) {
+        throw new Error('Máximo 50 productos por batch');
+      }
+
+      // Sanitizar inputs
+      const sanitizedProducts = products.map((p, index) => {
+        const sanitizedNombre = AISecurityUtils.sanitizeUserInput(p.nombre, 100);
+        if (!sanitizedNombre || sanitizedNombre === '[INVALID_INPUT]') {
+          throw new Error(`Producto en índice ${index} tiene nombre inválido`);
+        }
+        
+        const sanitized: { nombre: string; descripcion?: string } = {
+          nombre: sanitizedNombre
+        };
+
+        if (p.descripcion) {
+          const sanitizedDesc = AISecurityUtils.sanitizeUserInput(p.descripcion, 500);
+          if (sanitizedDesc && sanitizedDesc !== '[INVALID_INPUT]') {
+            sanitized.descripcion = sanitizedDesc;
+          }
+        }
+
+        return sanitized;
+      });
+
+      const sanitizedCategories = existingCategories?.map(cat => 
+        AISecurityUtils.sanitizeUserInput(cat, 30)
+      ).filter(cat => cat && cat !== '[INVALID_INPUT]');
+
+      // Construir prompt optimizado para batching
+      const prompt = this.buildBulkCategorizationPrompt(
+        sanitizedProducts,
+        sanitizedCategories
+      );
+
+      this.logger.ai('Categorizando productos en lote', {
+        productsCount: products.length,
+        existingCategoriesCount: sanitizedCategories?.length || 0,
+        promptLength: prompt.length
+      });
+
+      // Llamar a Perplexity API
+      const response = await this.httpClient.post('/chat/completions', {
+        model: this.config.model,
+        messages: [
+          {
+            role: 'system',
+            content: 'Eres un asistente experto en categorización de productos de supermercado. Siempre respondes con JSON válido estricto.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3, // Baja temperatura para categorización consistente
+        max_tokens: Math.min(products.length * 80 + 200, 2000), // ~80 tokens por producto
+        response_format: { type: 'json_object' }
+      });
+
+      const content = response.data.choices[0]?.message?.content;
+
+      if (!content) {
+        throw new Error('No se recibió respuesta de la IA');
+      }
+
+      // Validar que la respuesta sea JSON válido
+      if (!this.isValidJSON(content)) {
+        this.logger.warn('Respuesta de IA no es JSON válido, usando fallback', {
+          contentPreview: content.substring(0, 200)
+        });
+        return this.generateFallbackBulkCategorization(products);
+      }
+
+      // Validar estructura de respuesta
+      const parsed = JSON.parse(content);
+      if (!parsed.products || !Array.isArray(parsed.products)) {
+        this.logger.warn('Respuesta de IA con estructura inválida, usando fallback');
+        return this.generateFallbackBulkCategorization(products);
+      }
+
+      const processingTime = Date.now() - startTime;
+      this.logger.ai('Categorización en lote completada exitosamente', {
+        processingTime,
+        productsProcessed: parsed.products.length,
+        responseLength: content.length,
+        tokensUsed: response.data.usage?.total_tokens
+      });
+
+      return content;
+
+    } catch (error: any) {
+      const processingTime = Date.now() - startTime;
+      this.logger.error('Error al categorizar productos en lote', {
+        error: error.message,
+        processingTime,
+        productsCount: products.length
+      });
+
+      // Intentar fallback
+      return this.generateFallbackBulkCategorization(products);
+    }
+  }
+
+  /**
+   * Construye el prompt optimizado para categorización en lote
+   */
+  private buildBulkCategorizationPrompt(
+    products: Array<{ nombre: string; descripcion?: string }>,
+    existingCategories?: string[]
+  ): string {
+    let prompt = `Analiza el siguiente lote de ${products.length} productos y asigna categorías apropiadas.
+
+`;
+
+    if (existingCategories && existingCategories.length > 0) {
+      prompt += `**CATEGORÍAS EXISTENTES EN LA TIENDA:**
+${existingCategories.slice(0, 30).join(', ')}
+
+**REGLAS:**
+1. PRIORIZA categorías existentes cuando apliquen
+2. Si ninguna categoría existente es apropiada, usa categorías genéricas comunes
+3. Nombres de categorías simples y claros (máximo 30 caracteres)
+4. Asigna confidence 0-100 basado en certeza
+5. Proporciona 1-3 categorías alternativas SOLO si hay ambigüedad real
+
+`;
+    } else {
+      prompt += `**REGLAS:**
+1. Usa categorías genéricas comunes de supermercado
+2. Nombres simples y claros (máximo 30 caracteres)
+3. Asigna confidence 0-100 basado en certeza
+4. Proporciona 1-3 categorías alternativas SOLO si hay ambigüedad real
+
+`;
+    }
+
+    prompt += `**CATEGORÍAS GENÉRICAS COMUNES:**
+Lácteos, Bebidas, Panadería, Carne, Pescado, Frutas, Verduras, Legumbres, Cereales, Pasta, Arroz, Conservas, Congelados, Limpieza, Higiene, Snacks, Dulces, Salsas, Especias, Aceites
+
+**PRODUCTOS A CATEGORIZAR:**
+`;
+
+    products.forEach((product, index) => {
+      prompt += `${index + 1}. ${product.nombre}`;
+      if (product.descripcion) {
+        prompt += ` - ${product.descripcion}`;
+      }
+      prompt += '\n';
+    });
+
+    prompt += `
+**FORMATO DE RESPUESTA (JSON estricto):**
+{
+  "products": [
+    {
+      "nombre": "Nombre del producto original",
+      "suggestedCategory": {
+        "nombre": "Categoría principal",
+        "confidence": 95
+      },
+      "alternativeCategories": [
+        { "nombre": "Alternativa 1", "confidence": 70 }
+      ]
+    }
+  ]
+}
+
+IMPORTANTE: 
+- Incluir TODOS los ${products.length} productos en la respuesta
+- Usar EXACTAMENTE los nombres originales de los productos
+- Array 'alternativeCategories' puede estar vacío si no hay ambigüedad
+- Confidence siempre entre 0-100
+- Responder SOLO con JSON válido, sin texto adicional`;
+
+    return prompt;
+  }
+
+  /**
+   * Genera categorización de fallback cuando falla la IA
+   */
+  private generateFallbackBulkCategorization(
+    products: Array<{ nombre: string; descripcion?: string }>
+  ): string {
+    const categorizedProducts = products.map(product => {
+      // Fallback básico: categorización por palabras clave
+      const productLower = product.nombre.toLowerCase();
+      let category = 'General';
+      let confidence = 40; // Baja confianza para fallback
+
+      // Reglas simples de categorización
+      if (productLower.includes('leche') || productLower.includes('yogur') || productLower.includes('queso')) {
+        category = 'Lácteos';
+        confidence = 60;
+      } else if (productLower.includes('pan') || productLower.includes('barra')) {
+        category = 'Panadería';
+        confidence = 60;
+      } else if (productLower.includes('carne') || productLower.includes('pollo') || productLower.includes('cerdo')) {
+        category = 'Carne';
+        confidence = 60;
+      } else if (productLower.includes('fruta') || productLower.includes('manzana') || productLower.includes('plátano')) {
+        category = 'Frutas';
+        confidence = 60;
+      } else if (productLower.includes('verdura') || productLower.includes('lechuga') || productLower.includes('tomate')) {
+        category = 'Verduras';
+        confidence = 60;
+      } else if (productLower.includes('agua') || productLower.includes('refresco') || productLower.includes('zumo')) {
+        category = 'Bebidas';
+        confidence = 60;
+      } else if (productLower.includes('limpieza') || productLower.includes('detergente') || productLower.includes('lejía')) {
+        category = 'Limpieza';
+        confidence = 60;
+      } else if (productLower.includes('jabón') || productLower.includes('champú') || productLower.includes('gel')) {
+        category = 'Higiene';
+        confidence = 60;
+      }
+
+      return {
+        nombre: product.nombre,
+        suggestedCategory: {
+          nombre: category,
+          confidence
+        },
+        alternativeCategories: []
+      };
+    });
+
+    return JSON.stringify({
+      products: categorizedProducts
+    });
+  }
+
+  /**
    * Verifica si una cadena contiene JSON válido
    */
   private isValidJSON(str: string): boolean {

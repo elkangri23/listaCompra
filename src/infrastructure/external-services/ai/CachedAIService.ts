@@ -143,6 +143,80 @@ export class CachedAIService implements IAIService {
   }
 
   /**
+   * Categoriza múltiples productos en lote de forma optimizada
+   * CU-29: Categorización Masiva Inteligente
+   */
+  async bulkCategorizeProducts(
+    products: Array<{ nombre: string; descripcion?: string }>,
+    existingCategories?: string[]
+  ): Promise<string> {
+    // Cache key basado en hash de nombres de productos
+    const productNames = products.map(p => p.nombre).sort().join('|');
+    const categoriesKey = existingCategories?.sort().join('|') || '';
+    const cacheKey = `ai:bulk-categorize:${this.hashString(productNames + categoriesKey)}`;
+
+    // Intentar obtener de cache
+    if (this.cacheService) {
+      try {
+        const cached = await this.cacheService.get<string>(cacheKey);
+        if (cached) {
+          this.logger.info('Categorización masiva obtenida de cache', {
+            productsCount: products.length,
+            cacheKey: cacheKey.substring(0, 50) + '...'
+          });
+          
+          // Marcar como source 'cache' en metadata
+          const parsed: any = JSON.parse(cached);
+          return JSON.stringify({
+            ...parsed,
+            _fromCache: true
+          });
+        }
+      } catch (error) {
+        this.logger.warn('Error al leer cache de categorización masiva', {
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+
+    // Cache miss: llamar a PerplexityService
+    const result = await this.perplexityService.bulkCategorizeProducts(
+      products,
+      existingCategories
+    );
+
+    // Guardar en cache (TTL 24 horas)
+    if (this.cacheService && result) {
+      try {
+        await this.cacheService.set(cacheKey, result, 86400); // 24 horas
+        this.logger.info('Categorización masiva guardada en cache', {
+          productsCount: products.length,
+          ttl: 86400
+        });
+      } catch (error) {
+        this.logger.warn('Error al guardar cache de categorización masiva', {
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Genera hash simple de una cadena (para cache keys)
+   */
+  private hashString(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
+  }
+
+  /**
    * Verifica disponibilidad del servicio
    */
   async isAvailable(): Promise<boolean> {

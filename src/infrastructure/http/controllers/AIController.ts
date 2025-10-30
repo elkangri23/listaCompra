@@ -6,7 +6,11 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../types/express';
 import { GetCategorySuggestionsUseCase } from '../../../application/use-cases/ai/GetCategorySuggestions';
+import { BulkCategorizeProducts } from '../../../application/use-cases/ai/BulkCategorizeProducts';
 import { GetCategorySuggestionsDto } from '../../../application/dto/ai/AIDto';
+import { 
+  BulkCategorizeProductsDtoFactory 
+} from '../../../application/dto/ai/BulkCategorizeProductsDto';
 import { ValidationError } from '../../../application/errors/ValidationError';
 import { Logger } from '../../observability/logger/Logger';
 
@@ -14,7 +18,8 @@ export class AIController {
   private readonly logger = new Logger('AIController');
 
   constructor(
-    private readonly getCategorySuggestionsUseCase: GetCategorySuggestionsUseCase
+    private readonly getCategorySuggestionsUseCase?: GetCategorySuggestionsUseCase,
+    private readonly bulkCategorizeProductsUseCase?: BulkCategorizeProducts
   ) {}
 
   /**
@@ -27,6 +32,18 @@ export class AIController {
         body: req.body,
         userId: req.user?.userId
       });
+
+      // Verificar que el use case esté disponible
+      if (!this.getCategorySuggestionsUseCase) {
+        res.status(503).json({
+          success: false,
+          error: {
+            code: 'FEATURE_NOT_AVAILABLE',
+            message: 'Sugerencias de categorías no disponibles'
+          }
+        });
+        return;
+      }
 
       // Validar entrada
       const input: GetCategorySuggestionsDto = {
@@ -121,7 +138,132 @@ export class AIController {
   }
 
   /**
-   * Endpoint de health check para el servicio de IA
+   * Endpoint para categorización masiva de productos con IA
+   * POST /api/v1/ai/bulk-categorize
+   * CU-29: Categorización Masiva Inteligente
+   */
+  async bulkCategorize(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const startTime = Date.now();
+
+    try {
+      this.logger.http('Solicitud de categorización masiva', {
+        productsCount: req.body?.products?.length,
+        tiendaId: req.body?.tiendaId,
+        userId: req.user?.userId
+      });
+
+      // Verificar que el use case esté disponible
+      if (!this.bulkCategorizeProductsUseCase) {
+        res.status(503).json({
+          success: false,
+          error: {
+            code: 'FEATURE_NOT_AVAILABLE',
+            message: 'Categorización masiva no disponible'
+          }
+        });
+        return;
+      }
+
+      // Validar y crear DTO
+      let dto;
+      try {
+        dto = BulkCategorizeProductsDtoFactory.fromHttpRequest(req.body);
+      } catch (validationError) {
+        const errorMessage = validationError instanceof Error 
+          ? validationError.message 
+          : 'Datos de entrada inválidos';
+
+        this.logger.warn('Validación fallida en categorización masiva', {
+          error: errorMessage,
+          bodyPreview: JSON.stringify(req.body).substring(0, 200)
+        });
+
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: errorMessage
+          }
+        });
+        return;
+      }
+
+      // Ejecutar caso de uso
+      const result = await this.bulkCategorizeProductsUseCase.execute(
+        dto,
+        req.user!.userId
+      );
+
+      if (result.isFailure) {
+        this.logger.error('Error en categorización masiva', {
+          error: result.error.message,
+          userId: req.user?.userId,
+          productsCount: dto.products.length
+        });
+
+        // Determinar código de error apropiado
+        const statusCode = result.error.message.includes('no encontrado') ? 404 : 500;
+
+        res.status(statusCode).json({
+          success: false,
+          error: {
+            code: statusCode === 404 ? 'NOT_FOUND' : 'PROCESSING_ERROR',
+            message: result.error.message
+          }
+        });
+        return;
+      }
+
+      // Respuesta exitosa
+      const processingTime = Date.now() - startTime;
+      const { categorizedProducts, batchStats } = result.value;
+
+      // Determinar código de estado
+      // 207 Multi-Status si hay fallos parciales, 200 si todo OK
+      const statusCode = batchStats.failed > 0 ? 207 : 200;
+
+      this.logger.info('Categorización masiva completada', {
+        statusCode,
+        successful: batchStats.successful,
+        failed: batchStats.failed,
+        fromCache: batchStats.fromCache,
+        fromAI: batchStats.fromAI,
+        averageConfidence: batchStats.averageConfidence,
+        totalProcessingTime: processingTime
+      });
+
+      res.status(statusCode).json({
+        success: true,
+        data: {
+          categorizedProducts,
+          batchStats: {
+            ...batchStats,
+            totalProcessingTimeMs: processingTime
+          }
+        }
+      });
+
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+
+      this.logger.error('Error fatal en categorización masiva', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: req.user?.userId,
+        processingTime
+      });
+
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Error interno del servidor'
+        }
+      });
+    }
+  }
+
+  /**
+   * Endpoint para health check del servicio de IA
    * GET /api/ai/health
    */
   async healthCheck(_req: AuthenticatedRequest, res: Response): Promise<void> {

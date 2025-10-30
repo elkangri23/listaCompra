@@ -1,6 +1,6 @@
 # ?? Lista de la Compra Colaborativa
 
-> Proyecto educativo de backend desarrollado con **Node.js + TypeScript**, aplicando **arquitectura limpia (hexagonal)**, **patrón Outbox**, **mensajería asíncrona con RabbitMQ** e integración de **Inteligencia Artificial**.
+> Proyecto educativo de backend desarrollado con **Node.js + TypeScript**, aplicando **arquitectura limpia (hexagonal)**, **patrï¿½n Outbox**, **mensajerï¿½a asï¿½ncrona con RabbitMQ** e integraciï¿½n de **Inteligencia Artificial**.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-v20+-green.svg)](https://nodejs.org/)
@@ -12,111 +12,124 @@
 
 ## ?? **Logros Recientes Completados (Octubre 2025)**
 
-> **? FUNCIONALIDADES DE IA AVANZADA** - Sistema inteligente de recomendaciones implementado
+> **ðŸ§  FUNCIONALIDADES DE IA AVANZADA** - Sistema inteligente de categorizaciÃ³n masiva y recomendaciones
 
-### ?? **Fase 16: IA Avanzada - Recomendaciones Contextuales (30 Oct 2025) - RECIÉN COMPLETADA** ?
-- ?? **3 Endpoints REST Funcionales**: Recomendaciones generales, específicas por producto, ejemplos de contexto
+### ðŸš€ **Fase 17: IA Premium - CategorizaciÃ³n Masiva Inteligente (30 Oct 2025) - RECIÃ‰N COMPLETADA** â­
+- ðŸ“¦ **Endpoint Bulk Categorization**: Procesamiento de hasta 50 productos por request
+- ðŸŽ¯ **Batching AutomÃ¡tico**: DivisiÃ³n inteligente en lotes de 20 para optimizar tokens
+- ðŸ§  **Prompt Engineering**: Contexto optimizado para Llama 3.1 Sonar (temp 0.3)
+- ðŸ“Š **Enriquecimiento BD**: IntegraciÃ³n automÃ¡tica con categorÃ­as existentes en base de datos
+- ðŸ’¾ **Cache Redis 24h**: ReducciÃ³n de costos API con TTL optimizado
+- ðŸ›¡ï¸ **3 Niveles ValidaciÃ³n**: DTO (Zod), Use Case, Service Layer
+- ðŸ“ˆ **EstadÃ­sticas Completas**: Confidence, sources, warnings, processing time por request
+- âš ï¸ **Manejo Fallos Parciales**: ContinÃºa procesando aunque fallen productos individuales
+- ðŸ” **Seguridad**: JWT + Rate Limiting especÃ­fico para IA endpoints
+- ðŸ“š **Swagger Completo**: POST /api/v1/ai/bulk-categorize con ejemplos mÃºltiples
+- ðŸ’¡ **UX Mejorada**: Onboarding rÃ¡pido para usuarios con muchos productos sin categorizar
+
+### ðŸ§ª **Fase 16: IA Avanzada - Recomendaciones Contextuales (30 Oct 2025) - COMPLETADA** âœ…
+- ?? **3 Endpoints REST Funcionales**: Recomendaciones generales, especï¿½ficas por producto, ejemplos de contexto
 - ?? **IA con 3 niveles creatividad**: Conservative (0.3), Balanced (0.5), Creative (0.7) temperature
 - ?? **Scoring inteligente 0-100**: Confidence con razones explicativas detalladas
-- ?? **Filtros granulares avanzados**: Categoría, tienda, historial usuario, productos existentes
-- ?? **Context-aware**: Interpreta "Cena romántica", "Desayuno fitness", "Barbacoa familiar"
+- ?? **Filtros granulares avanzados**: Categorï¿½a, tienda, historial usuario, productos existentes
+- ?? **Context-aware**: Interpreta "Cena romï¿½ntica", "Desayuno fitness", "Barbacoa familiar"
 - ??? **15 reglas de fallback**: Patrones robustos (pasta?salsa, carne?papas, etc.)
-- ?? **Enriquecimiento local**: Categorías desde BD, precios estimados, cantidades sugeridas
-- ?? **Backend completo**: Use case (368 líneas), Controller (330+), Rutas Swagger (390+)
-- ? **TypeScript**: 0 errores compilación, integración DI Container y server.ts
-- ?? **4 tipos recomendación**: Complement, frequently_together, category_match, user_preference
+- ?? **Enriquecimiento local**: Categorï¿½as desde BD, precios estimados, cantidades sugeridas
+- ?? **Backend completo**: Use case (368 lï¿½neas), Controller (330+), Rutas Swagger (390+)
+- ? **TypeScript**: 0 errores compilaciï¿½n, integraciï¿½n DI Container y server.ts
+- ?? **4 tipos recomendaciï¿½n**: Complement, frequently_together, category_match, user_preference
 
-### ?? **Fase 15: Listas Inteligentes por Ocasión (29 Oct 2025) - RECIÉN COMPLETADA** ?
-- ?? **CU-32 Implementado**: Generación automática de listas completas con IA
-- ?? **20 Ocasiones Predefinidas**: "Barbacoa", "Cena romántica", "Cumpleaños infantil", etc.
-- ?? **Parámetros Inteligentes**: Personas (1-50), presupuesto (1-10.000€), restricciones dietéticas
+### ?? **Fase 15: Listas Inteligentes por Ocasiï¿½n (29 Oct 2025) - RECIï¿½N COMPLETADA** ?
+- ?? **CU-32 Implementado**: Generaciï¿½n automï¿½tica de listas completas con IA
+- ?? **20 Ocasiones Predefinidas**: "Barbacoa", "Cena romï¿½ntica", "Cumpleaï¿½os infantil", etc.
+- ?? **Parï¿½metros Inteligentes**: Personas (1-50), presupuesto (1-10.000ï¿½), restricciones dietï¿½ticas
 - ?? **Prompt Engineering**: IA optimizada para productos realistas con cantidades exactas
-- ?? **Estimación de Costos**: Cálculo automático de presupuesto total estimado
-- ??? **Categorización Automática**: Productos organizados por categorías de tienda
-- ? **3 endpoints REST**: Ocasiones predefinidas, generación y vista previa
-- ?? **Documentación Swagger**: Especificaciones completas con ejemplos interactivos
+- ?? **Estimaciï¿½n de Costos**: Cï¿½lculo automï¿½tico de presupuesto total estimado
+- ??? **Categorizaciï¿½n Automï¿½tica**: Productos organizados por categorï¿½as de tienda
+- ? **3 endpoints REST**: Ocasiones predefinidas, generaciï¿½n y vista previa
+- ?? **Documentaciï¿½n Swagger**: Especificaciones completas con ejemplos interactivos
 
-### ?? **Fase 13: Documentación y Testing Final (29 Oct 2025) - COMPLETADA** ?
-- ?? **OpenAPI/Swagger UI** configurado: Documentación interactiva en `/api/docs`
+### ?? **Fase 13: Documentaciï¿½n y Testing Final (29 Oct 2025) - COMPLETADA** ?
+- ?? **OpenAPI/Swagger UI** configurado: Documentaciï¿½n interactiva en `/api/docs`
 - ?? **47 endpoints documentados**: Especificaciones completas con ejemplos y esquemas
 - ?? **Schemas detallados**: Entidades de dominio (Usuario, Lista, Producto, Blueprint) completas
 - ?? **Ejemplos interactivos**: Testing directo desde la UI de Swagger
-- ?? **Configuración modular**: `swagger-simple.config.ts` para fácil mantenimiento
-- ?? **JSON OpenAPI**: Especificación accesible en `/api/docs.json`
+- ?? **Configuraciï¿½n modular**: `swagger-simple.config.ts` para fï¿½cil mantenimiento
+- ?? **JSON OpenAPI**: Especificaciï¿½n accesible en `/api/docs.json`
 - ??? **Tags organizados**: Endpoints categorizados por funcionalidad
-- ?? **Autenticación JWT**: Integración completa Bearer token en documentación
+- ?? **Autenticaciï¿½n JWT**: Integraciï¿½n completa Bearer token en documentaciï¿½n
 
 ### ??? **Sistema de Seguridad Empresarial Implementado (29 Oct 2025)**
-- ?? **API Key Protection**: Validación robusta + logging seguro para Perplexity API
-- ?? **Admin Role Validation**: Multi-capa, prevención escalación privilegios
+- ?? **API Key Protection**: Validaciï¿½n robusta + logging seguro para Perplexity API
+- ?? **Admin Role Validation**: Multi-capa, prevenciï¿½n escalaciï¿½n privilegios
 - ?? **Blueprint Sanitization**: XSS/injection protection con BlueprintSanitizer  
-- ?? **AI Rate Limiting**: Control granular per-user (5 req/min, 50/día)
+- ?? **AI Rate Limiting**: Control granular per-user (5 req/min, 50/dï¿½a)
 - ?? **Prompt Injection Protection**: AISecurityUtils con 20+ patrones detectados
-- ?? **Score Seguridad**: **9.1/10** (subió desde 7.2/10)
-- ?? **0 vulnerabilidades críticas** restantes - Sistema producción-ready
+- ?? **Score Seguridad**: **9.1/10** (subiï¿½ desde 7.2/10)
+- ?? **0 vulnerabilidades crï¿½ticas** restantes - Sistema producciï¿½n-ready
 
 ### ?? **Fase 2: Seguridad Empresarial Avanzada (29 Oct 2025) - COMPLETADA** ?
-- ?? **SecurityAuditService** (600+ líneas): Sistema de auditoría empresarial con 20+ tipos de eventos
-- ??? **BlueprintPrivacyMiddleware** (240+ líneas): Control de acceso multicapa para blueprints
-- ?? **CacheIntegrityService** (500+ líneas): Validación de integridad con checksums MD5/SHA256/SHA512
-- ?? **InputSanitizationService** (600+ líneas): Protección avanzada contra OWASP Top 10
-- ?? **AdvancedRateLimitService** (600+ líneas): Rate limiting adaptativo con análisis comportamental
-- ?? **Administración de Cache** (300+ líneas): Endpoints admin para monitoreo y limpieza
-- ?? **Total**: **2,500+ líneas** de código de seguridad empresarial implementado
-- ?? **Estado**: Sistema preparado para entornos de producción enterprise
+- ?? **SecurityAuditService** (600+ lï¿½neas): Sistema de auditorï¿½a empresarial con 20+ tipos de eventos
+- ??? **BlueprintPrivacyMiddleware** (240+ lï¿½neas): Control de acceso multicapa para blueprints
+- ?? **CacheIntegrityService** (500+ lï¿½neas): Validaciï¿½n de integridad con checksums MD5/SHA256/SHA512
+- ?? **InputSanitizationService** (600+ lï¿½neas): Protecciï¿½n avanzada contra OWASP Top 10
+- ?? **AdvancedRateLimitService** (600+ lï¿½neas): Rate limiting adaptativo con anï¿½lisis comportamental
+- ?? **Administraciï¿½n de Cache** (300+ lï¿½neas): Endpoints admin para monitoreo y limpieza
+- ?? **Total**: **2,500+ lï¿½neas** de cï¿½digo de seguridad empresarial implementado
+- ?? **Estado**: Sistema preparado para entornos de producciï¿½n enterprise
 
-### ? **Optimización de Performance Completada (Octubre 2025)**
-- ?? **Tests optimizados**: -83% tiempo tests integración (122s ? 21s)
+### ? **Optimizaciï¿½n de Performance Completada (Octubre 2025)**
+- ?? **Tests optimizados**: -83% tiempo tests integraciï¿½n (122s ? 21s)
 - ?? **Email mocking**: Tests SMTP deshabilitados por defecto, eliminados timeouts
-- ?? **Jest paralelización**: maxWorkers 50% configurado para desarrollo ágil
-- ?? **Sistema de métricas**: MetricsCollector en tiempo real para todos los endpoints
-- ?? **Database isolation**: Race conditions corregidas, emails únicos en tests
-- ?? **Throughput mejorado**: +785% en velocidad de ejecución de tests
+- ?? **Jest paralelizaciï¿½n**: maxWorkers 50% configurado para desarrollo ï¿½gil
+- ?? **Sistema de mï¿½tricas**: MetricsCollector en tiempo real para todos los endpoints
+- ?? **Database isolation**: Race conditions corregidas, emails ï¿½nicos en tests
+- ?? **Throughput mejorado**: +785% en velocidad de ejecuciï¿½n de tests
 - ??? **MockNodemailerService**: Sistema de mocks completo para desarrollo
-- ?? **Documentación actualizada**: PERFORMANCE_ANALYSIS.md con métricas detalladas
+- ?? **Documentaciï¿½n actualizada**: PERFORMANCE_ANALYSIS.md con mï¿½tricas detalladas
 
 ### ?? **Dashboard de Monitoreo Unificado (Objetivo 8/8 - Completado)**
 - ?? **DashboardController** - 4 endpoints REST para monitoreo completo
-- ?? **GET /dashboard/metrics** - Métricas del sistema, endpoints y cache
-- ?? **GET /dashboard/health** - Health checks automáticos con status
+- ?? **GET /dashboard/metrics** - Mï¿½tricas del sistema, endpoints y cache
+- ?? **GET /dashboard/health** - Health checks automï¿½ticos con status
 - ?? **GET /dashboard/alerts** - Sistema de alertas inteligente (error rate, response time, cache)
-- ? **GET /dashboard/performance** - Análisis detallado de endpoints lentos y con errores
-- ?? **RedisCacheAnalytics** - Análisis de hit ratios y optimización TTL
+- ? **GET /dashboard/performance** - Anï¿½lisis detallado de endpoints lentos y con errores
+- ?? **RedisCacheAnalytics** - Anï¿½lisis de hit ratios y optimizaciï¿½n TTL
 - ?? **MetricsCollector integrado** - Tracking de response time, throughput y success rate
 - ?? **8 tests dashboard + 15 tests cache** - Cobertura completa con mocks
 
 ### ?? **Inteligencia Artificial Implementada (Fase 9 - 100% Completada)**
-- ?? **Perplexity API integrada** - Categorización automática con Llama 3.1 Sonar
-- ? **Redis Cache System** - TTL inteligente: 24h categorías, 1h análisis (optimización costos)
-- ?? **AddProduct mejorado** - Creación automática de categorías con IA (confianza >= 0.7)
+- ?? **Perplexity API integrada** - Categorizaciï¿½n automï¿½tica con Llama 3.1 Sonar
+- ? **Redis Cache System** - TTL inteligente: 24h categorï¿½as, 1h anï¿½lisis (optimizaciï¿½n costos)
+- ?? **AddProduct mejorado** - Creaciï¿½n automï¿½tica de categorï¿½as con IA (confianza >= 0.7)
 - ?? **AIController HTTP** - 3 endpoints: sugerencias, health check, info admin
-- ?? **GetCategorySuggestions** - Caso de uso con validación, filtrado y normalización Unicode
-- ??? **Rate Limiting IA** - 10 req/min, máx 1000 tokens, fallback graceful
-- ?? **17 tests IA** - Unitarios + integración, cobertura completa
-- ?? **Container DI** - Inyección completa del ecosistema IA
-- ?? **Headers de seguridad completos** - Helmet con CSP, HSTS, y políticas estrictas
-- ?? **JWT secrets crypto-seguros** - Validación de 512-bit entropy + detección de claves débiles
-- ?? **Rutas dev bloqueadas** - Protección total en producción con logging de intentos
+- ?? **GetCategorySuggestions** - Caso de uso con validaciï¿½n, filtrado y normalizaciï¿½n Unicode
+- ??? **Rate Limiting IA** - 10 req/min, mï¿½x 1000 tokens, fallback graceful
+- ?? **17 tests IA** - Unitarios + integraciï¿½n, cobertura completa
+- ?? **Container DI** - Inyecciï¿½n completa del ecosistema IA
+- ?? **Headers de seguridad completos** - Helmet con CSP, HSTS, y polï¿½ticas estrictas
+- ?? **JWT secrets crypto-seguros** - Validaciï¿½n de 512-bit entropy + detecciï¿½n de claves dï¿½biles
+- ?? **Rutas dev bloqueadas** - Protecciï¿½n total en producciï¿½n con logging de intentos
 - ?? **Vulnerabilidades resueltas** - 0 vulnerabilidades npm audit, Nodemailer actualizado
 
 ### ?? **Funcionalidades de Administrador Completadas (Fase 11 - 100%)**
-- ?? **Middleware de autorización por roles** - requireRole, requireAdmin, requireAdminOrOwner
-- ?? **Sistema de impersonación** - CU-24/CU-25: Impersonar y finalizar impersonación usuarios
-- ?? **Endpoint de auditoría funcional** - Datos mock, filtrado por fecha/usuario, paginación
-- ??? **Rate limiting administrativo avanzado** - 3 niveles: impersonación (5/h), auditoría (20/5min), general (10/15min)
+- ?? **Middleware de autorizaciï¿½n por roles** - requireRole, requireAdmin, requireAdminOrOwner
+- ?? **Sistema de impersonaciï¿½n** - CU-24/CU-25: Impersonar y finalizar impersonaciï¿½n usuarios
+- ?? **Endpoint de auditorï¿½a funcional** - Datos mock, filtrado por fecha/usuario, paginaciï¿½n
+- ??? **Rate limiting administrativo avanzado** - 3 niveles: impersonaciï¿½n (5/h), auditorï¿½a (20/5min), general (10/15min)
 - ?? **AdminController REST** - 4 endpoints documentados con Swagger/OpenAPI
-- ?? **Integración DI Container** - Casos de uso admin registrados e inyectados
-- ?? **Testing verificado** - Tests unitarios + integración (66 tests pasando)
-- ?? **Logging de seguridad** - Auditoría completa de acciones administrativas
+- ?? **Integraciï¿½n DI Container** - Casos de uso admin registrados e inyectados
+- ?? **Testing verificado** - Tests unitarios + integraciï¿½n (66 tests pasando)
+- ?? **Logging de seguridad** - Auditorï¿½a completa de acciones administrativas
 
 ### ?? **Sistema de Blueprints/Plantillas Completado (Fase 10 - 100%)**
 - ??? **Entidad Blueprint** - Plantillas reutilizables de listas con productos predefinidos
-- ?? **CU-22: Crear Blueprint** - Casos de uso para creación desde listas existentes
-- ?? **CU-23: Crear Lista desde Blueprint** - Instanciación automática de plantillas
+- ?? **CU-22: Crear Blueprint** - Casos de uso para creaciï¿½n desde listas existentes
+- ?? **CU-23: Crear Lista desde Blueprint** - Instanciaciï¿½n automï¿½tica de plantillas
 - ?? **BlueprintController REST** - CRUD completo con endpoints documentados
 - ?? **PrismaBlueprintRepository** - Persistencia con soporte JSON para contenido
-- ?? **Integración completa** - DI Container, rutas, validaciones y DTOs
-- ?? **Límites de negocio** - Máximo 50 blueprints activos por usuario
+- ?? **Integraciï¿½n completa** - DI Container, rutas, validaciones y DTOs
+- ?? **Lï¿½mites de negocio** - Mï¿½ximo 50 blueprints activos por usuario
 
 ### ??? **Sistema de Notificaciones (Fase 8)**
 - ?? **300+ tests pasando** (97% success rate en funcionalidades core + seguridad)
@@ -124,138 +137,138 @@
 - ??? **NodemailerService** con soporte Gmail/SMTP y retry exponencial
 - ?? **NotificationConsumer** para procesar eventos de invitaciones ? FUNCIONAL
 - ?? **Plantillas HTML integradas** para invitaciones y confirmaciones
-- ?? **RabbitMQConsumer genérico** para mensajería configurable ? CORREGIDO
+- ?? **RabbitMQConsumer genï¿½rico** para mensajerï¿½a configurable ? CORREGIDO
 - ?? **Variables de entorno** configuradas para Gmail
-- ?? **Scripts de testing** para verificar configuración email y workers
+- ?? **Scripts de testing** para verificar configuraciï¿½n email y workers
 - ??? **Container de DI** actualizado con servicios de email
-- ?? **Arquitectura evento-driven** lista para notificaciones asíncronas
-- ??? **WorkerService** implementado para gestión limpia de consumers
+- ?? **Arquitectura evento-driven** lista para notificaciones asï¿½ncronas
+- ??? **WorkerService** implementado para gestiï¿½n limpia de consumers
 - ? **RabbitMQ funcionando** - Consumers conectando exitosamente
-- ?? **Compilación TypeScript** sin errores - sistema robusto
+- ?? **Compilaciï¿½n TypeScript** sin errores - sistema robusto
 
 ---
 
 ## ?? Tabla de Contenidos
 
-- [Descripción del Proyecto](#-descripción-del-proyecto)
-- [Documentación](#-documentación)
-- [Características Principales](#-características-principales)
+- [Descripciï¿½n del Proyecto](#-descripciï¿½n-del-proyecto)
+- [Documentaciï¿½n](#-documentaciï¿½n)
+- [Caracterï¿½sticas Principales](#-caracterï¿½sticas-principales)
 - [Arquitectura](#-arquitectura)
-- [Stack Tecnológico](#-stack-tecnológico)
+- [Stack Tecnolï¿½gico](#-stack-tecnolï¿½gico)
 - [Requisitos Previos](#-requisitos-previos)
-- [Instalación y Configuración](#-instalación-y-configuración)
+- [Instalaciï¿½n y Configuraciï¿½n](#-instalaciï¿½n-y-configuraciï¿½n)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
 - [Casos de Uso](#-casos-de-uso)
 - [Roadmap de Desarrollo](#-roadmap-de-desarrollo)
 - [Testing](#-testing)
 - [API Documentation](#-api-documentation)
-- [Contribución](#-contribución)
+- [Contribuciï¿½n](#-contribuciï¿½n)
 - [Licencia](#-licencia)
 
 ---
 
-## ?? Descripción del Proyecto
+## ?? Descripciï¿½n del Proyecto
 
-Sistema backend de gestión de **listas de compra colaborativas** que permite a los usuarios:
-- Crear y gestionar listas de compra asociadas a tiendas específicas
+Sistema backend de gestiï¿½n de **listas de compra colaborativas** que permite a los usuarios:
+- Crear y gestionar listas de compra asociadas a tiendas especï¿½ficas
 - Compartir listas con otros usuarios mediante enlaces seguros
-- Organizar productos por categorías/pasillos personalizables
+- Organizar productos por categorï¿½as/pasillos personalizables
 - Recibir sugerencias inteligentes mediante IA
-- Analizar patrones y hábitos de compra
+- Analizar patrones y hï¿½bitos de compra
 
-El proyecto es un ejercicio educativo avanzado desarrollado como parte del **Máster de Desarrollo con IA de Big School** (Brais Moure), enfocado en la aplicación práctica de:
+El proyecto es un ejercicio educativo avanzado desarrollado como parte del **Mï¿½ster de Desarrollo con IA de Big School** (Brais Moure), enfocado en la aplicaciï¿½n prï¿½ctica de:
 - Arquitectura limpia y hexagonal
 - Principios SOLID
-- Patrón Outbox para consistencia eventual
-- Mensajería asíncrona con RabbitMQ
-- Integración de APIs de Inteligencia Artificial
-- Testing exhaustivo (unitario, integración, E2E)
+- Patrï¿½n Outbox para consistencia eventual
+- Mensajerï¿½a asï¿½ncrona con RabbitMQ
+- Integraciï¿½n de APIs de Inteligencia Artificial
+- Testing exhaustivo (unitario, integraciï¿½n, E2E)
 
 ---
 
-## ?? Documentación
+## ?? Documentaciï¿½n
 
-| Documento | Descripción |
+| Documento | Descripciï¿½n |
 |-----------|-------------|
-| [Analisis-de-requisitos-ListaCompra.pdf](Doc/Analisis-de-requisitos-ListaCompra.pdf) | Análisis de requisitos funcionales y no funcionales completo |
+| [Analisis-de-requisitos-ListaCompra.pdf](Doc/Analisis-de-requisitos-ListaCompra.pdf) | Anï¿½lisis de requisitos funcionales y no funcionales completo |
 | [DiagramaClases_V1-mermaid.md](Doc/DiagramaClases_V1-mermaid.md) | Diagrama de clases UML en formato Mermaid |
 | [casos-uso-completos.md](Doc/casos-uso-completos.md) | 33 casos de uso detallados con flujos principales y alternativos |
-| [AGENTS.md](AGENTS.md) | Guía completa de arquitectura, roadmap y agentes de desarrollo |
-| [API_Testing_Guide.md](API_Testing_Guide.md) | ?? **Guía de testing con Postman/Thunder Client** |
-| [TERMS_AND_CONDITIONS.md](TERMS_AND_CONDITIONS.md) | ?? **Términos y Condiciones del Servicio** |
-| [PRIVACY_POLICY.md](PRIVACY_POLICY.md) | ?? **Política de Privacidad y Protección de Datos** |
+| [AGENTS.md](AGENTS.md) | Guï¿½a completa de arquitectura, roadmap y agentes de desarrollo |
+| [API_Testing_Guide.md](API_Testing_Guide.md) | ?? **Guï¿½a de testing con Postman/Thunder Client** |
+| [TERMS_AND_CONDITIONS.md](TERMS_AND_CONDITIONS.md) | ?? **Tï¿½rminos y Condiciones del Servicio** |
+| [PRIVACY_POLICY.md](PRIVACY_POLICY.md) | ?? **Polï¿½tica de Privacidad y Protecciï¿½n de Datos** |
 
 ## ?? Testing de API
 
-Para probar todos los endpoints de la API fácilmente:
+Para probar todos los endpoints de la API fï¿½cilmente:
 
-| Archivo | Herramienta | Descripción |
+| Archivo | Herramienta | Descripciï¿½n |
 |---------|-------------|-------------|
-| [postman_collection.json](postman_collection.json) | Postman/Thunder Client | **33+ endpoints** organizados en 7 categorías |
+| [postman_collection.json](postman_collection.json) | Postman/Thunder Client | **33+ endpoints** organizados en 7 categorï¿½as |
 | [postman_environment.json](postman_environment.json) | Postman/Thunder Client | Variables de entorno para desarrollo local |
-| [API_Testing_Guide.md](API_Testing_Guide.md) | Documentación | **Guía completa** con flujos de testing y ejemplos |
+| [API_Testing_Guide.md](API_Testing_Guide.md) | Documentaciï¿½n | **Guï¿½a completa** con flujos de testing y ejemplos |
 
-### ?? Inicio Rápido de Testing
+### ?? Inicio Rï¿½pido de Testing
 1. **Importa** `postman_collection.json` en Postman/Thunder Client
 2. **Configura** el entorno con `postman_environment.json`
-3. **Sigue** la guía en [API_Testing_Guide.md](API_Testing_Guide.md)
+3. **Sigue** la guï¿½a en [API_Testing_Guide.md](API_Testing_Guide.md)
 4. **Ejecuta** el flujo: Registro ? Login ? Crear Lista ? Agregar Productos
 
 ---
 
-## ? Características Principales
+## ? Caracterï¿½sticas Principales
 
-### Gestión de Usuarios
-- ? Registro y autenticación con JWT
+### Gestiï¿½n de Usuarios
+- ? Registro y autenticaciï¿½n con JWT
 - ? Roles diferenciados (Usuario Normal, Invitado, Administrador)
-- ? Encriptación segura de contraseñas (bcrypt)
+- ? Encriptaciï¿½n segura de contraseï¿½as (bcrypt)
 
-### Gestión de Listas
+### Gestiï¿½n de Listas
 - ? CRUD completo de listas de compra
-- ? Asociación de listas a tiendas específicas
+- ? Asociaciï¿½n de listas a tiendas especï¿½ficas
 - ? Marcar productos como comprados
-- ? Creación de blueprints/plantillas reutilizables
+- ? Creaciï¿½n de blueprints/plantillas reutilizables
 
-### Colaboración
-- ? Compartir listas mediante enlaces seguros con hash criptográfico
+### Colaboraciï¿½n
+- ? Compartir listas mediante enlaces seguros con hash criptogrï¿½fico
 - ? Permisos granulares (lectura / lectura-escritura)
 - ? Acceso de invitados sin necesidad de registro
 - ? **Sistema de notificaciones por email** implementado con arquitectura puerto-adaptador
-- ? **Eventos asíncronos** para invitaciones mediante RabbitMQ
-- ? **Plantillas HTML responsivas** para emails de invitación
+- ? **Eventos asï¿½ncronos** para invitaciones mediante RabbitMQ
+- ? **Plantillas HTML responsivas** para emails de invitaciï¿½n
 
-### Categorización
-- ? Categorías/pasillos personalizables por usuario
-- ? Categorías predefinidas por tienda
-- ? Asociación opcional de productos a categorías
+### Categorizaciï¿½n
+- ? Categorï¿½as/pasillos personalizables por usuario
+- ? Categorï¿½as predefinidas por tienda
+- ? Asociaciï¿½n opcional de productos a categorï¿½as
 
 ### ?? Inteligencia Artificial (IA)
 
-#### **Fase 9: IA Básica - Categorización Automática** ? **COMPLETADA**
-- ?? **CU-28: Sugerencias Automáticas de Categorías por Tienda**
-  - Categorización inteligente basada en contexto de tienda específica
-  - Aplicación automática sin confirmación para fluidez
-  - Integración con **Perplexity AI** (modelo Llama 3.1 Sonar)
+#### **Fase 9: IA Bï¿½sica - Categorizaciï¿½n Automï¿½tica** ? **COMPLETADA**
+- ?? **CU-28: Sugerencias Automï¿½ticas de Categorï¿½as por Tienda**
+  - Categorizaciï¿½n inteligente basada en contexto de tienda especï¿½fica
+  - Aplicaciï¿½n automï¿½tica sin confirmaciï¿½n para fluidez
+  - Integraciï¿½n con **Perplexity AI** (modelo Llama 3.1 Sonar)
   - Cache inteligente para optimizar costos
 
-#### **Fase 15: IA Premium - Listas Inteligentes por Ocasión** ? **COMPLETADA (29 Oct)**
-- ?? **CU-32: Generador de Listas por Ocasión**
-  - 20 ocasiones predefinidas: "Barbacoa", "Cena romántica", "Desayuno fitness", etc.
-  - Control de presupuesto (1-10.000€) y escalado personas (1-50)
-  - Restricciones dietéticas personalizables (máx 10)
+#### **Fase 15: IA Premium - Listas Inteligentes por Ocasiï¿½n** ? **COMPLETADA (29 Oct)**
+- ?? **CU-32: Generador de Listas por Ocasiï¿½n**
+  - 20 ocasiones predefinidas: "Barbacoa", "Cena romï¿½ntica", "Desayuno fitness", etc.
+  - Control de presupuesto (1-10.000ï¿½) y escalado personas (1-50)
+  - Restricciones dietï¿½ticas personalizables (mï¿½x 10)
   - Prompt engineering optimizado para Llama 3.1 Sonar
-  - Métricas de confianza y validación robusta
+  - Mï¿½tricas de confianza y validaciï¿½n robusta
 
 #### **Fase 16: IA Avanzada - Recomendaciones Contextuales** ? **COMPLETADA (30 Oct)**
 - ?? **CU-33: Recomendaciones Inteligentes de Productos**
-  - **3 Endpoints REST**: Recomendaciones generales, específicas por producto, ejemplos de contexto
+  - **3 Endpoints REST**: Recomendaciones generales, especï¿½ficas por producto, ejemplos de contexto
   - **3 niveles de creatividad**: Conservative (0.3), Balanced (0.5), Creative (0.7)
   - **Scoring de confianza**: 0-100 con razones explicativas
-  - **Filtros avanzados**: Por categoría, tienda, historial de usuario, productos existentes
-  - **Context-aware**: Interpreta "Cena romántica", "Desayuno fitness", "Barbacoa familiar"
+  - **Filtros avanzados**: Por categorï¿½a, tienda, historial de usuario, productos existentes
+  - **Context-aware**: Interpreta "Cena romï¿½ntica", "Desayuno fitness", "Barbacoa familiar"
   - **Fallbacks robustos**: 15 reglas basadas en patrones (pasta?salsa, carne?papas)
-  - **Enriquecimiento local**: Categorías desde BD, precios estimados, cantidades sugeridas
-  - **4 tipos de recomendación**: Complement, frequently_together, category_match, user_preference
+  - **Enriquecimiento local**: Categorï¿½as desde BD, precios estimados, cantidades sugeridas
+  - **4 tipos de recomendaciï¿½n**: Complement, frequently_together, category_match, user_preference
 
 **?? Endpoints CU-33:**
 ```bash
@@ -265,24 +278,24 @@ GET /api/v1/recommendations/:listId
   &maxRecommendations=10
   &excludeExisting=true
 
-# Recomendaciones específicas basadas en producto
+# Recomendaciones especï¿½ficas basadas en producto
 GET /api/v1/recommendations/:listId/for-product/:productId
   ?context=Cena%20italiana
 
-# Ejemplos de contextos disponibles (público)
+# Ejemplos de contextos disponibles (pï¿½blico)
 GET /api/v1/recommendations/context-examples
 ```
 
-**?? Parámetros opcionales:**
+**?? Parï¿½metros opcionales:**
 - `maxRecommendations` (5-50, default: 10)
 - `creativityLevel` (conservative/balanced/creative)
-- `categoryId` - Filtrar por categoría
+- `categoryId` - Filtrar por categorï¿½a
 - `storeId` - Filtrar por tienda
 - `context` - Contexto textual
 - `includeUserHistory` (boolean)
 - `excludeExisting` (boolean, default: true)
 
-**?? Respuesta típica:**
+**?? Respuesta tï¿½pica:**
 ```json
 {
   "success": true,
@@ -310,58 +323,58 @@ GET /api/v1/recommendations/context-examples
 ```
 
 #### **Fase Extra: IA Avanzada - Funcionalidades Futuras** ??
-- ?? **CU-29: Análisis de Hábitos de Compra** - Dashboard con insights ? **PRÓXIMO**
-- ?? **CU-30: Alertas Proactivas de Precios** - Monitoreo automático ?? **FUTURO**
-- ?? **CU-31: Categorización Masiva** - Procesamiento por lotes ?? **FUTURO**
+- ?? **CU-29: Anï¿½lisis de Hï¿½bitos de Compra** - Dashboard con insights ? **PRï¿½XIMO**
+- ?? **CU-30: Alertas Proactivas de Precios** - Monitoreo automï¿½tico ?? **FUTURO**
+- ?? **CU-31: Categorizaciï¿½n Masiva** - Procesamiento por lotes ?? **FUTURO**
 
-#### **Configuración IA**
+#### **Configuraciï¿½n IA**
 - ?? **API Key**: Perplexity configurada con Llama 3.1 Sonar
-- ? **Cache Redis**: TTL optimizado (24h categorías, 1h análisis)
-- ??? **Rate Limiting**: 5 req/min, 50/día por usuario
-- ??? **Temperatura variable**: 0.3-0.7 según caso de uso
-- ?? **Optimización costos**: Cache inteligente + batching
+- ? **Cache Redis**: TTL optimizado (24h categorï¿½as, 1h anï¿½lisis)
+- ??? **Rate Limiting**: 5 req/min, 50/dï¿½a por usuario
+- ??? **Temperatura variable**: 0.3-0.7 segï¿½n caso de uso
+- ?? **Optimizaciï¿½n costos**: Cache inteligente + batching
 
 ### ?? Seguridad Empresarial Avanzada
 
-#### **SecurityAuditService** - Sistema de Auditoría Empresarial
+#### **SecurityAuditService** - Sistema de Auditorï¿½a Empresarial
 - ?? **20+ tipos de eventos auditados**: LOGIN_SUCCESS, ADMIN_IMPERSONATION, BLUEPRINT_ACCESS, etc.
-- ?? **Clasificación de riesgo**: LOW, MEDIUM, HIGH, CRITICAL con acciones automáticas
-- ?? **Detección de anomalías**: Análisis de patrones de fallos de autenticación
+- ?? **Clasificaciï¿½n de riesgo**: LOW, MEDIUM, HIGH, CRITICAL con acciones automï¿½ticas
+- ?? **Detecciï¿½n de anomalï¿½as**: Anï¿½lisis de patrones de fallos de autenticaciï¿½n
 - ?? **Logging estructurado**: Almacenamiento en memoria con persistencia futura
-- ?? **Tracking de usuarios**: Identificación y seguimiento de comportamientos sospechosos
+- ?? **Tracking de usuarios**: Identificaciï¿½n y seguimiento de comportamientos sospechosos
 
 #### **BlueprintPrivacyMiddleware** - Control de Acceso Multicapa
-- ??? **Verificación de propiedad**: Validación estricta de acceso a blueprints
-- ?? **Permisos granulares**: Diferenciación entre lectura y escritura
-- ?? **Modo público**: Enforcement de blueprints públicos únicamente
-- ?? **Auditoría detallada**: Logging de todos los intentos de acceso
-- ? **Performance optimizado**: Mínimo impacto en tiempo de respuesta
+- ??? **Verificaciï¿½n de propiedad**: Validaciï¿½n estricta de acceso a blueprints
+- ?? **Permisos granulares**: Diferenciaciï¿½n entre lectura y escritura
+- ?? **Modo pï¿½blico**: Enforcement de blueprints pï¿½blicos ï¿½nicamente
+- ?? **Auditorï¿½a detallada**: Logging de todos los intentos de acceso
+- ? **Performance optimizado**: Mï¿½nimo impacto en tiempo de respuesta
 
-#### **CacheIntegrityService** - Validación de Integridad de Datos
-- ?? **Checksums múltiples**: Soporte MD5, SHA256, SHA512 para verificación
-- ?? **Detección de corrupción**: Análisis automático de integridad de datos
-- ?? **Limpieza automática**: Eliminación de datos corrompidos o inválidos
-- ?? **Reparación de cache**: Herramientas de recuperación de datos
-- ?? **Endpoints administrativos**: API REST para monitoreo y gestión
+#### **CacheIntegrityService** - Validaciï¿½n de Integridad de Datos
+- ?? **Checksums mï¿½ltiples**: Soporte MD5, SHA256, SHA512 para verificaciï¿½n
+- ?? **Detecciï¿½n de corrupciï¿½n**: Anï¿½lisis automï¿½tico de integridad de datos
+- ?? **Limpieza automï¿½tica**: Eliminaciï¿½n de datos corrompidos o invï¿½lidos
+- ?? **Reparaciï¿½n de cache**: Herramientas de recuperaciï¿½n de datos
+- ?? **Endpoints administrativos**: API REST para monitoreo y gestiï¿½n
 
-#### **InputSanitizationService** - Protección OWASP Top 10
-- ?? **Sanitización XSS**: Limpieza de scripts maliciosos en inputs
-- ?? **Protección SQL Injection**: Validación y escape de queries peligrosas
-- ?? **Sanitización por tipo**: Personalizada para strings, objetos, arrays
-- ?? **Detección de amenazas**: Clasificación de riesgo de inputs maliciosos
-- ??? **Middleware integrado**: Protección automática en todas las rutas
+#### **InputSanitizationService** - Protecciï¿½n OWASP Top 10
+- ?? **Sanitizaciï¿½n XSS**: Limpieza de scripts maliciosos en inputs
+- ?? **Protecciï¿½n SQL Injection**: Validaciï¿½n y escape de queries peligrosas
+- ?? **Sanitizaciï¿½n por tipo**: Personalizada para strings, objetos, arrays
+- ?? **Detecciï¿½n de amenazas**: Clasificaciï¿½n de riesgo de inputs maliciosos
+- ??? **Middleware integrado**: Protecciï¿½n automï¿½tica en todas las rutas
 
 #### **AdvancedRateLimitService** - Rate Limiting Inteligente
-- ?? **Análisis comportamental**: Adaptación basada en patrones de uso
-- ?? **Trust scoring**: Sistema de puntuación de confianza por usuario
-- ?? **Bloqueo temporal**: Suspensión automática de usuarios problemáticos
-- ?? **Métricas en tiempo real**: Tracking de requests, errores y comportamiento
-- ?? **Configuración adaptativa**: Límites dinámicos basados en historial
+- ?? **Anï¿½lisis comportamental**: Adaptaciï¿½n basada en patrones de uso
+- ?? **Trust scoring**: Sistema de puntuaciï¿½n de confianza por usuario
+- ?? **Bloqueo temporal**: Suspensiï¿½n automï¿½tica de usuarios problemï¿½ticos
+- ?? **Mï¿½tricas en tiempo real**: Tracking de requests, errores y comportamiento
+- ?? **Configuraciï¿½n adaptativa**: Lï¿½mites dinï¿½micos basados en historial
 
-### Administración
-- ? Impersonación de usuarios para testing
-- ? Logs de auditoría
-- ? Gestión de permisos y roles
+### Administraciï¿½n
+- ? Impersonaciï¿½n de usuarios para testing
+- ? Logs de auditorï¿½a
+- ? Gestiï¿½n de permisos y roles
 
 ---
 
@@ -369,47 +382,47 @@ GET /api/v1/recommendations/context-examples
 
 El proyecto sigue los principios de **Clean Architecture** y **Arquitectura Hexagonal**, garantizando:
 
-- **Independencia del framework**: La lógica de negocio no depende de Express/Fastify
+- **Independencia del framework**: La lï¿½gica de negocio no depende de Express/Fastify
 - **Independencia de la base de datos**: Se puede cambiar PostgreSQL sin afectar el dominio
 - **Independencia de servicios externos**: IA y email son intercambiables
 - **Testeable**: Cada capa puede probarse de forma aislada
-- **Mantenible**: Separación clara de responsabilidades
+- **Mantenible**: Separaciï¿½n clara de responsabilidades
 
 ### Capas de la Arquitectura
 
 ```
 +-----------------------------------------------------+
-¦                     ADAPTERS                        ¦
-¦  (HTTP Controllers, Routes, Middlewares)            ¦
+ï¿½                     ADAPTERS                        ï¿½
+ï¿½  (HTTP Controllers, Routes, Middlewares)            ï¿½
 +-----------------------------------------------------+
-                     ¦
+                     ï¿½
 +--------------------?--------------------------------+
-¦                  APPLICATION                        ¦
-¦  (Use Cases, DTOs, Ports/Interfaces)                ¦
+ï¿½                  APPLICATION                        ï¿½
+ï¿½  (Use Cases, DTOs, Ports/Interfaces)                ï¿½
 +-----------------------------------------------------+
-                     ¦
+                     ï¿½
 +--------------------?--------------------------------+
-¦                    DOMAIN                           ¦
-¦  (Entities, Value Objects, Domain Services)         ¦
+ï¿½                    DOMAIN                           ï¿½
+ï¿½  (Entities, Value Objects, Domain Services)         ï¿½
 +-----------------------------------------------------+
                      ?
 +-----------------------------------------------------+
-¦                INFRASTRUCTURE                       ¦
-¦  (Repositories, RabbitMQ, Email, AI Services)       ¦
+ï¿½                INFRASTRUCTURE                       ï¿½
+ï¿½  (Repositories, RabbitMQ, Email, AI Services)       ï¿½
 +-----------------------------------------------------+
 ```
 
-### Patrón Outbox
+### Patrï¿½n Outbox
 
 Implementa consistencia eventual mediante:
-1. **Outbox Table**: Almacena eventos de dominio en la misma transacción
-2. **Worker/Poller**: Procesa eventos pendientes de forma asíncrona
+1. **Outbox Table**: Almacena eventos de dominio en la misma transacciï¿½n
+2. **Worker/Poller**: Procesa eventos pendientes de forma asï¿½ncrona
 3. **RabbitMQ**: Publica eventos a consumers externos
-4. **Consumers**: Procesan eventos (notificaciones, auditoría, etc.)
+4. **Consumers**: Procesan eventos (notificaciones, auditorï¿½a, etc.)
 
 ---
 
-## ??? Stack Tecnológico - Estado Real
+## ??? Stack Tecnolï¿½gico - Estado Real
 
 ### ? **Implementado y Funcionando**
 
@@ -417,104 +430,104 @@ Implementa consistencia eventual mediante:
 - **Runtime**: Node.js v16.17.0+ ?
 - **Lenguaje**: TypeScript 5.x ?
 - **Framework Web**: Express ?
-- **Validación**: Zod ?
+- **Validaciï¿½n**: Zod ?
 
 #### Persistencia
 - **Base de datos**: PostgreSQL 15+ con Docker ?
 - **ORM**: Prisma 5.x ?
 - **Migraciones**: Prisma Migrate ?
 
-#### Mensajería y Notificaciones
+#### Mensajerï¿½a y Notificaciones
 - **Broker**: RabbitMQ 3.x con Docker ?
 - **Cliente**: amqplib ?
-- **Patrón Outbox**: Implementado y funcionando ?
+- **Patrï¿½n Outbox**: Implementado y funcionando ?
 - **Email Service**: NodemailerService con Gmail/SMTP ?
-- **RabbitMQConsumer**: Consumer base genérico ? CORREGIDO
-- **NotificationConsumer**: Consumer específico para eventos ? FUNCIONAL
-- **WorkerService**: Gestión limpia de consumers ? IMPLEMENTADO
+- **RabbitMQConsumer**: Consumer base genï¿½rico ? CORREGIDO
+- **NotificationConsumer**: Consumer especï¿½fico para eventos ? FUNCIONAL
+- **WorkerService**: Gestiï¿½n limpia de consumers ? IMPLEMENTADO
 - **Plantillas HTML**: Emails responsivos integrados ?
 
 #### Inteligencia Artificial y Cache
 - **IA Service**: Perplexity API con Llama 3.1 Sonar ?
-- **Cache Redis**: Sistema TTL inteligente para optimización de costos ?
-- **Categorización automática**: Productos con confianza >= 0.7 ?
+- **Cache Redis**: Sistema TTL inteligente para optimizaciï¿½n de costos ?
+- **Categorizaciï¿½n automï¿½tica**: Productos con confianza >= 0.7 ?
 - **Rate Limiting**: 10 req/min con fallback graceful ?
-- **CacheService**: Redis con gestión de conexiones y reconexión ?
+- **CacheService**: Redis con gestiï¿½n de conexiones y reconexiï¿½n ?
 
-#### Autenticación y Seguridad
+#### Autenticaciï¿½n y Seguridad
 - **Tokens**: JWT (jsonwebtoken) ?
-- **Encriptación**: bcrypt ?
+- **Encriptaciï¿½n**: bcrypt ?
 - **Hash seguro**: Para invitaciones ?
-- **SecurityAuditService**: Sistema de auditoría empresarial (20+ tipos de eventos) ?
+- **SecurityAuditService**: Sistema de auditorï¿½a empresarial (20+ tipos de eventos) ?
 - **BlueprintPrivacyMiddleware**: Control de acceso multicapa ?
-- **CacheIntegrityService**: Validación de integridad con checksums ?
-- **InputSanitizationService**: Protección OWASP Top 10 ?
+- **CacheIntegrityService**: Validaciï¿½n de integridad con checksums ?
+- **InputSanitizationService**: Protecciï¿½n OWASP Top 10 ?
 - **AdvancedRateLimitService**: Rate limiting adaptativo ?
-- **Endpoints de administración**: Monitoreo y gestión de cache ?
+- **Endpoints de administraciï¿½n**: Monitoreo y gestiï¿½n de cache ?
 
 #### Testing
 - **Framework**: Jest con 243 tests pasando ?
 - **API Testing**: Supertest ?
 - **Cobertura**: >90% en capas core ?
-- **Email Testing**: Scripts de configuración ?
+- **Email Testing**: Scripts de configuraciï¿½n ?
 - **Workers Testing**: Scripts de consumers ? NUEVO
 
 ### ?? **Planificado para Fases Futuras**
 
-#### Documentación y Observabilidad
+#### Documentaciï¿½n y Observabilidad
 - **API**: Swagger/OpenAPI (Fase 13)
 - **Logging avanzado**: Winston ? **IMPLEMENTADO**
-- **Métricas**: Prometheus (Fase 12)
+- **Mï¿½tricas**: Prometheus (Fase 12)
 - **Tracing**: OpenTelemetry (Fase 12)
 
 #### Seguridad Empresarial ? **COMPLETADO FASE 2 AVANZADA**
-- **SecurityAuditService**: Sistema de auditoría empresarial (20+ tipos) ? NUEVO
+- **SecurityAuditService**: Sistema de auditorï¿½a empresarial (20+ tipos) ? NUEVO
 - **BlueprintPrivacyMiddleware**: Control de acceso multicapa ? NUEVO
-- **CacheIntegrityService**: Validación de integridad con checksums ? NUEVO
-- **InputSanitizationService**: Protección OWASP Top 10 ? NUEVO
+- **CacheIntegrityService**: Validaciï¿½n de integridad con checksums ? NUEVO
+- **InputSanitizationService**: Protecciï¿½n OWASP Top 10 ? NUEVO
 - **AdvancedRateLimitService**: Rate limiting adaptativo ? NUEVO
-- **Cache Admin Endpoints**: Monitoreo y gestión avanzada ? NUEVO
-- **Rate Limiting granular**: 4 niveles de protección ?
+- **Cache Admin Endpoints**: Monitoreo y gestiï¿½n avanzada ? NUEVO
+- **Rate Limiting granular**: 4 niveles de protecciï¿½n ?
 - **Winston Logger profesional**: Reemplaza console.log ?
 - **Middleware de errores**: Centralizado con tracking ?
-- **CORS estricto**: Configuración por entorno ?
+- **CORS estricto**: Configuraciï¿½n por entorno ?
 - **Headers de seguridad**: Helmet + CSP + HSTS ?
-- **JWT crypto-seguros**: Validación 512-bit entropy ?
-- **Protección rutas dev**: Bloqueo total en producción ?
-- **Vulnerabilidades**: 0 críticas detectadas (9.1/10 score) ?
+- **JWT crypto-seguros**: Validaciï¿½n 512-bit entropy ?
+- **Protecciï¿½n rutas dev**: Bloqueo total en producciï¿½n ?
+- **Vulnerabilidades**: 0 crï¿½ticas detectadas (9.1/10 score) ?
 
 ### Testing
 - **Framework**: Jest
 - **API Testing**: Supertest
 - **Cobertura**: >80%
 
-### Calidad de Código
+### Calidad de Cï¿½digo
 - **TypeScript**: Strict mode habilitado con `exactOptionalPropertyTypes`
 - **Result Pattern**: Manejo funcional de errores implementado
-- **Arquitectura Hexagonal**: Separación estricta de capas
-- **Pre-commit**: Verificación de compilación TypeScript
+- **Arquitectura Hexagonal**: Separaciï¿½n estricta de capas
+- **Pre-commit**: Verificaciï¿½n de compilaciï¿½n TypeScript
 
-### Documentación y Observabilidad
+### Documentaciï¿½n y Observabilidad
 - **API**: Swagger/OpenAPI ? **IMPLEMENTADO** (disponible en `/api/docs`)
 - **Logs**: Winston Logger profesional ? **IMPLEMENTADO**
 - **Error Tracking**: Middleware centralizado con Request ID ? **NUEVO**
 - **HTTP Logging**: Reemplaza Morgan con sistema completo ? **NUEVO**
-- **Observabilidad**: Métricas y tracing (planificado)
+- **Observabilidad**: Mï¿½tricas y tracing (planificado)
 
 ---
 
 ## ?? Requisitos Previos
 
-Antes de comenzar, asegúrate de tener instalado:
+Antes de comenzar, asegï¿½rate de tener instalado:
 
-- **Node.js** v20 o superior: [Descargar aquí](https://nodejs.org/)
+- **Node.js** v20 o superior: [Descargar aquï¿½](https://nodejs.org/)
 - **npm** o **yarn**: Incluido con Node.js
-- **Docker Desktop**: [Descargar aquí](https://www.docker.com/products/docker-desktop/) (para PostgreSQL y RabbitMQ)
-- **Git**: [Descargar aquí](https://git-scm.com/)
+- **Docker Desktop**: [Descargar aquï¿½](https://www.docker.com/products/docker-desktop/) (para PostgreSQL y RabbitMQ)
+- **Git**: [Descargar aquï¿½](https://git-scm.com/)
 
 ---
 
-## ?? Instalación y Configuración
+## ?? Instalaciï¿½n y Configuraciï¿½n
 
 ### 1. Clonar el repositorio
 
@@ -552,7 +565,7 @@ docker run -d \
   rabbitmq:management
 ```
 
-**Panel de administración RabbitMQ**: http://localhost:15672 (guest/guest)
+**Panel de administraciï¿½n RabbitMQ**: http://localhost:15672 (guest/guest)
 
 ### 4. Configurar variables de entorno
 
@@ -586,7 +599,7 @@ OPENAI_API_KEY=tu_api_key_aqui
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=tu_email@gmail.com
-SMTP_PASS=tu_contraseña
+SMTP_PASS=tu_contraseï¿½a
 ```
 
 ### 5. Generar Prisma Client y ejecutar migraciones
@@ -608,12 +621,12 @@ npx prisma db seed
 # Modo desarrollo (con hot reload)
 npm run dev
 
-# Modo producción
+# Modo producciï¿½n
 npm run build
 npm start
 ```
 
-El servidor estará disponible en: **http://localhost:3000**
+El servidor estarï¿½ disponible en: **http://localhost:3000**
 
 ---
 
@@ -622,134 +635,134 @@ El servidor estará disponible en: **http://localhost:3000**
 ```
 /
 +-- src/
-¦   +-- domain/                      # Lógica de negocio pura
-¦   ¦   +-- entities/                # Usuario, Lista, Producto, etc.
-¦   ¦   +-- value-objects/           # Email, Password, Hash
-¦   ¦   +-- services/                # Domain services
-¦   ¦   +-- events/                  # Eventos de dominio
-¦   ¦   +-- errors/                  # Errores de dominio
-¦   ¦
-¦   +-- application/                 # Casos de uso
-¦   ¦   +-- use-cases/               # 33 casos de uso organizados
-¦   ¦   +-- ports/                   # Interfaces (repositorios, servicios)
-¦   ¦   +-- dto/                     # DTOs entrada/salida
-¦   ¦   +-- errors/                  # Errores de aplicación
-¦   ¦
-¦   +-- infrastructure/              # Adaptadores
-¦   ¦   +-- persistence/
-¦   ¦   ¦   +-- prisma/              # Schema y migraciones
-¦   ¦   ¦   +-- repositories/        # Implementaciones Prisma
-¦   ¦   ¦   +-- mappers/             # Mapeo entidad ? modelo
-¦   ¦   ¦   +-- in-memory/           # Repositorios fake para testing
-¦   ¦   +-- http/
-¦   ¦   ¦   +-- controllers/         # Controladores REST
-¦   ¦   ¦   ¦   +-- AuthController.ts
-¦   ¦   ¦   ¦   +-- ListController.ts
-¦   ¦   ¦   ¦   +-- ProductController.ts
-¦   ¦   ¦   ¦   +-- CategoryController.ts
-¦   ¦   ¦   ¦   +-- InvitationController.ts
-¦   ¦   ¦   ¦   +-- AIController.ts
-¦   ¦   ¦   ¦   +-- BlueprintController.ts
-¦   ¦   ¦   ¦   +-- AdminController.ts
-¦   ¦   ¦   ¦   +-- DashboardController.ts
-¦   ¦   ¦   ¦   +-- CacheIntegrityController.ts  # ?? Admin de seguridad
-¦   ¦   ¦   +-- middlewares/         # Auth, validación, errors
-¦   ¦   ¦   +-- routes/              # Definición de rutas
-¦   ¦   ¦   ¦   +-- authRoutes.ts
-¦   ¦   ¦   ¦   +-- listRoutes.ts
-¦   ¦   ¦   ¦   +-- productRoutes.ts
-¦   ¦   ¦   ¦   +-- categoryRoutes.ts
-¦   ¦   ¦   ¦   +-- invitationRoutes.ts
-¦   ¦   ¦   ¦   +-- aiRoutes.ts
-¦   ¦   ¦   ¦   +-- blueprintRoutes.ts
-¦   ¦   ¦   ¦   +-- adminRoutes.ts
-¦   ¦   ¦   ¦   +-- dashboardRoutes.ts
-¦   ¦   ¦   ¦   +-- cacheIntegrityRoutes.ts      # ?? Rutas de seguridad
-¦   ¦   ¦   +-- server.ts            # Bootstrap del servidor
-¦   ¦   +-- messaging/
-¦   ¦   ¦   +-- rabbitmq/            # Conexión, publisher, consumer
-¦   ¦   ¦   +-- outbox/              # Servicio outbox y worker
-¦   ¦   ¦   +-- consumers/           # Consumers específicos
-¦   ¦   +-- external-services/
-¦   ¦   ¦   +-- ai/                  # ?? Perplexity AI, OpenAI, etc.
-¦   ¦   ¦   +-- email/               # Nodemailer
-¦   ¦   ¦   +-- auth/                # JWT, bcrypt
-¦   ¦   ¦   +-- security/            # ?? Servicios de seguridad empresarial
-¦   ¦   ¦       +-- SecurityAuditService.ts      # Auditoría empresarial
-¦   ¦   ¦       +-- BlueprintPrivacyMiddleware.ts # Control de acceso
-¦   ¦   ¦       +-- CacheIntegrityService.ts      # Validación de integridad
-¦   ¦   ¦       +-- InputSanitizationService.ts   # Protección OWASP
-¦   ¦   ¦       +-- AdvancedRateLimitService.ts   # Rate limiting inteligente
-¦   ¦   +-- observability/           # Logger, metrics, tracing
-¦   ¦   +-- config/                  # Configuración por módulo
-¦   ¦
-¦   +-- composition/                 # Inyección de dependencias
-¦   ¦   +-- container.ts
-¦   ¦
-¦   +-- shared/                      # Utilidades compartidas
-¦   ¦   +-- result.ts                # Result/Either
-¦   ¦   +-- types.ts
-¦   ¦   +-- utils.ts
-¦   ¦
-¦   +-- main.ts                      # Punto de entrada
-¦
+ï¿½   +-- domain/                      # Lï¿½gica de negocio pura
+ï¿½   ï¿½   +-- entities/                # Usuario, Lista, Producto, etc.
+ï¿½   ï¿½   +-- value-objects/           # Email, Password, Hash
+ï¿½   ï¿½   +-- services/                # Domain services
+ï¿½   ï¿½   +-- events/                  # Eventos de dominio
+ï¿½   ï¿½   +-- errors/                  # Errores de dominio
+ï¿½   ï¿½
+ï¿½   +-- application/                 # Casos de uso
+ï¿½   ï¿½   +-- use-cases/               # 33 casos de uso organizados
+ï¿½   ï¿½   +-- ports/                   # Interfaces (repositorios, servicios)
+ï¿½   ï¿½   +-- dto/                     # DTOs entrada/salida
+ï¿½   ï¿½   +-- errors/                  # Errores de aplicaciï¿½n
+ï¿½   ï¿½
+ï¿½   +-- infrastructure/              # Adaptadores
+ï¿½   ï¿½   +-- persistence/
+ï¿½   ï¿½   ï¿½   +-- prisma/              # Schema y migraciones
+ï¿½   ï¿½   ï¿½   +-- repositories/        # Implementaciones Prisma
+ï¿½   ï¿½   ï¿½   +-- mappers/             # Mapeo entidad ? modelo
+ï¿½   ï¿½   ï¿½   +-- in-memory/           # Repositorios fake para testing
+ï¿½   ï¿½   +-- http/
+ï¿½   ï¿½   ï¿½   +-- controllers/         # Controladores REST
+ï¿½   ï¿½   ï¿½   ï¿½   +-- AuthController.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- ListController.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- ProductController.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- CategoryController.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- InvitationController.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- AIController.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- BlueprintController.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- AdminController.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- DashboardController.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- CacheIntegrityController.ts  # ?? Admin de seguridad
+ï¿½   ï¿½   ï¿½   +-- middlewares/         # Auth, validaciï¿½n, errors
+ï¿½   ï¿½   ï¿½   +-- routes/              # Definiciï¿½n de rutas
+ï¿½   ï¿½   ï¿½   ï¿½   +-- authRoutes.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- listRoutes.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- productRoutes.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- categoryRoutes.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- invitationRoutes.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- aiRoutes.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- blueprintRoutes.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- adminRoutes.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- dashboardRoutes.ts
+ï¿½   ï¿½   ï¿½   ï¿½   +-- cacheIntegrityRoutes.ts      # ?? Rutas de seguridad
+ï¿½   ï¿½   ï¿½   +-- server.ts            # Bootstrap del servidor
+ï¿½   ï¿½   +-- messaging/
+ï¿½   ï¿½   ï¿½   +-- rabbitmq/            # Conexiï¿½n, publisher, consumer
+ï¿½   ï¿½   ï¿½   +-- outbox/              # Servicio outbox y worker
+ï¿½   ï¿½   ï¿½   +-- consumers/           # Consumers especï¿½ficos
+ï¿½   ï¿½   +-- external-services/
+ï¿½   ï¿½   ï¿½   +-- ai/                  # ?? Perplexity AI, OpenAI, etc.
+ï¿½   ï¿½   ï¿½   +-- email/               # Nodemailer
+ï¿½   ï¿½   ï¿½   +-- auth/                # JWT, bcrypt
+ï¿½   ï¿½   ï¿½   +-- security/            # ?? Servicios de seguridad empresarial
+ï¿½   ï¿½   ï¿½       +-- SecurityAuditService.ts      # Auditorï¿½a empresarial
+ï¿½   ï¿½   ï¿½       +-- BlueprintPrivacyMiddleware.ts # Control de acceso
+ï¿½   ï¿½   ï¿½       +-- CacheIntegrityService.ts      # Validaciï¿½n de integridad
+ï¿½   ï¿½   ï¿½       +-- InputSanitizationService.ts   # Protecciï¿½n OWASP
+ï¿½   ï¿½   ï¿½       +-- AdvancedRateLimitService.ts   # Rate limiting inteligente
+ï¿½   ï¿½   +-- observability/           # Logger, metrics, tracing
+ï¿½   ï¿½   +-- config/                  # Configuraciï¿½n por mï¿½dulo
+ï¿½   ï¿½
+ï¿½   +-- composition/                 # Inyecciï¿½n de dependencias
+ï¿½   ï¿½   +-- container.ts
+ï¿½   ï¿½
+ï¿½   +-- shared/                      # Utilidades compartidas
+ï¿½   ï¿½   +-- result.ts                # Result/Either
+ï¿½   ï¿½   +-- types.ts
+ï¿½   ï¿½   +-- utils.ts
+ï¿½   ï¿½
+ï¿½   +-- main.ts                      # Punto de entrada
+ï¿½
 +-- tests/
-¦   +-- unit/                        # Tests unitarios por capa
-¦   ¦   +-- domain/                  # Tests de entidades y value objects
-¦   ¦   +-- application/             # Tests de casos de uso
-¦   ¦   +-- infrastructure/          # Tests de adaptadores
-¦   +-- integration/                 # Tests de integración
-¦   ¦   +-- http/                    # Tests de controladores y rutas
-¦   ¦   +-- persistence/             # Tests de repositorios con BD
-¦   ¦   +-- messaging/               # Tests de RabbitMQ
-¦   +-- e2e/                         # Tests end-to-end
-¦   ¦   +-- scenarios/               # Escenarios completos de usuario
-¦   +-- setup.ts                     # Configuración global de tests
-¦   +-- setup.d.ts                   # Tipos para tests
-¦
+ï¿½   +-- unit/                        # Tests unitarios por capa
+ï¿½   ï¿½   +-- domain/                  # Tests de entidades y value objects
+ï¿½   ï¿½   +-- application/             # Tests de casos de uso
+ï¿½   ï¿½   +-- infrastructure/          # Tests de adaptadores
+ï¿½   +-- integration/                 # Tests de integraciï¿½n
+ï¿½   ï¿½   +-- http/                    # Tests de controladores y rutas
+ï¿½   ï¿½   +-- persistence/             # Tests de repositorios con BD
+ï¿½   ï¿½   +-- messaging/               # Tests de RabbitMQ
+ï¿½   +-- e2e/                         # Tests end-to-end
+ï¿½   ï¿½   +-- scenarios/               # Escenarios completos de usuario
+ï¿½   +-- setup.ts                     # Configuraciï¿½n global de tests
+ï¿½   +-- setup.d.ts                   # Tipos para tests
+ï¿½
 +-- scripts/                         # Scripts auxiliares
-¦   +-- test-email-config.ts         # Verificar configuración email
-¦   +-- test-email.ts                # Test manual de emails
-¦   +-- test-workers.ts              # Test manual de workers RabbitMQ
-¦
+ï¿½   +-- test-email-config.ts         # Verificar configuraciï¿½n email
+ï¿½   +-- test-email.ts                # Test manual de emails
+ï¿½   +-- test-workers.ts              # Test manual de workers RabbitMQ
+ï¿½
 +-- docker/                          # Configuraciones Docker
-¦   +-- postgres/                    # Configuración PostgreSQL
-¦   ¦   +-- init/                    # Scripts de inicialización
-¦   +-- rabbitmq/                    # Configuración RabbitMQ
-¦       +-- definitions.json         # Definiciones de exchanges/queues
-¦       +-- rabbitmq.conf            # Configuración del broker
-¦
+ï¿½   +-- postgres/                    # Configuraciï¿½n PostgreSQL
+ï¿½   ï¿½   +-- init/                    # Scripts de inicializaciï¿½n
+ï¿½   +-- rabbitmq/                    # Configuraciï¿½n RabbitMQ
+ï¿½       +-- definitions.json         # Definiciones de exchanges/queues
+ï¿½       +-- rabbitmq.conf            # Configuraciï¿½n del broker
+ï¿½
 +-- prisma/                          # Prisma ORM
-¦   +-- schema.prisma                # Schema de base de datos
-¦   +-- migrations/                  # Migraciones de BD
-¦       +-- migration_lock.toml      # Lock de migraciones
-¦
-+-- Docs/                            # Documentación del proyecto
-¦   +-- Analisis-de-requisitos-ListaCompra.pdf
-¦   +-- DiagramaClases_V1-mermaid.md
-¦   +-- DiagramaClases_V1.mmd
-¦   +-- DiagramaClases_v1.png
-¦   +-- DiagramaClases_V1.svg
-¦   +-- casos-uso-completos.md
-¦
+ï¿½   +-- schema.prisma                # Schema de base de datos
+ï¿½   +-- migrations/                  # Migraciones de BD
+ï¿½       +-- migration_lock.toml      # Lock de migraciones
+ï¿½
++-- Docs/                            # Documentaciï¿½n del proyecto
+ï¿½   +-- Analisis-de-requisitos-ListaCompra.pdf
+ï¿½   +-- DiagramaClases_V1-mermaid.md
+ï¿½   +-- DiagramaClases_V1.mmd
+ï¿½   +-- DiagramaClases_v1.png
+ï¿½   +-- DiagramaClases_V1.svg
+ï¿½   +-- casos-uso-completos.md
+ï¿½
 +-- ?? **Archivos de Testing API**   # ?? **NUEVOS**
-+-- postman_collection.json          # Colección Postman (33+ endpoints)
++-- postman_collection.json          # Colecciï¿½n Postman (33+ endpoints)
 +-- postman_environment.json         # Variables de entorno para testing
-+-- API_Testing_Guide.md             # Guía completa de testing
-¦
-+-- ?? **Configuración del Proyecto**
++-- API_Testing_Guide.md             # Guï¿½a completa de testing
+ï¿½
++-- ?? **Configuraciï¿½n del Proyecto**
 +-- .env.example                     # Plantilla de variables de entorno
-+-- .eslintrc.json                   # Configuración ESLint
-+-- .prettierrc                      # Configuración Prettier
++-- .eslintrc.json                   # Configuraciï¿½n ESLint
++-- .prettierrc                      # Configuraciï¿½n Prettier
 +-- .prettierignore                  # Archivos ignorados por Prettier
 +-- .gitignore                       # Archivos ignorados por Git
-+-- tsconfig.json                    # Configuración TypeScript
-+-- jest.config.js                   # Configuración Jest
++-- tsconfig.json                    # Configuraciï¿½n TypeScript
++-- jest.config.js                   # Configuraciï¿½n Jest
 +-- docker-compose.yml               # Servicios PostgreSQL + RabbitMQ
 +-- package.json                     # Dependencias y scripts NPM
-¦
-+-- ?? **Documentación Principal**
-+-- README.md                        # ?? **Este archivo - Guía completa**
+ï¿½
++-- ?? **Documentaciï¿½n Principal**
++-- README.md                        # ?? **Este archivo - Guï¿½a completa**
 +-- AGENTS.md                        # Arquitectura y roadmap detallado
 ```
 
@@ -757,64 +770,64 @@ El servidor estará disponible en: **http://localhost:3000**
 
 ## ?? Casos de Uso
 
-El sistema implementa **33 casos de uso** completos organizados en módulos:
+El sistema implementa **33 casos de uso** completos organizados en mï¿½dulos:
 
-### Autenticación (2)
+### Autenticaciï¿½n (2)
 - CU-01: Registro de Usuario
-- CU-02: Autenticación de Usuario
+- CU-02: Autenticaciï¿½n de Usuario
 
-### Gestión de Listas (4)
+### Gestiï¿½n de Listas (4)
 - CU-03: Crear Lista de la Compra
 - CU-04: Obtener Listas del Usuario
 - CU-05: Actualizar Lista
 - CU-06: Eliminar Lista
 
-### Gestión de Productos (4)
+### Gestiï¿½n de Productos (4)
 - CU-07: Agregar Producto a Lista
 - CU-08: Marcar/Desmarcar Producto como Comprado
 - CU-09: Modificar Producto
 - CU-10: Eliminar Producto
 
-### Gestión de Categorías (4)
-- CU-11: Crear Categoría
-- CU-12: Obtener Categorías de Tienda
-- CU-13: Actualizar Categoría
-- CU-14: Eliminar Categoría
+### Gestiï¿½n de Categorï¿½as (4)
+- CU-11: Crear Categorï¿½a
+- CU-12: Obtener Categorï¿½as de Tienda
+- CU-13: Actualizar Categorï¿½a
+- CU-14: Eliminar Categorï¿½a
 
-### Compartición y Colaboración (4)
+### Comparticiï¿½n y Colaboraciï¿½n (4)
 - CU-15: Compartir Lista (Generar Enlace)
 - CU-16: Acceder a Lista Compartida
 - CU-17: Gestionar Permisos
-- CU-18: Cancelar Invitación
+- CU-18: Cancelar Invitaciï¿½n
 
 ### Notificaciones (1)
-- CU-19: Procesar Notificación (Worker Outbox)
+- CU-19: Procesar Notificaciï¿½n (Worker Outbox)
 
-### **? Inteligencia Artificial Básica - Fase 9 (1)**
-- **CU-28: Sugerencias Automáticas de Categorías por Tienda**
+### **? Inteligencia Artificial Bï¿½sica - Fase 9 (1)**
+- **CU-28: Sugerencias Automï¿½ticas de Categorï¿½as por Tienda**
 
 ### Blueprints/Plantillas (2)
 - CU-22: Crear Blueprint
 - CU-23: Usar Blueprint para Crear Lista
 
-### Administración (2)
+### Administraciï¿½n (2)
 - CU-24: Impersonar Usuario
-- CU-25: Finalizar Impersonación
+- CU-25: Finalizar Impersonaciï¿½n
 
 ### Auxiliares (2)
 - CU-26: Obtener Tiendas Disponibles
-- CU-27: Validar Enlaces de Invitación (Proceso Automático)
+- CU-27: Validar Enlaces de Invitaciï¿½n (Proceso Automï¿½tico)
 
 ### **?? IA Avanzada - Fase Extra (5)**
-- **CU-29: Categorización Masiva Inteligente**
-- **CU-30: Análisis Inteligente de Hábitos de Compra**
+- **CU-29: Categorizaciï¿½n Masiva Inteligente**
+- **CU-30: Anï¿½lisis Inteligente de Hï¿½bitos de Compra**
 - **CU-31: Alertas Proactivas de Precios y Ofertas**
-- **CU-32: Listas Inteligentes por Ocasión**
-- **CU-33: Recomendaciones Contextuales Automáticas**
+- **CU-32: Listas Inteligentes por Ocasiï¿½n**
+- **CU-33: Recomendaciones Contextuales Automï¿½ticas**
 
 ### ~~Inteligencia Artificial Original (2)~~ *(Reorganizado)*
-- ~~CU-20: Solicitar Sugerencias de IA para Categorías~~ ? **Evolucionado a CU-28**
-- ~~CU-21: Analizar Hábitos de Compra~~ ? **Evolucionado a CU-30**
+- ~~CU-20: Solicitar Sugerencias de IA para Categorï¿½as~~ ? **Evolucionado a CU-28**
+- ~~CU-21: Analizar Hï¿½bitos de Compra~~ ? **Evolucionado a CU-30**
 
 ?? **[Ver casos de uso detallados](Doc/casos-uso-completos.md)**
 
@@ -822,22 +835,22 @@ El sistema implementa **33 casos de uso** completos organizados en módulos:
 
 ## ??? Estado del Proyecto - Progreso Actual
 
-| Fase | Estado | Descripción | Casos de Uso |
+| Fase | Estado | Descripciï¿½n | Casos de Uso |
 |------|--------|-------------|--------------|
 | **Fase 1** | ? **COMPLETADA** | Setup y arquitectura base | - |
-| **Fase 2** | ? **COMPLETADA** | Autenticación y gestión de usuarios | CU-01, CU-02 |
-| **Fase 3** | ? **COMPLETADA** | Gestión de listas | CU-03 a CU-06 |
-| **Fase 4** | ? **COMPLETADA** | Gestión de productos | CU-07 a CU-10 |
-| **Fase 5** | ? **COMPLETADA** | Gestión de categorías y tiendas | CU-11 a CU-14, CU-26 |
-| **Fase 6** | ? **COMPLETADA** | Patrón Outbox y RabbitMQ | CU-19 (base) |
-| **Fase 7** | ? **COMPLETADA** | Compartición de listas | CU-15 a CU-18 |
+| **Fase 2** | ? **COMPLETADA** | Autenticaciï¿½n y gestiï¿½n de usuarios | CU-01, CU-02 |
+| **Fase 3** | ? **COMPLETADA** | Gestiï¿½n de listas | CU-03 a CU-06 |
+| **Fase 4** | ? **COMPLETADA** | Gestiï¿½n de productos | CU-07 a CU-10 |
+| **Fase 5** | ? **COMPLETADA** | Gestiï¿½n de categorï¿½as y tiendas | CU-11 a CU-14, CU-26 |
+| **Fase 6** | ? **COMPLETADA** | Patrï¿½n Outbox y RabbitMQ | CU-19 (base) |
+| **Fase 7** | ? **COMPLETADA** | Comparticiï¿½n de listas | CU-15 a CU-18 |
 | **Fase 8** | ? **COMPLETADA** | Notificaciones por email | CU-19 (completo) |
-| **Fase 9** | ? **COMPLETADA** | Integración con IA | CU-28 |
+| **Fase 9** | ? **COMPLETADA** | Integraciï¿½n con IA | CU-28 |
 | **Fase 10** | ? **COMPLETADA** | Blueprints/Plantillas | CU-22, CU-23 |
 | **Fase 11** | ? **COMPLETADA** | Funcionalidades de administrador | CU-24, CU-25 |
-| **Fase 12** | ? **COMPLETADA** | Validación y seguridad | CU-27 |
-| **Fase 13** | ? **COMPLETADA** | Documentación y testing final | OpenAPI/Swagger |
-| **Fase 14** | ? **COMPLETADA** | IA Premium - Listas por Ocasión | CU-32 |
+| **Fase 12** | ? **COMPLETADA** | Validaciï¿½n y seguridad | CU-27 |
+| **Fase 13** | ? **COMPLETADA** | Documentaciï¿½n y testing final | OpenAPI/Swagger |
+| **Fase 14** | ? **COMPLETADA** | IA Premium - Listas por Ocasiï¿½n | CU-32 |
 
 **Progreso:** 14/15 fases completadas **(93%)**  
 **Tests:** 199+ pasando **(100% core features)**  
@@ -851,25 +864,25 @@ El sistema implementa **33 casos de uso** completos organizados en módulos:
 ## ?? Estado del Sistema de Email (Fase 8)
 
 ### ? **Implementado y Funcional**
-- **IEmailService**: Puerto limpio para abstracción de email
-- **NodemailerService**: Implementación concreta con Gmail/SMTP
+- **IEmailService**: Puerto limpio para abstracciï¿½n de email
+- **NodemailerService**: Implementaciï¿½n concreta con Gmail/SMTP
 - **NotificationConsumer**: Consumer para eventos de invitaciones
-- **RabbitMQConsumer**: Consumer base genérico configurable
+- **RabbitMQConsumer**: Consumer base genï¿½rico configurable
 - **Plantillas HTML**: Templates responsivos integrados
-- **Container DI**: Integración completa en sistema de dependencias
-- **Variables ENV**: Configuración Gmail completada
-- **Testing Scripts**: Scripts de verificación de configuración
+- **Container DI**: Integraciï¿½n completa en sistema de dependencias
+- **Variables ENV**: Configuraciï¿½n Gmail completada
+- **Testing Scripts**: Scripts de verificaciï¿½n de configuraciï¿½n
 
 ### ?? **Estado de Conectividad**
-- **Configuración**: ? Correcta y validada
+- **Configuraciï¿½n**: ? Correcta y validada
 - **Credenciales**: ? Gmail App Password configurado
-- **Tests Unitarios**: ? Pasan exitosamente (configuración)
-- **Tests Integración**: ?? Fallan por firewall/proxy de red local
-- **Producción**: ?? Listo para funcionar con conectividad SMTP
+- **Tests Unitarios**: ? Pasan exitosamente (configuraciï¿½n)
+- **Tests Integraciï¿½n**: ?? Fallan por firewall/proxy de red local
+- **Producciï¿½n**: ?? Listo para funcionar con conectividad SMTP
 
 ### ?? **Scripts Disponibles**
 ```bash
-npm run test:email:config  # ? Verifica configuración (pasa)
+npm run test:email:config  # ? Verifica configuraciï¿½n (pasa)
 npm run test:email         # ?? Requiere conectividad SMTP
 npm run test:email:integration  # ?? Requiere conectividad SMTP
 ```
@@ -880,25 +893,25 @@ npm run test:email:integration  # ?? Requiere conectividad SMTP
 
 El proyecto se desarrolla en **13 fases + Fase Extra** a lo largo de **15+ semanas**:
 
-| Fase | Duración | Descripción | Casos de Uso | Estado |
+| Fase | Duraciï¿½n | Descripciï¿½n | Casos de Uso | Estado |
 |------|----------|-------------|--------------|--------|
 | **Fase 1** | Semanas 1-2 | Setup y arquitectura base | - | ? **COMPLETADO** |
-| **Fase 2** | Semana 3 | Autenticación y gestión de usuarios | CU-01, CU-02 | ? **COMPLETADO** |
-| **Fase 3** | Semana 4 | Gestión de listas | CU-03 a CU-06 | ? **COMPLETADO** |
-| **Fase 4** | Semana 5 | Gestión de productos | CU-07 a CU-10 | ? **COMPLETADO** |
-| **Fase 5** | Semana 6 | Gestión de categorías y tiendas | CU-11 a CU-14, CU-26 | ? **COMPLETADO** |
-| **Fase 6** | Semana 7 | Patrón Outbox y RabbitMQ | CU-19 | ? **COMPLETADO** |
-| **Fase 7** | Semana 8 | Compartición de listas | CU-15 a CU-18 | ? **COMPLETADO** |
+| **Fase 2** | Semana 3 | Autenticaciï¿½n y gestiï¿½n de usuarios | CU-01, CU-02 | ? **COMPLETADO** |
+| **Fase 3** | Semana 4 | Gestiï¿½n de listas | CU-03 a CU-06 | ? **COMPLETADO** |
+| **Fase 4** | Semana 5 | Gestiï¿½n de productos | CU-07 a CU-10 | ? **COMPLETADO** |
+| **Fase 5** | Semana 6 | Gestiï¿½n de categorï¿½as y tiendas | CU-11 a CU-14, CU-26 | ? **COMPLETADO** |
+| **Fase 6** | Semana 7 | Patrï¿½n Outbox y RabbitMQ | CU-19 | ? **COMPLETADO** |
+| **Fase 7** | Semana 8 | Comparticiï¿½n de listas | CU-15 a CU-18 | ? **COMPLETADO** |
 | **Fase 8** | Semana 9 | Notificaciones por email | CU-19 | ? **COMPLETADO** |
-| **Fase 9** | Semana 10 | **IA Básica - Categorización Automática** | **CU-28** | ? **COMPLETADO** |
+| **Fase 9** | Semana 10 | **IA Bï¿½sica - Categorizaciï¿½n Automï¿½tica** | **CU-28** | ? **COMPLETADO** |
 | **Fase 10** | Semana 11 | Blueprints/Plantillas | CU-22, CU-23 | ? **COMPLETADO** |
 | **Fase 11** | Semana 12 | Funcionalidades de administrador | CU-24, CU-25 | ? **COMPLETADO** |
-| **Fase 12** | Semana 13 | **Validación y seguridad** | **CU-27** | ? **COMPLETADO** |
-| **Fase 13** | Semana 14 | Documentación y testing final | OpenAPI/Swagger | ? **COMPLETADA** |
-| **Fase 14** | Semana 15 | **IA Premium - Listas por Ocasión** | **CU-32** | ? **COMPLETADA** |
+| **Fase 12** | Semana 13 | **Validaciï¿½n y seguridad** | **CU-27** | ? **COMPLETADO** |
+| **Fase 13** | Semana 14 | Documentaciï¿½n y testing final | OpenAPI/Swagger | ? **COMPLETADA** |
+| **Fase 14** | Semana 15 | **IA Premium - Listas por Ocasiï¿½n** | **CU-32** | ? **COMPLETADA** |
 | **Fase Extra** | Semana 16+ | **IA Avanzada - Funcionalidades Premium** | **CU-29, CU-30, CU-31, CU-33** | ?? **FUTURO** |
 
-?? **[Ver roadmap completo](AGENTS.md#roadmap-de-implementación)**
+?? **[Ver roadmap completo](AGENTS.md#roadmap-de-implementaciï¿½n)**
 
 ---
 
@@ -906,14 +919,14 @@ El proyecto se desarrolla en **13 fases + Fase Extra** a lo largo de **15+ seman
 
 ### ?? Testing de API (Postman/Thunder Client)
 
-**¡Prueba todos los endpoints fácilmente!** 
+**ï¿½Prueba todos los endpoints fï¿½cilmente!** 
 
 **?? Archivos disponibles**:
-- [postman_collection.json](postman_collection.json) - Colección completa (33+ endpoints)
+- [postman_collection.json](postman_collection.json) - Colecciï¿½n completa (33+ endpoints)
 - [postman_environment.json](postman_environment.json) - Variables de entorno
-- [API_Testing_Guide.md](API_Testing_Guide.md) - Guía detallada de uso
+- [API_Testing_Guide.md](API_Testing_Guide.md) - Guï¿½a detallada de uso
 
-?? **Inicio rápido**: Importa la colección ? Configura entorno ? Sigue la guía
+?? **Inicio rï¿½pido**: Importa la colecciï¿½n ? Configura entorno ? Sigue la guï¿½a
 
 ### ?? Testing Automatizado
 
@@ -930,7 +943,7 @@ npm run test:cov
 # Solo tests unitarios
 npm run test:unit
 
-# Solo tests de integración
+# Solo tests de integraciï¿½n
 npm run test:integration
 
 # Solo tests E2E
@@ -939,14 +952,14 @@ npm run test:e2e
 
 ### Cobertura de Tests
 
-El proyecto mantiene una cobertura mínima del **80%** en todas las capas:
+El proyecto mantiene una cobertura mï¿½nima del **80%** en todas las capas:
 
 - ? **Tests Unitarios** (150+ tests): Dominio completo y casos de uso principales
   - Entidades Usuario, Lista, Producto, Categoria, Tienda ?
   - **Entidades Invitacion y Permiso completadas** ?
   - Value Objects (Email, Password, Hash, PermissionType) ?
   - Mappers de persistencia ?
-- ? **Tests de Integración** (44+ tests): Repositorios y base de datos
+- ? **Tests de Integraciï¿½n** (44+ tests): Repositorios y base de datos
   - **PrismaInvitacionRepository (7/7 tests)** ?
   - **PrismaPermisoRepository (8/8 tests)** ? 
   - **PrismaProductoRepository (9/9 tests)** ?
@@ -955,21 +968,21 @@ El proyecto mantiene una cobertura mínima del **80%** en todas las capas:
 
 ### Estado Actual: **380+ tests pasando** ?
 
-### ?? **Consolidación de Testing Completada (29 Oct 2025)**
+### ?? **Consolidaciï¿½n de Testing Completada (29 Oct 2025)**
 
 ? **Coverage mejorado significativamente**: 16.25% ? **18.94%** (+2.69 puntos)
 
 #### ?? **Tests Unitarios Agregados**
-- ?? **Usuario Entity**: 90% coverage (26 tests) - Business rules, validaciones, métodos completos
-- ?? **Email Value Object**: 100% coverage (19 tests) - Validación formato, normalización, utilidades
+- ?? **Usuario Entity**: 90% coverage (26 tests) - Business rules, validaciones, mï¿½todos completos
+- ?? **Email Value Object**: 100% coverage (19 tests) - Validaciï¿½n formato, normalizaciï¿½n, utilidades
 - ?? **PermissionType**: 97.05% coverage (20 tests) - Niveles, factory methods, comparaciones
-- ?? **Hash Value Object**: 66.66% coverage (19 tests) - Algoritmos, máscaras, edge cases
+- ?? **Hash Value Object**: 66.66% coverage (19 tests) - Algoritmos, mï¿½scaras, edge cases
 
 #### ?? **Total: 84 tests nuevos funcionando**
 - ? Tests independientes y bien estructurados
-- ? Verificación de interfaces reales (no asumidas)
+- ? Verificaciï¿½n de interfaces reales (no asumidas)
 - ? Cobertura de casos edge y business rules
-- ? Base sólida para future scaling
+- ? Base sï¿½lida para future scaling
 
 ### Estado Anterior: **260+ tests pasando** ?
 
@@ -979,23 +992,23 @@ El proyecto mantiene una cobertura mínima del **80%** en todas las capas:
 
 #### ? **1. Email Service Optimization** - COMPLETADO ?
 - **Problema**: Tests de email tomaban 110s (76% del tiempo total) por timeouts SMTP
-- **Solución**: Mock service para tests unitarios + tests de integración opcionales
+- **Soluciï¿½n**: Mock service para tests unitarios + tests de integraciï¿½n opcionales
 - **Impacto**: -95% tiempo (110s ? 5.6s)
 - **Archivos**: `MockNodemailerService.ts`, `email.unit.test.ts`
 
 #### ?? **2. Database Race Conditions** - COMPLETADO ?  
 - **Problema**: 6 tests fallando por unique constraint violations (emails duplicados)
-- **Solución**: Emails únicos con timestamp + random ID
+- **Soluciï¿½n**: Emails ï¿½nicos con timestamp + random ID
 - **Impacto**: +6 tests pasando (0% ? 100% success rate)
 - **Archivos**: `PrismaInvitacionRepository.test.ts`, otros repositorios
 
 #### ?? **3. Test Parallelization** - COMPLETADO ?
-- **Problema**: Tests ejecutándose secuencialmente 
-- **Solución**: Jest con `maxWorkers: '50%'`
-- **Impacto**: -50% tiempo ejecución tests unitarios (20s ? 9.8s)
+- **Problema**: Tests ejecutï¿½ndose secuencialmente 
+- **Soluciï¿½n**: Jest con `maxWorkers: '50%'`
+- **Impacto**: -50% tiempo ejecuciï¿½n tests unitarios (20s ? 9.8s)
 - **Archivos**: `jest.config.js`
 
-#### ?? **4. Sistema de Métricas en Tiempo Real** - COMPLETADO ?
+#### ?? **4. Sistema de Mï¿½tricas en Tiempo Real** - COMPLETADO ?
 - **Implementado**: `MetricsCollector` + `MetricsMiddleware`
 - **Features**: Response time, throughput, error rate por endpoint
 - **Endpoints**: `GET /metrics`, `GET /metrics/endpoint/:method/:path`
@@ -1004,7 +1017,7 @@ El proyecto mantiene una cobertura mínima del **80%** en todas las capas:
 
 ### ?? **Resultados Totales**
 
-| Métrica | Antes | Después | Mejora |
+| Mï¿½trica | Antes | Despuï¿½s | Mejora |
 |---------|-------|---------|--------|
 | **Tiempo Total Tests** | 144.9s | ~40-50s | **-65%** ?? |
 | **Email Tests** | 110s timeout | 5.6s mock | **-95%** ? |
@@ -1015,24 +1028,24 @@ El proyecto mantiene una cobertura mínima del **80%** en todas las capas:
 
 ### ??? **Monitoring & Observabilidad**
 
-#### **Sistema de Métricas**
-- **Collector automático** para todos los endpoints
-- **Normalización de paths** (IDs dinámicos ? `:id`)
-- **Métricas tracked**: response time, success rate, error rate, throughput
+#### **Sistema de Mï¿½tricas**
+- **Collector automï¿½tico** para todos los endpoints
+- **Normalizaciï¿½n de paths** (IDs dinï¿½micos ? `:id`)
+- **Mï¿½tricas tracked**: response time, success rate, error rate, throughput
 - **Endpoints de monitoreo**:
   - `GET /metrics` - Vista general del sistema
-  - `GET /metrics/endpoint/:method/:path` - Métricas específicas
-  - `DELETE /metrics` - Reset de métricas
+  - `GET /metrics/endpoint/:method/:path` - Mï¿½tricas especï¿½ficas
+  - `DELETE /metrics` - Reset de mï¿½tricas
 
 #### **KPIs Disponibles**
 - **Response Time**: min, max, avg por endpoint
 - **Error Rate**: porcentaje de requests fallidas
 - **Throughput**: requests por segundo
 - **System Uptime**: tiempo desde inicio
-- **Endpoints más lentos**: top 10 por response time
-- **Endpoints con más errores**: top 10 por error rate
+- **Endpoints mï¿½s lentos**: top 10 por response time
+- **Endpoints con mï¿½s errores**: top 10 por error rate
 
-### ?? **Análisis de Logs Completado**
+### ?? **Anï¿½lisis de Logs Completado**
 - **PostgreSQL**: Unique constraint violations identificados y solucionados ?
 - **RabbitMQ**: Conectividad estable, warnings normales ?
 - **Application**: No unhandled errors ni promise rejections ?
@@ -1044,10 +1057,10 @@ El proyecto mantiene una cobertura mínima del **80%** en todas las capas:
 
 ---
 
-**Últimos avances completados:**
-- ?? **Sistema de métricas en tiempo real implementado**
-- ?? **Optimización completa de tests (65% menos tiempo)**
-- ??? **Análisis de logs y corrección de race conditions**
+**ï¿½ltimos avances completados:**
+- ?? **Sistema de mï¿½tricas en tiempo real implementado**
+- ?? **Optimizaciï¿½n completa de tests (65% menos tiempo)**
+- ??? **Anï¿½lisis de logs y correcciï¿½n de race conditions**
 - ?? **Zero test failures con 260+ tests passing**
 
 ---
@@ -1056,23 +1069,23 @@ El proyecto mantiene una cobertura mínima del **80%** en todas las capas:
 
 ### Swagger UI
 
-Una vez el servidor esté corriendo, accede a la documentación interactiva:
+Una vez el servidor estï¿½ corriendo, accede a la documentaciï¿½n interactiva:
 
 ?? **http://localhost:3000/api-docs**
 
 ### Endpoints Principales
 
-#### Autenticación
+#### Autenticaciï¿½n
 ```
 POST   /api/auth/register          # Registrar usuario
-POST   /api/auth/login             # Iniciar sesión
+POST   /api/auth/login             # Iniciar sesiï¿½n
 ```
 
 #### Listas
 ```
 GET    /api/lists                  # Obtener listas del usuario
 POST   /api/lists                  # Crear lista
-GET    /api/lists/:id              # Obtener lista específica
+GET    /api/lists/:id              # Obtener lista especï¿½fica
 PUT    /api/lists/:id              # Actualizar lista
 DELETE /api/lists/:id              # Eliminar lista
 POST   /api/lists/:id/share        # Compartir lista
@@ -1080,52 +1093,52 @@ POST   /api/lists/:id/share        # Compartir lista
 
 #### Productos
 ```
-POST   /api/lists/:id/products     # Añadir producto a lista
+POST   /api/lists/:id/products     # Aï¿½adir producto a lista
 PATCH  /api/products/:id/purchased # Marcar como comprado
 PUT    /api/products/:id           # Actualizar producto
 DELETE /api/products/:id           # Eliminar producto
 ```
 
-#### Categorías
+#### Categorï¿½as
 ```
-GET    /api/stores/:id/categories  # Obtener categorías de tienda
-POST   /api/categories             # Crear categoría
-PUT    /api/categories/:id         # Actualizar categoría
-DELETE /api/categories/:id         # Eliminar categoría
+GET    /api/stores/:id/categories  # Obtener categorï¿½as de tienda
+POST   /api/categories             # Crear categorï¿½a
+PUT    /api/categories/:id         # Actualizar categorï¿½a
+DELETE /api/categories/:id         # Eliminar categorï¿½a
 ```
 
 #### IA
 ```
-POST   /api/ai/category-suggestions  # Obtener sugerencias de categorías
-GET    /api/ai/habits-analysis       # Análisis de hábitos de compra
+POST   /api/ai/category-suggestions  # Obtener sugerencias de categorï¿½as
+GET    /api/ai/habits-analysis       # Anï¿½lisis de hï¿½bitos de compra
 ```
 
 #### Dashboard de Monitoreo
 ```
-GET    /api/dashboard/metrics        # Métricas completas del sistema
+GET    /api/dashboard/metrics        # Mï¿½tricas completas del sistema
 GET    /api/dashboard/health         # Estado de salud de servicios
 GET    /api/dashboard/alerts         # Alertas activas del sistema
-GET    /api/dashboard/performance    # Análisis detallado de performance
+GET    /api/dashboard/performance    # Anï¿½lisis detallado de performance
 ```
 
 ---
 
-## ?? Contribución
+## ?? Contribuciï¿½n
 
 Este es un proyecto educativo, pero las contribuciones son bienvenidas. Si deseas colaborar:
 
 1. Haz un fork del proyecto
 2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commitea tus cambios (`git commit -am 'Añade nueva funcionalidad'`)
+3. Commitea tus cambios (`git commit -am 'Aï¿½ade nueva funcionalidad'`)
 4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
 5. Abre un Pull Request
 
-### Guías de Contribución
+### Guï¿½as de Contribuciï¿½n
 
 - Sigue los principios SOLID
-- Escribe tests para todo código nuevo
-- Mantén la cobertura >80%
-- Documenta las funciones públicas
+- Escribe tests para todo cï¿½digo nuevo
+- Mantï¿½n la cobertura >80%
+- Documenta las funciones pï¿½blicas
 - Usa TypeScript strict mode
 - Verifica que compila sin errores antes de commitear
 
@@ -1133,21 +1146,21 @@ Este es un proyecto educativo, pero las contribuciones son bienvenidas. Si desea
 
 ## ?? Licencia
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
+Este proyecto estï¿½ bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para mï¿½s detalles.
 
 ---
 
 ## ?? Autor
 
-Desarrollado como proyecto educativo del **Máster de Desarrollo con IA de Big School** (Brais Moure).
+Desarrollado como proyecto educativo del **Mï¿½ster de Desarrollo con IA de Big School** (Brais Moure).
 
 ---
 
 ## ?? Agradecimientos
 
-- [Big School](https://bigschool.dev/) y Brais Moure por el máster
+- [Big School](https://bigschool.dev/) y Brais Moure por el mï¿½ster
 - Comunidad de Node.js y TypeScript
-- Autores de las librerías utilizadas
+- Autores de las librerï¿½as utilizadas
 
 ---
 
@@ -1155,21 +1168,21 @@ Desarrollado como proyecto educativo del **Máster de Desarrollo con IA de Big Sc
 
 - ?? Email: anthonymoles@hotmail.com
 - ?? GitHub Issues: [Abrir issue](https://github.com/elkangri23/lista-compra-colaborativa/issues)
-- ?? Documentación adicional: Ver carpeta `docs/`
+- ?? Documentaciï¿½n adicional: Ver carpeta `docs/`
 
 ---
 
-## ?? Enlaces Útiles
+## ?? Enlaces ï¿½tiles
 
-- [Documentación de Node.js](https://nodejs.org/docs/)
-- [Documentación de TypeScript](https://www.typescriptlang.org/docs/)
-- [Documentación de Prisma](https://www.prisma.io/docs/)
-- [Documentación de RabbitMQ](https://www.rabbitmq.com/documentation.html)
+- [Documentaciï¿½n de Node.js](https://nodejs.org/docs/)
+- [Documentaciï¿½n de TypeScript](https://www.typescriptlang.org/docs/)
+- [Documentaciï¿½n de Prisma](https://www.prisma.io/docs/)
+- [Documentaciï¿½n de RabbitMQ](https://www.rabbitmq.com/documentation.html)
 - [Clean Architecture (Uncle Bob)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 - [Arquitectura Hexagonal](https://alistair.cockburn.us/hexagonal-architecture/)
 
 ---
 
-? Si este proyecto te resultó útil, considera darle una estrella en GitHub
+? Si este proyecto te resultï¿½ ï¿½til, considera darle una estrella en GitHub
 
 
