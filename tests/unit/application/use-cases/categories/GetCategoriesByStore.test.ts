@@ -16,7 +16,7 @@ describe('GetCategoriesByStore', () => {
       save: jest.fn(),
       findById: jest.fn(),
       findByNombre: jest.fn(),
-      findByTienda: jest.fn(),
+      findByTienda: jest.fn().mockResolvedValue(success([])),
       findAll: jest.fn(),
       update: jest.fn(),
       delete: jest.fn()
@@ -24,7 +24,7 @@ describe('GetCategoriesByStore', () => {
 
     tiendaRepository = {
       save: jest.fn(),
-      findById: jest.fn(),
+      findById: jest.fn().mockResolvedValue(success(null)),
       findByName: jest.fn(),
       findAll: jest.fn(),
       update: jest.fn(),
@@ -87,14 +87,37 @@ describe('GetCategoriesByStore', () => {
         expect(result.value.tienda?.nombre).toBe('Walmart');
       }
       expect(tiendaRepository.findById).toHaveBeenCalledWith('tienda-id');
-      expect(categoriaRepository.findByTienda).toHaveBeenCalledWith('tienda-id');
+      expect(categoriaRepository.findByTienda).toHaveBeenCalledWith('tienda-id', false);
     });
 
     it('debería obtener categorías generales (sin tienda) exitosamente', async () => {
       // Arrange
       const validInput = {};
 
-      categoriaRepository.findByTienda.mockResolvedValue(success(mockCategorias));
+      const mockGeneralCategorias = [
+        {
+          id: 'categoria-1',
+          nombre: 'Lácteos',
+          descripcion: 'Productos lácteos',
+          color: '#FF5733',
+          activa: true,
+          tiendaId: null,
+          fechaCreacion: new Date(),
+          fechaActualizacion: new Date()
+        },
+        {
+          id: 'categoria-2',
+          nombre: 'Carnes',
+          descripcion: 'Productos cárnicos',
+          color: '#33FF57',
+          activa: true,
+          tiendaId: null,
+          fechaCreacion: new Date(),
+          fechaActualizacion: new Date()
+        }
+      ] as Categoria[];
+
+      categoriaRepository.findByTienda.mockResolvedValue(success(mockGeneralCategorias));
 
       // Act
       const result = await getCategoriesByStore.execute(validInput);
@@ -106,7 +129,7 @@ describe('GetCategoriesByStore', () => {
         expect(result.value.tienda).toBeUndefined();
       }
       expect(tiendaRepository.findById).not.toHaveBeenCalled();
-      expect(categoriaRepository.findByTienda).toHaveBeenCalledWith(null);
+      expect(categoriaRepository.findByTienda).toHaveBeenCalledWith(null, false);
     });
 
     it('debería fallar si la tienda no existe', async () => {
