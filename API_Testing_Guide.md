@@ -164,7 +164,12 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 - ✅ Reparar Cache (`POST /admin/cache/integrity/repair`)
 - ✅ Métricas de Integridad (`GET /admin/cache/integrity/metrics`)
 
-**Total de Endpoints:** **44+ endpoints** (3 nuevos de IA - CU-32)
+### 🤖 Recomendaciones con IA (3 endpoints) - **CU-33 NUEVOS (30 Oct 2025)**
+- ✅ Recomendaciones Generales (`GET /recommendations/:listId`)
+- ✅ Recomendaciones Específicas (`GET /recommendations/:listId/for-product/:productId`)
+- ✅ Ejemplos de Contexto (`GET /recommendations/context-examples`) - Público
+
+**Total de Endpoints:** **47+ endpoints** (6 de IA: CU-28, CU-32, CU-33)
 
 ### 📊 Dashboard de Monitoreo (4 endpoints)
 - ✅ Métricas del Sistema (`GET /dashboard/metrics`)
@@ -357,6 +362,81 @@ POST /occasion-lists/preview
 - Cena de San Valentín, Halloween, Domingo de fútbol
 - Tarde de juegos de mesa, Cena de Acción de Gracias
 - Comida de playa
+
+### Probar Recomendaciones Contextuales (🎯 NUEVO - CU-33)
+```bash
+# 1. Obtener ejemplos de contexto (público, sin auth)
+GET /api/v1/recommendations/context-examples
+# Respuesta: Ejemplos de contextos útiles y tips
+
+# 2. Recomendaciones generales para una lista
+GET /api/v1/recommendations/{listId}?creativityLevel=balanced&maxRecommendations=10
+# Headers: Authorization: Bearer {{accessToken}}
+
+# 3. Recomendaciones con contexto específico
+GET /api/v1/recommendations/{listId}?context=Cena%20italiana&excludeExisting=true
+# Headers: Authorization: Bearer {{accessToken}}
+
+# 4. Recomendaciones basadas en producto específico
+GET /api/v1/recommendations/{listId}/for-product/{productId}
+# Headers: Authorization: Bearer {{accessToken}}
+
+# 5. Filtrar por categoría y tienda
+GET /api/v1/recommendations/{listId}?categoryId={catId}&storeId={storeId}
+# Headers: Authorization: Bearer {{accessToken}}
+```
+
+**Parámetros opcionales:**
+- `maxRecommendations` (5-50, default: 10) - Cantidad de sugerencias
+- `creativityLevel` (conservative/balanced/creative) - Nivel de innovación
+- `categoryId` - Filtrar por categoría específica
+- `storeId` - Filtrar por productos de tienda
+- `context` - Contexto textual ("Cena romántica", "Desayuno fitness")
+- `includeUserHistory` (boolean) - Incluir historial de compras
+- `excludeExisting` (boolean, default: true) - Excluir productos ya en lista
+
+**Niveles de creatividad:**
+- **Conservative**: Solo productos muy relacionados, alta confiabilidad
+- **Balanced**: Mix equilibrado (recomendado), buena relación creatividad/confianza
+- **Creative**: Sugerencias innovadoras, mayor exploración
+
+**Tipos de recomendación en respuesta:**
+- `complement` - Producto complementario directo
+- `frequently_together` - Productos comprados juntos frecuentemente
+- `category_match` - Productos de la misma categoría/contexto
+- `user_preference` - Basado en historial del usuario
+
+**Ejemplo de respuesta:**
+```json
+{
+  "success": true,
+  "data": {
+    "listId": "abc123",
+    "recommendations": [
+      {
+        "name": "Salsa de tomate",
+        "reason": "Complementa perfectamente con la pasta que agregaste",
+        "confidenceScore": 92,
+        "suggestedCategory": {"id": "cat456", "name": "Salsas"},
+        "estimatedPrice": 2.5,
+        "suggestedQuantity": 1,
+        "suggestedUnit": "unidades",
+        "relatedProducts": ["Pasta"],
+        "tags": ["italiano", "básico"],
+        "recommendationType": "complement"
+      }
+    ],
+    "detectedContext": "Comida italiana casual",
+    "productsInList": 5,
+    "metadata": {
+      "processingTime": 1250,
+      "aiUsed": true,
+      "averageConfidence": 87.3
+    }
+  }
+}
+```
+
 
 ```
 13. Admin → Impersonar Usuario
