@@ -18,7 +18,8 @@ describe('RegisterUser', () => {
       findByIdList: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-      findAll: jest.fn()
+      findAll: jest.fn(),
+      existsByEmail: jest.fn().mockResolvedValue(success(false))
     } as any;
 
     passwordHasher = {
@@ -40,7 +41,7 @@ describe('RegisterUser', () => {
 
     it('debería registrar un usuario exitosamente', async () => {
       // Arrange
-      usuarioRepository.findByEmail.mockResolvedValue(success(null));
+      usuarioRepository.existsByEmail.mockResolvedValue(success(false));
       passwordHasher.hash.mockResolvedValue(success('hashed-password'));
       
       const emailResult = Email.create('juan.perez@example.com');
@@ -63,7 +64,10 @@ describe('RegisterUser', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(usuarioRepository.findByEmail).toHaveBeenCalledWith('juan.perez@example.com');
+      expect(usuarioRepository.existsByEmail).toHaveBeenCalled();
+      const emailArg = usuarioRepository.existsByEmail.mock.calls[0]?.[0];
+      expect(emailArg).toBeDefined();
+      expect(emailArg?.value).toBe('juan.perez@example.com');
       expect(passwordHasher.hash).toHaveBeenCalled();
       expect(usuarioRepository.save).toHaveBeenCalled();
     });
@@ -87,20 +91,8 @@ describe('RegisterUser', () => {
 
     it('debería fallar si el email ya está registrado', async () => {
       // Arrange
-      const emailResult = Email.create('juan.perez@example.com');
-      if (!emailResult.isSuccess) throw new Error('Failed to create email');
-      
-      const existingUserResult = Usuario.create({
-        id: 'existing-id',
-        email: emailResult.value,
-        password: 'hashed-password',
-        nombre: 'Existing',
-        apellidos: 'User'
-      });
-      
-      if (!existingUserResult.isSuccess) throw new Error('Failed to create existing user');
-
-      usuarioRepository.findByEmail.mockResolvedValue(success(existingUserResult.value));
+      usuarioRepository.existsByEmail.mockResolvedValue(success(true));
+      passwordHasher.hash.mockResolvedValue(success('hashed-password'));
 
       // Act
       const result = await registerUser.execute(validInput);
@@ -113,7 +105,8 @@ describe('RegisterUser', () => {
 
     it('debería manejar errores del repositorio al buscar email', async () => {
       // Arrange
-      usuarioRepository.findByEmail.mockResolvedValue(failure(new Error('Database error')));
+      usuarioRepository.existsByEmail.mockResolvedValue(failure(new Error('Database error')));
+      passwordHasher.hash.mockResolvedValue(success('hashed-password'));
 
       // Act
       const result = await registerUser.execute(validInput);
