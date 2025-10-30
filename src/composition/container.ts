@@ -48,6 +48,7 @@ import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/Bcr
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
 import { PrismaOutboxService } from '@infrastructure/messaging/outbox/PrismaOutboxService';
+import { OutboxWorker } from '@infrastructure/messaging/outbox/OutboxWorker';
 import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import { NodemailerService } from '@infrastructure/external-services/email/NodemailerService';
 import { PerplexityService } from '@infrastructure/external-services/ai/PerplexityService';
@@ -102,6 +103,7 @@ export class Container {
   private _aiService!: IAIService;
   private _eventPublisher!: IEventPublisher;
   private _outboxService!: IOutboxService;
+  private _outboxWorker!: OutboxWorker;
   private _hashGenerator!: IInvitationHashGenerator;
   private _workerService!: WorkerService;
 
@@ -176,6 +178,14 @@ export class Container {
       try {
         await this._eventPublisher.initialize();
         console.log('✅ RabbitMQ inicializado correctamente');
+        
+        // Inicializar OutboxWorker (procesador de eventos)
+        await this._outboxWorker.start();
+        console.log('✅ OutboxWorker iniciado correctamente');
+        
+        // Inicializar WorkerService (consumers)
+        await this._workerService.start();
+        console.log('✅ Workers de notificaciones iniciados correctamente');
       } catch (error) {
         console.error('❌ Error al inicializar RabbitMQ:', error);
         // Fallback a un publisher que no haga nada
@@ -194,6 +204,14 @@ export class Container {
    * Cierra las conexiones del container
    */
   public async close(): Promise<void> {
+    // Detener OutboxWorker primero
+    await this._outboxWorker.stop();
+    console.log('✅ OutboxWorker detenido correctamente');
+    
+    // Detener workers
+    await this._workerService.stop();
+    console.log('✅ Workers detenidos correctamente');
+    
     if (this._eventPublisher instanceof RabbitMQEventPublisher) {
       await this._eventPublisher.close();
     }
@@ -285,6 +303,12 @@ export class Container {
       usuarioRepository: this._usuarioRepository,
       listaRepository: this._listaRepository
     });
+
+    // Configurar OutboxWorker (procesador de eventos outbox)
+    this._outboxWorker = new OutboxWorker(
+      this._outboxService,
+      this._eventPublisher
+    );
   }
 
   private initializeUseCases(): void {
@@ -524,6 +548,10 @@ export class Container {
 
   public get outboxService(): IOutboxService {
     return this._outboxService;
+  }
+
+  public get outboxWorker(): OutboxWorker {
+    return this._outboxWorker;
   }
 
   public get emailService(): IEmailService {

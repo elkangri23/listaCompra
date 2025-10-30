@@ -36,6 +36,7 @@ describe('E2E: Shopping List Management Flow', () => {
       authController: container.authController,
       invitationController: container.invitationController,
       adminController: container.adminController,
+      aiController: container.aiController,
       authMiddleware: container.authMiddleware
     };
     app = await createServer(dependencies);

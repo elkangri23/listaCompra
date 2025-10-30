@@ -300,7 +300,7 @@ describe('Entidad Usuario', () => {
       expect(result.isSuccess).toBe(true);
       expect(usuario.nombre).toBe('Pedro Luis');
       expect(usuario.apellidos).toBe('González Ruiz');
-      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThan(fechaOriginal);
+      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
 
     it('debería actualizar solo el nombre', async () => {

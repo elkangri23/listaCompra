@@ -17,7 +17,8 @@ const mockAIService: jest.Mocked<IAIService> = {
   isAvailable: jest.fn(),
   getUsageInfo: jest.fn(),
   generateOccasionList: jest.fn(),
-  getProductRecommendations: jest.fn()
+  getProductRecommendations: jest.fn(),
+  bulkCategorizeProducts: jest.fn()
 };
 
 describe('GetCategorySuggestionsUseCase', () => {
