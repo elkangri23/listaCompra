@@ -34,6 +34,7 @@ import { ManagePermissions } from '@application/use-cases/invitations/ManagePerm
 import { CancelInvitation } from '@application/use-cases/invitations/CancelInvitation';
 import { ImpersonateUser } from '@application/use-cases/admin/ImpersonateUser';
 import { EndImpersonation } from '@application/use-cases/admin/EndImpersonation';
+import { BulkCategorizeProducts } from '@application/use-cases/ai/BulkCategorizeProducts';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
@@ -62,6 +63,7 @@ import { StoreController } from '@infrastructure/http/controllers/StoreControlle
 import { InvitationController } from '@infrastructure/http/controllers/InvitationController';
 import { AdminController } from '@infrastructure/http/controllers/AdminController';
 import { RecommendationsController } from '@infrastructure/http/controllers/RecommendationsController';
+import { AIController } from '@infrastructure/http/controllers/AIController';
 import { createAuthMiddleware } from '@infrastructure/http/middlewares/authMiddleware';
 
 // Interfaces
@@ -130,6 +132,7 @@ export class Container {
   private _cancelInvitation!: CancelInvitation;
   private _impersonateUser!: ImpersonateUser;
   private _endImpersonation!: EndImpersonation;
+  private _bulkCategorizeProducts!: BulkCategorizeProducts;
 
   // Controllers
   private _authController!: AuthController;
@@ -140,6 +143,7 @@ export class Container {
   private _invitationController!: InvitationController;
   private _adminController!: AdminController;
   private _recommendationsController!: RecommendationsController;
+  private _aiController!: AIController;
 
   // Middlewares
   private _authMiddleware!: express.RequestHandler;
@@ -422,6 +426,12 @@ export class Container {
       this._usuarioRepository,
       this._tokenService
     );
+
+    this._bulkCategorizeProducts = new BulkCategorizeProducts(
+      this._aiService,
+      this._usuarioRepository,
+      this._categoriaRepository
+    );
   }
 
   private initializeControllers(): void {
@@ -473,6 +483,11 @@ export class Container {
 
     this._recommendationsController = new RecommendationsController(
       this._getProductRecommendations
+    );
+
+    this._aiController = new AIController(
+      undefined, // getCategorySuggestionsUseCase - por implementar
+      this._bulkCategorizeProducts
     );
 
     // Inicializar middleware de autenticación
@@ -665,6 +680,10 @@ export class Container {
 
   public get recommendationsController(): RecommendationsController {
     return this._recommendationsController;
+  }
+
+  public get aiController(): AIController {
+    return this._aiController;
   }
 
   public get authMiddleware(): express.RequestHandler {
