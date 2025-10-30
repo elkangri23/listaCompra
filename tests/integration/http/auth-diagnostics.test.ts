@@ -19,6 +19,7 @@ describe('Auth Diagnostics', () => {
       authController: container.authController,
       invitationController: container.invitationController,
       adminController: container.adminController,
+      aiController: container.aiController,
       authMiddleware: container.authMiddleware
     });
   });

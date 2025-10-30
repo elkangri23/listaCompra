@@ -21,7 +21,8 @@ const mockAIService = {
   analyzeWithAI: jest.fn(),
   isAvailable: jest.fn(),
   getUsageInfo: jest.fn(),
-  getProductRecommendations: jest.fn()
+  getProductRecommendations: jest.fn(),
+  bulkCategorizeProducts: jest.fn()
 };
 
 const mockListaRepository = {

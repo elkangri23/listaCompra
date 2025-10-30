@@ -24,6 +24,7 @@ describe('E2E: User Registration Flow', () => {
       authController: container.authController,
       invitationController: container.invitationController,
       adminController: container.adminController,
+      aiController: container.aiController,
       authMiddleware: container.authMiddleware
     };
     app = await createServer(dependencies);
