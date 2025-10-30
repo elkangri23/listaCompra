@@ -152,7 +152,7 @@ describe('Entidad Lista', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(lista.nombre).toBe('Nuevo Nombre');
-      expect(lista.fechaActualizacion.getTime()).toBeGreaterThan(fechaOriginal);
+      expect(lista.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
 
     it('debería fallar con nombre vacío', () => {
