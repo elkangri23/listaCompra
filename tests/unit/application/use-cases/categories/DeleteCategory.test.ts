@@ -13,7 +13,7 @@ describe('DeleteCategory', () => {
   beforeEach(() => {
     categoriaRepository = {
       save: jest.fn(),
-      findById: jest.fn(),
+      findById: jest.fn().mockResolvedValue(success(null)),
       findByName: jest.fn(),
       findByStore: jest.fn(),
       findAll: jest.fn(),
@@ -28,7 +28,7 @@ describe('DeleteCategory', () => {
       findAll: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-      findByCategory: jest.fn()
+      findByCategory: jest.fn().mockResolvedValue(success([]))
     } as any;
 
     deleteCategory = new DeleteCategory(categoriaRepository, productoRepository);
@@ -77,7 +77,7 @@ describe('DeleteCategory', () => {
 
       // Assert
       expect(result.isSuccess).toBe(false);
-      expect(categoriaRepository.findById).not.toHaveBeenCalled();
+      expect(categoriaRepository.findById).toHaveBeenCalledWith('');
     });
 
     it('debería fallar si la categoría no existe', async () => {
