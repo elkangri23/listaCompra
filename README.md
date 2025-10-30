@@ -1,4 +1,4 @@
-# 🛒 Lista de la Compra Colaborativa
+﻿# 🛒 Lista de la Compra Colaborativa
 
 > Proyecto educativo de backend desarrollado con **Node.js + TypeScript**, aplicando **arquitectura limpia (hexagonal)**, **patrón Outbox**, **mensajería asíncrona con RabbitMQ** e integración de **Inteligencia Artificial**.
 
@@ -12,21 +12,41 @@
 
 ## 🎯 **Logros Recientes Completados (Octubre 2025)**
 
-> **🔐 VULNERABILIDADES CRÍTICAS RESUELTAS** - Sistema completamente securizado contra ataques
+> **� FUNCIONALIDADES DE IA AVANZADA** - Sistema inteligente de recomendaciones implementado
 
-### � **Fase 13: Documentación y Testing Final (29 Oct 2025) - RECIÉN COMPLETADA** ✅
+### 🤖 **Fase 16: IA Avanzada - Recomendaciones Contextuales (30 Oct 2025) - RECIÉN COMPLETADA** ✅
+- 🎯 **3 Endpoints REST Funcionales**: Recomendaciones generales, específicas por producto, ejemplos de contexto
+- 🧠 **IA con 3 niveles creatividad**: Conservative (0.3), Balanced (0.5), Creative (0.7) temperature
+- 📊 **Scoring inteligente 0-100**: Confidence con razones explicativas detalladas
+- 🔍 **Filtros granulares avanzados**: Categoría, tienda, historial usuario, productos existentes
+- 🎨 **Context-aware**: Interpreta "Cena romántica", "Desayuno fitness", "Barbacoa familiar"
+- 🛡️ **15 reglas de fallback**: Patrones robustos (pasta→salsa, carne→papas, etc.)
+- 📈 **Enriquecimiento local**: Categorías desde BD, precios estimados, cantidades sugeridas
+- 💾 **Backend completo**: Use case (368 líneas), Controller (330+), Rutas Swagger (390+)
+- ✅ **TypeScript**: 0 errores compilación, integración DI Container y server.ts
+- 📦 **4 tipos recomendación**: Complement, frequently_together, category_match, user_preference
+
+### 🎉 **Fase 15: Listas Inteligentes por Ocasión (29 Oct 2025) - RECIÉN COMPLETADA** ✅
+- 🤖 **CU-32 Implementado**: Generación automática de listas completas con IA
+- 🎯 **20 Ocasiones Predefinidas**: "Barbacoa", "Cena romántica", "Cumpleaños infantil", etc.
+- 📊 **Parámetros Inteligentes**: Personas (1-50), presupuesto (1-10.000€), restricciones dietéticas
+- 🧠 **Prompt Engineering**: IA optimizada para productos realistas con cantidades exactas
+- 💰 **Estimación de Costos**: Cálculo automático de presupuesto total estimado
+- 🏷️ **Categorización Automática**: Productos organizados por categorías de tienda
+- ✨ **3 endpoints REST**: Ocasiones predefinidas, generación y vista previa
+- 📖 **Documentación Swagger**: Especificaciones completas con ejemplos interactivos
+
+### 📖 **Fase 13: Documentación y Testing Final (29 Oct 2025) - COMPLETADA** ✅
 - 📖 **OpenAPI/Swagger UI** configurado: Documentación interactiva en `/api/docs`
-- 🔗 **40+ endpoints documentados**: Especificaciones completas con ejemplos y esquemas
-- 📋 **Schemas detallados**: Entidades de dominio (Usuario, Lista, Producto, Blueprint) completamente definidas
+- 🔗 **47 endpoints documentados**: Especificaciones completas con ejemplos y esquemas
+- 📋 **Schemas detallados**: Entidades de dominio (Usuario, Lista, Producto, Blueprint) completas
 - 🎯 **Ejemplos interactivos**: Testing directo desde la UI de Swagger
 - 🔧 **Configuración modular**: `swagger-simple.config.ts` para fácil mantenimiento
 - 📊 **JSON OpenAPI**: Especificación accesible en `/api/docs.json`
 - 🏷️ **Tags organizados**: Endpoints categorizados por funcionalidad
 - 🔒 **Autenticación JWT**: Integración completa Bearer token en documentación
-- 📝 **Estados de respuesta**: Códigos HTTP documentados con ejemplos reales
-- 🎨 **UI personalizada**: Branding y configuración optimizada para la API
 
-### �🛡️ **Sistema de Seguridad Empresarial Implementado (29 Oct 2025) - NUEVO**
+### 🛡️ **Sistema de Seguridad Empresarial Implementado (29 Oct 2025)**
 - 🔐 **API Key Protection**: Validación robusta + logging seguro para Perplexity API
 - 👑 **Admin Role Validation**: Multi-capa, prevención escalación privilegios
 - 🧹 **Blueprint Sanitization**: XSS/injection protection con BlueprintSanitizer  
@@ -35,7 +55,7 @@
 - 📊 **Score Seguridad**: **9.1/10** (subió desde 7.2/10)
 - 🧪 **0 vulnerabilidades críticas** restantes - Sistema producción-ready
 
-### 🚀 **Fase 2: Seguridad Empresarial Avanzada (29 Oct 2025) - RECIÉN COMPLETADA** ✅
+### 🚀 **Fase 2: Seguridad Empresarial Avanzada (29 Oct 2025) - COMPLETADA** ✅
 - 🔒 **SecurityAuditService** (600+ líneas): Sistema de auditoría empresarial con 20+ tipos de eventos
 - 🛡️ **BlueprintPrivacyMiddleware** (240+ líneas): Control de acceso multicapa para blueprints
 - 🧮 **CacheIntegrityService** (500+ líneas): Validación de integridad con checksums MD5/SHA256/SHA512
@@ -97,18 +117,6 @@
 - 💾 **PrismaBlueprintRepository** - Persistencia con soporte JSON para contenido
 - ⚙️ **Integración completa** - DI Container, rutas, validaciones y DTOs
 - 🎯 **Límites de negocio** - Máximo 50 blueprints activos por usuario
-
-### 🎉 **Listas Inteligentes por Ocasión - NUEVA FUNCIONALIDAD (29 Oct 2025)** ✅
-- 🤖 **CU-32 Implementado** - Generación automática de listas completas con IA para ocasiones específicas
-- 🎯 **20 Ocasiones Predefinidas** - "Barbacoa familiar", "Cena romántica", "Cumpleaños infantil", etc.
-- 📊 **Parámetros Inteligentes** - Número de personas, presupuesto, restricciones dietéticas
-- 🧠 **Prompt Engineering** - IA optimizada para generar productos realistas con cantidades exactas
-- 💰 **Estimación de Costos** - Cálculo automático de presupuesto total estimado
-- 🏷️ **Categorización Automática** - Productos organizados por categorías de tienda
-- ✨ **APIs REST Completas** - 3 endpoints: ocasiones predefinidas, generación y vista previa
-- 📖 **Documentación Swagger** - Especificaciones completas con ejemplos interactivos
-- 🛡️ **Validaciones Robustas** - Input sanitization y manejo de errores de IA
-- 🔧 **Integración Completa** - PerplexityService + Container DI + logging empresarial
 
 ### 🏗️ **Sistema de Notificaciones (Fase 8)**
 - 🔥 **300+ tests pasando** (97% success rate en funcionalidades core + seguridad)
@@ -230,18 +238,88 @@ Para probar todos los endpoints de la API fácilmente:
   - Integración con **Perplexity AI** (modelo Llama 3.1 Sonar)
   - Cache inteligente para optimizar costos
 
-#### **Fase Extra: IA Avanzada - Funcionalidades Premium** � **EN CURSO**
-- 🔄 **CU-29: Categorización Masiva Inteligente** - Procesamiento por lotes ⏳ **PRÓXIMO**
-- 📊 **CU-30: Análisis de Hábitos de Compra** - Dashboard con insights 🚀 **FUTURO**
-- 🚨 **CU-31: Alertas Proactivas de Precios** - Monitoreo automático 🚀 **FUTURO**
-- ✅ **CU-32: Listas por Ocasión** - "Barbacoa familiar", "Cena romántica" **COMPLETADO (29 Oct)**
-- 🤝 **CU-33: Recomendaciones Contextuales** - Productos complementarios ⏳ **PRÓXIMO**
+#### **Fase 15: IA Premium - Listas Inteligentes por Ocasión** ✅ **COMPLETADA (29 Oct)**
+- 🎉 **CU-32: Generador de Listas por Ocasión**
+  - 20 ocasiones predefinidas: "Barbacoa", "Cena romántica", "Desayuno fitness", etc.
+  - Control de presupuesto (1-10.000€) y escalado personas (1-50)
+  - Restricciones dietéticas personalizables (máx 10)
+  - Prompt engineering optimizado para Llama 3.1 Sonar
+  - Métricas de confianza y validación robusta
+
+#### **Fase 16: IA Avanzada - Recomendaciones Contextuales** ✅ **COMPLETADA (30 Oct)**
+- 🤝 **CU-33: Recomendaciones Inteligentes de Productos**
+  - **3 Endpoints REST**: Recomendaciones generales, específicas por producto, ejemplos de contexto
+  - **3 niveles de creatividad**: Conservative (0.3), Balanced (0.5), Creative (0.7)
+  - **Scoring de confianza**: 0-100 con razones explicativas
+  - **Filtros avanzados**: Por categoría, tienda, historial de usuario, productos existentes
+  - **Context-aware**: Interpreta "Cena romántica", "Desayuno fitness", "Barbacoa familiar"
+  - **Fallbacks robustos**: 15 reglas basadas en patrones (pasta→salsa, carne→papas)
+  - **Enriquecimiento local**: Categorías desde BD, precios estimados, cantidades sugeridas
+  - **4 tipos de recomendación**: Complement, frequently_together, category_match, user_preference
+
+**📡 Endpoints CU-33:**
+```bash
+# Recomendaciones generales para una lista
+GET /api/v1/recommendations/:listId
+  ?creativityLevel=balanced
+  &maxRecommendations=10
+  &excludeExisting=true
+
+# Recomendaciones específicas basadas en producto
+GET /api/v1/recommendations/:listId/for-product/:productId
+  ?context=Cena%20italiana
+
+# Ejemplos de contextos disponibles (público)
+GET /api/v1/recommendations/context-examples
+```
+
+**🔧 Parámetros opcionales:**
+- `maxRecommendations` (5-50, default: 10)
+- `creativityLevel` (conservative/balanced/creative)
+- `categoryId` - Filtrar por categoría
+- `storeId` - Filtrar por tienda
+- `context` - Contexto textual
+- `includeUserHistory` (boolean)
+- `excludeExisting` (boolean, default: true)
+
+**📊 Respuesta típica:**
+```json
+{
+  "success": true,
+  "data": {
+    "listId": "abc123",
+    "recommendations": [
+      {
+        "name": "Salsa de tomate",
+        "reason": "Complementa perfectamente con la pasta que agregaste",
+        "confidenceScore": 92,
+        "suggestedCategory": {"id": "cat456", "name": "Salsas"},
+        "estimatedPrice": 2.5,
+        "suggestedQuantity": 1,
+        "recommendationType": "complement"
+      }
+    ],
+    "detectedContext": "Comida italiana casual",
+    "metadata": {
+      "processingTime": 1250,
+      "aiUsed": true,
+      "averageConfidence": 87.3
+    }
+  }
+}
+```
+
+#### **Fase Extra: IA Avanzada - Funcionalidades Futuras** 🚀
+- 📊 **CU-29: Análisis de Hábitos de Compra** - Dashboard con insights ⏳ **PRÓXIMO**
+- 🚨 **CU-30: Alertas Proactivas de Precios** - Monitoreo automático 🚀 **FUTURO**
+- 🔄 **CU-31: Categorización Masiva** - Procesamiento por lotes 🚀 **FUTURO**
 
 #### **Configuración IA**
-- 🔑 **API Key**: Perplexity configurada
-- ⚡ **Cache Redis**: Optimización de tokens y costos
-- 🛡️ **Rate Limiting**: Control de uso y presupuesto
-- 🎛️ **Configurable**: Automático vs manual por funcionalidad
+- 🔑 **API Key**: Perplexity configurada con Llama 3.1 Sonar
+- ⚡ **Cache Redis**: TTL optimizado (24h categorías, 1h análisis)
+- 🛡️ **Rate Limiting**: 5 req/min, 50/día por usuario
+- 🎛️ **Temperatura variable**: 0.3-0.7 según caso de uso
+- 💰 **Optimización costos**: Cache inteligente + batching
 
 ### 🔒 Seguridad Empresarial Avanzada
 
@@ -1093,3 +1171,4 @@ Desarrollado como proyecto educativo del **Máster de Desarrollo con IA de Big S
 ---
 
 ⭐ Si este proyecto te resultó útil, considera darle una estrella en GitHub
+
