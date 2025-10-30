@@ -32,7 +32,17 @@ const mockListaRepository = {
   findSharedLists: jest.fn(),
   delete: jest.fn(),
   existsByNombre: jest.fn(),
-  findAll: jest.fn()
+  findAll: jest.fn(),
+  findByIdAndOwner: jest.fn(),
+  findByOwner: jest.fn(),
+  findByNameAndOwner: jest.fn(),
+  deleteById: jest.fn(),
+  existsByNameAndOwner: jest.fn(),
+  countByOwner: jest.fn(),
+  findByListaId: jest.fn(),  hardDelete: jest.fn(),  existsById: jest.fn(),  updateActiveStatus: jest.fn(),
+  hardDelete: jest.fn(),
+  existsById: jest.fn(),
+  updateActiveStatus: jest.fn()
 };
 
 const mockProductoRepository = {
@@ -96,8 +106,10 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBeInstanceOf(ValidationError);
-      expect(result.error?.message).toContain('ocasión es requerida');
+      if (result.isFailure) {
+        expect(result.error).toBeInstanceOf(ValidationError);
+        expect(result.error.message).toContain('ocasión es requerida');
+      }
     });
 
     it('debe fallar si el número de personas es inválido', async () => {
@@ -109,8 +121,10 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBeInstanceOf(ValidationError);
-      expect(result.error?.message).toContain('número de personas debe ser al menos 1');
+      if (result.isFailure) {
+        expect(result.error).toBeInstanceOf(ValidationError);
+        expect(result.error.message).toContain('número de personas debe ser al menos 1');
+      }
     });
 
     it('debe fallar si el presupuesto es negativo', async () => {
@@ -123,8 +137,10 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBeInstanceOf(ValidationError);
-      expect(result.error?.message).toContain('presupuesto no puede ser negativo');
+      if (result.isFailure) {
+        expect(result.error).toBeInstanceOf(ValidationError);
+        expect(result.error.message).toContain('presupuesto no puede ser negativo');
+      }
     });
 
     it('debe validar exitosamente un DTO correcto', async () => {
@@ -152,9 +168,10 @@ describe('CreateOccasionListUseCase', () => {
       }));
 
       const lista = Lista.create({
-        nombre: 'Test Lista',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -162,6 +179,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
+      if (!producto.isSuccess) throw new Error("Test setup failed");
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -179,17 +197,18 @@ describe('CreateOccasionListUseCase', () => {
       };
 
       const tienda = Tienda.create({
-        nombre: 'Supermercado Test',
-        propietarioId: 'owner-123'
+        nombre: 'Supermercado Test'
       });
+      if (!tienda.isSuccess) throw new Error("Test setup failed");
       mockTiendaRepository.findById.mockResolvedValue(success(tienda.value));
       mockCategoriaRepository.findByTienda.mockResolvedValue(success([]));
       mockAIService.generateOccasionList.mockResolvedValue('{"products":[]}');
 
       const lista = Lista.create({
-        nombre: 'Test Lista',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       await useCase.execute(dto, 'user-123');
@@ -219,17 +238,18 @@ describe('CreateOccasionListUseCase', () => {
       };
 
       const tienda = Tienda.create({
-        nombre: 'Tienda Default',
-        propietarioId: 'owner-123'
+        nombre: 'Tienda Default'
       });
+      if (!tienda.isSuccess) throw new Error("Test setup failed");
       mockTiendaRepository.findAll.mockResolvedValue(success([tienda.value]));
       mockCategoriaRepository.findByTienda.mockResolvedValue(success([]));
       mockAIService.generateOccasionList.mockResolvedValue('{"products":[]}');
 
       const lista = Lista.create({
-        nombre: 'Test Lista',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       await useCase.execute(dto, 'user-123');
@@ -256,9 +276,10 @@ describe('CreateOccasionListUseCase', () => {
       mockAIService.generateOccasionList.mockResolvedValue('{"products":[]}');
 
       const lista = Lista.create({
-        nombre: 'Test Lista',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       await useCase.execute(dto, 'user-123');
@@ -309,9 +330,10 @@ describe('CreateOccasionListUseCase', () => {
       mockAIService.generateOccasionList.mockResolvedValue(aiResponse);
 
       const lista = Lista.create({
-        nombre: 'Test Lista',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -319,6 +341,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
+      if (!producto.isSuccess) throw new Error("Test setup failed");
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -339,9 +362,10 @@ describe('CreateOccasionListUseCase', () => {
       mockAIService.generateOccasionList.mockResolvedValue('respuesta inválida sin JSON');
 
       const lista = Lista.create({
-        nombre: 'Test Lista',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -349,6 +373,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
+      if (!producto.isSuccess) throw new Error("Test setup failed");
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -383,9 +408,10 @@ describe('CreateOccasionListUseCase', () => {
       };
 
       const lista = Lista.create({
-        nombre: 'Mi Barbacoa Especial',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -393,6 +419,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
+      if (!producto.isSuccess) throw new Error("Test setup failed");
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -408,9 +435,10 @@ describe('CreateOccasionListUseCase', () => {
       };
 
       const lista = Lista.create({
-        nombre: 'Barbacoa familiar (6 personas)',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -418,6 +446,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
+      if (!producto.isSuccess) throw new Error("Test setup failed");
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -456,9 +485,10 @@ describe('CreateOccasionListUseCase', () => {
       }));
 
       const lista = Lista.create({
-        nombre: 'Test Lista',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -466,6 +496,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
+      if (!producto.isSuccess) throw new Error("Test setup failed");
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -495,9 +526,10 @@ describe('CreateOccasionListUseCase', () => {
       }));
 
       const lista = Lista.create({
-        nombre: 'Test Lista',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -505,6 +537,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
+      if (!producto.isSuccess) throw new Error("Test setup failed");
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -565,9 +598,10 @@ describe('CreateOccasionListUseCase', () => {
       }));
 
       const lista = Lista.create({
-        nombre: 'Test Lista',
+        nombre: '',
         propietarioId: 'user-123'
       });
+      if (!lista.isSuccess) throw new Error("Test setup failed");
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
