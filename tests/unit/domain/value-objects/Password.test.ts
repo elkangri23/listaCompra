@@ -36,12 +36,23 @@ describe('Password Value Object', () => {
   });
 
   describe('toString', () => {
-    it('debería devolver el valor de la contraseña', () => {
+    it('debería devolver [PASSWORD] por seguridad', () => {
       const passwordValue = 'SecurePass123!';
       const password = Password.create(passwordValue);
       
       if (password.isSuccess) {
-        expect(password.value.toString()).toBe(passwordValue);
+        expect(password.value.toString()).toBe('[PASSWORD]');
+      } else {
+        fail('Password creation should have succeeded');
+      }
+    });
+
+    it('debería permitir acceder al valor real mediante la propiedad value', () => {
+      const passwordValue = 'SecurePass123!';
+      const password = Password.create(passwordValue);
+      
+      if (password.isSuccess) {
+        expect(password.value.value).toBe(passwordValue);
       } else {
         fail('Password creation should have succeeded');
       }
@@ -94,7 +105,7 @@ describe('Password Value Object', () => {
       const result = Password.create(originalValue);
       
       if (result.isSuccess) {
-        expect(result.value.toString()).toBe(originalValue);
+        expect(result.value.value).toBe(originalValue);
       } else {
         fail('Password creation should have succeeded');
       }
@@ -107,7 +118,7 @@ describe('Password Value Object', () => {
     });
 
     it('debería funcionar con contraseñas en el límite máximo', () => {
-      const maxPassword = 'a'.repeat(128); // 128 caracteres
+      const maxPassword = 'A1a!' + 'a'.repeat(124); // 128 caracteres total
       const result = Password.create(maxPassword);
       expect(result.isSuccess).toBe(true);
     });

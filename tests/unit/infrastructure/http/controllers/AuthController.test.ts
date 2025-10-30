@@ -68,10 +68,20 @@ describe('AuthController', () => {
       // Assert
       expect(registerUser.execute).toHaveBeenCalledWith(req.body);
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({
-        success: true,
-        data: mockResponse
-      });
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: {
+            user: expect.objectContaining({
+              id: mockResponse.id,
+              email: mockResponse.email,
+              nombre: mockResponse.nombre
+            })
+          },
+          message: expect.any(String),
+          timestamp: expect.any(String)
+        })
+      );
     });
 
     it('debería manejar errores de validación en registro', async () => {
@@ -89,10 +99,14 @@ describe('AuthController', () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Validation error'
-      });
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: expect.any(String),
+          timestamp: expect.any(String)
+        })
+      );
     });
 
     it('debería manejar errores internos del servidor', async () => {
@@ -109,11 +123,7 @@ describe('AuthController', () => {
       await authController.register(req as Request, res as Response, next);
 
       // Assert
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Error interno del servidor'
-      });
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
     });
   });
 
@@ -150,10 +160,17 @@ describe('AuthController', () => {
       // Assert
       expect(authenticateUser.execute).toHaveBeenCalledWith(req.body);
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        success: true,
-        data: mockResponse
-      });
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({
+            user: expect.any(Object),
+            tokens: expect.any(Object)
+          }),
+          message: expect.any(String),
+          timestamp: expect.any(String)
+        })
+      );
     });
 
     it('debería rechazar credenciales incorrectas', async () => {
@@ -163,17 +180,22 @@ describe('AuthController', () => {
         password: 'wrongpassword'
       };
 
-      authenticateUser.execute.mockResolvedValue(failure(new Error('Invalid credentials')));
+      const { UnauthorizedError } = require('../../../../../src/application/errors/UnauthorizedError');
+      authenticateUser.execute.mockResolvedValue(failure(new UnauthorizedError('Invalid credentials')));
 
       // Act
       await authController.login(req as Request, res as Response, next);
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Invalid credentials'
-      });
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'UNAUTHORIZED',
+          message: expect.any(String),
+          timestamp: expect.any(String)
+        })
+      );
     });
 
     it('debería manejar datos de entrada inválidos', async () => {
@@ -190,22 +212,26 @@ describe('AuthController', () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Validation error'
-      });
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: expect.any(String),
+          timestamp: expect.any(String)
+        })
+      );
     });
 
     it('debería llamar next cuando hay una excepción no controlada', async () => {
       // Arrange
       req.body = { email: 'test@example.com', password: 'test' };
-      registerUser.execute.mockRejectedValue(new Error('Unexpected error'));
+      authenticateUser.execute.mockRejectedValue(new Error('Unexpected error'));
 
       // Act
-      await authController.register(req as Request, res as Response, next);
+      await authController.login(req as Request, res as Response, next);
 
       // Assert
-      expect(res.status).toHaveBeenCalledWith(500);
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
     });
   });
 });

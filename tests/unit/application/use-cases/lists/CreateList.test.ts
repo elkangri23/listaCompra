@@ -15,7 +15,9 @@ describe('CreateList', () => {
       update: jest.fn(),
       delete: jest.fn(),
       findByIdWithPermissions: jest.fn(),
-      findSharedWithUser: jest.fn()
+      findSharedWithUser: jest.fn(),
+      existsByNameAndOwner: jest.fn().mockResolvedValue(success(false)),
+      countByOwner: jest.fn().mockResolvedValue(success(0))
     } as any;
 
     createList = new CreateList(listaRepository);
@@ -43,6 +45,7 @@ describe('CreateList', () => {
         fechaActualizacion: new Date()
       } as Lista;
       
+      listaRepository.existsByNameAndOwner.mockResolvedValue(success(false));
       listaRepository.save.mockResolvedValue(success(mockLista));
 
       // Act
@@ -50,6 +53,7 @@ describe('CreateList', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
+      expect(listaRepository.existsByNameAndOwner).toHaveBeenCalledWith(validInput.nombre, propietarioId);
       expect(listaRepository.save).toHaveBeenCalled();
     });
 
