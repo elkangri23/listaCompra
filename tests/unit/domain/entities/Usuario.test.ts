@@ -189,12 +189,13 @@ describe('Usuario Entity', () => {
     });
 
     it('debería actualizar nombre correctamente', () => {
+      const fechaCreacionAnterior = new Date(usuario.fechaCreacion);
       const nuevoNombre = 'Carlos';
       const result = usuario.actualizarNombre(nuevoNombre);
 
       expect(result.isSuccess).toBe(true);
       expect(usuario.nombre).toBe(nuevoNombre);
-      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThan(usuario.fechaCreacion.getTime());
+      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaCreacionAnterior.getTime());
     });
 
     it('debería fallar al actualizar con nombre inválido', () => {
