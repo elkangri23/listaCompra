@@ -39,7 +39,7 @@ const mockListaRepository = {
   deleteById: jest.fn(),
   existsByNameAndOwner: jest.fn(),
   countByOwner: jest.fn(),
-  findByListaId: jest.fn(),  hardDelete: jest.fn(),  existsById: jest.fn(),  updateActiveStatus: jest.fn(),
+  findByListaId: jest.fn(),
   hardDelete: jest.fn(),
   existsById: jest.fn(),
   updateActiveStatus: jest.fn()
@@ -55,7 +55,26 @@ const mockProductoRepository = {
   delete: jest.fn(),
   markAsPurchased: jest.fn(),
   getStatistics: jest.fn(),
-  findAll: jest.fn()
+  findAll: jest.fn(),
+  findByIdAndList: jest.fn(),
+  findByList: jest.fn(),
+  findByNameAndList: jest.fn(),
+  deleteById: jest.fn(),
+  hardDelete: jest.fn(),
+  existsById: jest.fn(),
+  updateActiveStatus: jest.fn(),
+  findByListaId: jest.fn(),
+  updateQuantity: jest.fn(),
+  updatePurchaseStatus: jest.fn(),
+  existsByNameAndList: jest.fn(),
+  countByList: jest.fn(),
+  findPurchasedByList: jest.fn(),
+  findUnpurchasedByList: jest.fn(),
+  getResumenByList: jest.fn(),
+  markAllAsPurchased: jest.fn(),
+  findByCategory: jest.fn(),
+  findUrgentByUser: jest.fn(),
+  deleteAllByList: jest.fn()
 };
 
 const mockTiendaRepository = {
@@ -65,7 +84,24 @@ const mockTiendaRepository = {
   update: jest.fn(),
   delete: jest.fn(),
   findByNombre: jest.fn(),
-  existsByNombre: jest.fn()
+  existsByNombre: jest.fn(),
+  search: jest.fn(),
+  findByIdWithCategories: jest.fn(),
+  findAllWithCategories: jest.fn(),
+  countCategorias: jest.fn(),
+  existsById: jest.fn(),
+  hardDelete: jest.fn(),
+  updateActiveStatus: jest.fn(),
+  findByOwner: jest.fn(),
+  countByOwner: jest.fn(),
+  hasCategories: jest.fn(),
+  getStats: jest.fn(),
+  getAllStats: jest.fn(),
+  getMostUsed: jest.fn(),
+  getLeastUsed: jest.fn(),
+  findByNameAndOwner: jest.fn(),
+  deactivateWithCategories: jest.fn(),
+  activate: jest.fn()
 };
 
 const mockCategoriaRepository = {
@@ -77,7 +113,17 @@ const mockCategoriaRepository = {
   delete: jest.fn(),
   findByNombre: jest.fn(),
   findByColor: jest.fn(),
-  existsByNombre: jest.fn()
+  existsByNombre: jest.fn(),
+  existsByNombreAndTienda: jest.fn(),
+  countByTienda: jest.fn(),
+  search: jest.fn(),
+  getMostUsed: jest.fn(),
+  findByCategory: jest.fn(),
+  findGeneralCategories: jest.fn(),
+  existsById: jest.fn(),
+  moveToTienda: jest.fn(),
+  deactivateByTienda: jest.fn(),
+  getStats: jest.fn()
 };
 
 const dependencies = {
@@ -168,7 +214,7 @@ describe('CreateOccasionListUseCase', () => {
       }));
 
       const lista = Lista.create({
-        nombre: '',
+        nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
       if (!lista.isSuccess) throw new Error("Test setup failed");
@@ -205,7 +251,7 @@ describe('CreateOccasionListUseCase', () => {
       mockAIService.generateOccasionList.mockResolvedValue('{"products":[]}');
 
       const lista = Lista.create({
-        nombre: '',
+        nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
       if (!lista.isSuccess) throw new Error("Test setup failed");
@@ -228,7 +274,9 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBeInstanceOf(NotFoundError);
+      if (result.isFailure) {
+        expect(result.error).toBeInstanceOf(NotFoundError);
+      }
     });
 
     it('debe usar primera tienda disponible si no se especifica ninguna', async () => {
@@ -246,7 +294,7 @@ describe('CreateOccasionListUseCase', () => {
       mockAIService.generateOccasionList.mockResolvedValue('{"products":[]}');
 
       const lista = Lista.create({
-        nombre: '',
+        nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
       if (!lista.isSuccess) throw new Error("Test setup failed");
@@ -276,7 +324,7 @@ describe('CreateOccasionListUseCase', () => {
       mockAIService.generateOccasionList.mockResolvedValue('{"products":[]}');
 
       const lista = Lista.create({
-        nombre: '',
+        nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
       if (!lista.isSuccess) throw new Error("Test setup failed");
@@ -330,7 +378,7 @@ describe('CreateOccasionListUseCase', () => {
       mockAIService.generateOccasionList.mockResolvedValue(aiResponse);
 
       const lista = Lista.create({
-        nombre: '',
+        nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
       if (!lista.isSuccess) throw new Error("Test setup failed");
@@ -347,10 +395,12 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value?.products).toHaveLength(2);
-      expect(result.value?.products[0].name).toBe('Carne para asar');
-      expect(result.value?.products[0].alternatives).toEqual(['Pollo', 'Pescado']);
-      expect(result.value?.products[1].estimatedPrice).toBeUndefined();
+      if (result.isSuccess) {
+        expect(result.value.products).toHaveLength(2);
+        expect(result.value.products[0]?.name).toBe('Carne para asar');
+        expect(result.value.products[0]?.alternatives).toEqual(['Pollo', 'Pescado']);
+        expect(result.value.products[1]?.estimatedPrice).toBeUndefined();
+      }
     });
 
     it('debe manejar respuesta inválida de IA con fallback', async () => {
@@ -362,7 +412,7 @@ describe('CreateOccasionListUseCase', () => {
       mockAIService.generateOccasionList.mockResolvedValue('respuesta inválida sin JSON');
 
       const lista = Lista.create({
-        nombre: '',
+        nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
       if (!lista.isSuccess) throw new Error("Test setup failed");
@@ -379,8 +429,10 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value?.products.length).toBeGreaterThan(0);
-      // Debería generar productos de fallback
+      if (result.isSuccess) {
+        expect(result.value.products.length).toBeGreaterThan(0);
+        // Debería generar productos de fallback
+      }
     });
   });
 
@@ -407,12 +459,8 @@ describe('CreateOccasionListUseCase', () => {
         customListName: 'Mi Barbacoa Especial'
       };
 
-      const lista = Lista.create({
-        nombre: '',
-        propietarioId: 'user-123'
-      });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
-      mockListaRepository.save.mockResolvedValue(success(lista.value));
+      // Mock: save devuelve la misma lista que recibe
+      mockListaRepository.save.mockImplementation((lista) => Promise.resolve(success(lista)));
 
       const producto = Producto.create({
         nombre: 'Test Producto',
@@ -425,7 +473,9 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value?.listName).toBe('Mi Barbacoa Especial');
+      if (result.isSuccess) {
+        expect(result.value.listName).toBe('Mi Barbacoa Especial');
+      }
     });
 
     it('debe crear lista con nombre generado automáticamente', async () => {
@@ -434,12 +484,8 @@ describe('CreateOccasionListUseCase', () => {
         numberOfPeople: 6
       };
 
-      const lista = Lista.create({
-        nombre: '',
-        propietarioId: 'user-123'
-      });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
-      mockListaRepository.save.mockResolvedValue(success(lista.value));
+      // Mock: save devuelve la misma lista que recibe
+      mockListaRepository.save.mockImplementation((lista) => Promise.resolve(success(lista)));
 
       const producto = Producto.create({
         nombre: 'Test Producto',
@@ -452,7 +498,9 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value?.listName).toBe('Barbacoa familiar (6 personas)');
+      if (result.isSuccess) {
+        expect(result.value.listName).toBe('Barbacoa familiar (6 personas)');
+      }
     });
 
     it('debe calcular costo estimado total correctamente', async () => {
@@ -485,7 +533,7 @@ describe('CreateOccasionListUseCase', () => {
       }));
 
       const lista = Lista.create({
-        nombre: '',
+        nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
       if (!lista.isSuccess) throw new Error("Test setup failed");
@@ -502,8 +550,10 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      // (2 * 10.5) + (3 * 5.0) = 21 + 15 = 36
-      expect(result.value?.summary.estimatedCost).toBe(36);
+      if (result.isSuccess) {
+        // (2 * 10.5) + (3 * 5.0) = 21 + 15 = 36
+        expect(result.value.summary.estimatedCost).toBe(36);
+      }
     });
 
     it('debe calcular confianza de IA basada en calidad de productos', async () => {
@@ -526,7 +576,7 @@ describe('CreateOccasionListUseCase', () => {
       }));
 
       const lista = Lista.create({
-        nombre: '',
+        nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
       if (!lista.isSuccess) throw new Error("Test setup failed");
@@ -543,7 +593,9 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value?.aiConfidence).toBeGreaterThan(80); // Producto completo = alta confianza
+      if (result.isSuccess) {
+        expect(result.value.aiConfidence).toBeGreaterThan(80); // Producto completo = alta confianza
+      }
     });
   });
 
@@ -563,7 +615,9 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error?.message).toContain('Error en BD');
+      if (result.isFailure) {
+        expect(result.error.message).toContain('Error en BD');
+      }
     });
 
     it('debe manejar error en servicio de IA', async () => {
@@ -579,7 +633,9 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error?.message).toContain('Error interno al generar lista');
+      if (result.isFailure) {
+        expect(result.error.message).toContain('Error interno al generar lista');
+      }
     });
 
     it('debe continuar creando productos válidos aunque algunos fallen', async () => {
@@ -598,7 +654,7 @@ describe('CreateOccasionListUseCase', () => {
       }));
 
       const lista = Lista.create({
-        nombre: '',
+        nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
       if (!lista.isSuccess) throw new Error("Test setup failed");
@@ -609,6 +665,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
+      if (!producto.isSuccess) throw new Error("Test setup failed");
       
       // Mock: primer producto válido, segundo falla
       mockProductoRepository.save
@@ -618,8 +675,10 @@ describe('CreateOccasionListUseCase', () => {
       const result = await useCase.execute(dto, 'user-123');
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value?.summary.totalProducts).toBe(2); // Cuenta productos generados por IA
-      // Aunque solo uno se guardó exitosamente en BD
+      if (result.isSuccess) {
+        expect(result.value.summary.totalProducts).toBe(2); // Cuenta productos generados por IA
+        // Aunque solo uno se guardó exitosamente en BD
+      }
     });
   });
 });
