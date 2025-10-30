@@ -640,6 +640,343 @@ Proporciona insights sobre frecuencia, patrones y recomendaciones.`;
   }
 
   /**
+   * Genera recomendaciones contextuales de productos complementarios
+   * CU-33: Recomendaciones Contextuales Automáticas
+   */
+  async getProductRecommendations(
+    productsInList: ProductInList[],
+    context?: string,
+    specificProductName?: string,
+    maxRecommendations: number = 5,
+    creativityLevel: 'conservative' | 'balanced' | 'creative' = 'balanced'
+  ): Promise<string> {
+    const startTime = Date.now();
+
+    try {
+      // Validar inputs
+      if (!productsInList || productsInList.length === 0) {
+        throw new Error('Se requiere al menos un producto en la lista para generar recomendaciones');
+      }
+
+      if (maxRecommendations < 1 || maxRecommendations > 20) {
+        throw new Error('maxRecommendations debe estar entre 1 y 20');
+      }
+
+      // Sanitizar inputs con AISecurityUtils
+      const sanitizedContext = context ? AISecurityUtils.sanitizeUserInput(context) : undefined;
+      const sanitizedProductName = specificProductName ? AISecurityUtils.sanitizeUserInput(specificProductName) : undefined;
+      const sanitizedProducts: ProductInList[] = productsInList.map(p => {
+        const sanitized: ProductInList = {
+          name: AISecurityUtils.sanitizeUserInput(p.name),
+          quantity: p.quantity,
+          purchased: p.purchased
+        };
+        if (p.category) {
+          sanitized.category = AISecurityUtils.sanitizeUserInput(p.category);
+        }
+        return sanitized;
+      });
+
+      // Construir prompt optimizado para recomendaciones
+      const prompt = this.buildRecommendationsPrompt(
+        sanitizedProducts,
+        sanitizedContext,
+        sanitizedProductName,
+        maxRecommendations,
+        creativityLevel
+      );
+
+      this.logger.ai('Generando recomendaciones de productos', {
+        productsCount: productsInList.length,
+        context: sanitizedContext,
+        specificProduct: sanitizedProductName,
+        maxRecommendations,
+        creativityLevel,
+        promptLength: prompt.length
+      });
+
+      // Llamar a Perplexity API
+      const response = await this.httpClient.post('/chat/completions', {
+        model: this.config.model,
+        messages: [
+          {
+            role: 'system',
+            content: 'Eres un asistente experto en alimentación y compras que sugiere productos complementarios basándose en lo que el usuario ya tiene. Siempre respondes con JSON válido.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: this.getTemperatureForCreativity(creativityLevel),
+        max_tokens: Math.min(maxRecommendations * 150 + 300, 2000), // Estimación: ~150 tokens por recomendación
+        response_format: { type: 'json_object' }
+      });
+
+      const content = response.data.choices[0]?.message?.content;
+
+      if (!content) {
+        throw new Error('No se recibió respuesta de la IA');
+      }
+
+      // Validar que la respuesta sea JSON válido
+      if (!this.isValidJSON(content)) {
+        this.logger.warn('Respuesta de IA no es JSON válido, usando fallback', {
+          contentPreview: content.substring(0, 200)
+        });
+        return this.generateFallbackRecommendations(productsInList, maxRecommendations);
+      }
+
+      const processingTime = Date.now() - startTime;
+      this.logger.ai('Recomendaciones generadas exitosamente', {
+        processingTime,
+        responseLength: content.length,
+        tokensUsed: response.data.usage?.total_tokens
+      });
+
+      return content;
+
+    } catch (error: any) {
+      const processingTime = Date.now() - startTime;
+      this.logger.error('Error al generar recomendaciones de productos', {
+        error: error.message,
+        processingTime,
+        productsCount: productsInList.length,
+        context,
+        specificProduct: specificProductName
+      });
+
+      // Intentar fallback
+      return this.generateFallbackRecommendations(productsInList, maxRecommendations);
+    }
+  }
+
+  /**
+   * Construye el prompt optimizado para recomendaciones contextuales
+   */
+  private buildRecommendationsPrompt(
+    products: ProductInList[],
+    context?: string,
+    specificProductName?: string,
+    maxRecommendations: number = 5,
+    creativityLevel: 'conservative' | 'balanced' | 'creative' = 'balanced'
+  ): string {
+    const productsList = products
+      .filter(p => !p.purchased) // Solo productos no comprados
+      .map(p => `- ${p.name}${p.category ? ` (${p.category})` : ''} - ${p.quantity} unidades`)
+      .join('\n');
+
+    const purchasedProducts = products
+      .filter(p => p.purchased)
+      .map(p => p.name)
+      .join(', ');
+
+    let prompt = `Analiza esta lista de compra y sugiere ${maxRecommendations} productos complementarios que el usuario podría necesitar.
+
+**PRODUCTOS ACTUALES EN LA LISTA:**
+${productsList}
+`;
+
+    if (purchasedProducts) {
+      prompt += `\n**PRODUCTOS YA COMPRADOS:** ${purchasedProducts}\n`;
+    }
+
+    if (context) {
+      prompt += `\n**CONTEXTO:** ${context}\n`;
+    }
+
+    if (specificProductName) {
+      prompt += `\n**ENFOQUE ESPECÍFICO:** Sugiere productos que complementen específicamente con "${specificProductName}".\n`;
+    }
+
+    // Ajustar instrucciones según nivel de creatividad
+    const creativityInstructions = {
+      conservative: 'Recomienda SOLO productos que sean complementos directos y obvios de los productos existentes. Prioriza productos básicos y esenciales.',
+      balanced: 'Recomienda una mezcla de complementos directos y algunos productos que podrían ser útiles según el contexto. Encuentra un balance entre lo esperado y lo útil.',
+      creative: 'Sé creativo y sugiere productos innovadores que podrían complementar la lista, incluso si no son obvios. Piensa en combinaciones interesantes y recetas posibles.'
+    };
+
+    prompt += `\n**NIVEL DE CREATIVIDAD:** ${creativityInstructions[creativityLevel]}\n`;
+
+    prompt += `
+**INSTRUCCIONES:**
+1. Analiza los productos existentes e identifica patrones (¿es una comida italiana? ¿un desayuno? ¿comida vegana?)
+2. Sugiere ${maxRecommendations} productos complementarios que faltan
+3. Para cada recomendación, explica por qué es relevante
+4. Ordena por relevancia (más relevante primero)
+5. Asigna un score de confianza (0-100) a cada recomendación
+6. NO sugieras productos que ya están en la lista
+7. Indica qué productos de la lista están relacionados con cada recomendación
+
+**FORMATO DE RESPUESTA (JSON válido):**
+{
+  "detectedContext": "Descripción breve del tipo de comida/ocasión detectada",
+  "recommendations": [
+    {
+      "name": "Nombre del producto",
+      "reason": "Por qué este producto complementa la lista",
+      "confidenceScore": 85,
+      "suggestedQuantity": 2,
+      "suggestedUnit": "unidades",
+      "suggestedCategory": "Nombre de categoría",
+      "estimatedPrice": 3.50,
+      "relatedProducts": ["Producto1", "Producto2"],
+      "tags": ["saludable", "vegano"],
+      "recommendationType": "complement"
+    }
+  ]
+}
+
+**TIPOS DE RECOMENDACIÓN VÁLIDOS:**
+- "complement": Producto complementario directo
+- "frequently_together": Productos comprados juntos frecuentemente
+- "category_match": Productos de la misma categoría/contexto
+- "user_preference": Basado en preferencias comunes
+
+Responde SOLO con el JSON, sin texto adicional.`;
+
+    return prompt;
+  }
+
+  /**
+   * Obtiene temperatura para API según nivel de creatividad
+   */
+  private getTemperatureForCreativity(creativityLevel: 'conservative' | 'balanced' | 'creative'): number {
+    const temperatures = {
+      conservative: 0.3, // Respuestas más predecibles
+      balanced: 0.5,     // Balance entre creatividad y coherencia
+      creative: 0.7      // Más creatividad e innovación
+    };
+    return temperatures[creativityLevel];
+  }
+
+  /**
+   * Genera recomendaciones de fallback cuando falla la IA
+   */
+  private generateFallbackRecommendations(products: ProductInList[], maxRecommendations: number): string {
+    // Reglas básicas de complementariedad sin IA
+    const recommendations: any[] = [];
+
+    const productNames = products.map(p => p.name.toLowerCase());
+
+    // Regla 1: Si hay pasta, sugerir salsa de tomate
+    if (productNames.some(name => name.includes('pasta') || name.includes('espagueti'))) {
+      recommendations.push({
+        name: "Salsa de tomate",
+        reason: "Complementa perfectamente con la pasta",
+        confidenceScore: 90,
+        suggestedQuantity: 1,
+        suggestedUnit: "bote",
+        suggestedCategory: "Salsas",
+        estimatedPrice: 2.50,
+        relatedProducts: ["Pasta"],
+        tags: ["italiano"],
+        recommendationType: "complement"
+      });
+
+      if (recommendations.length < maxRecommendations) {
+        recommendations.push({
+          name: "Queso parmesano rallado",
+          reason: "Ingrediente esencial para pasta italiana",
+          confidenceScore: 85,
+          suggestedQuantity: 1,
+          suggestedUnit: "paquete",
+          suggestedCategory: "Lácteos",
+          estimatedPrice: 3.00,
+          relatedProducts: ["Pasta"],
+          tags: ["italiano", "lácteo"],
+          recommendationType: "complement"
+        });
+      }
+    }
+
+    // Regla 2: Si hay carne, sugerir acompañamientos
+    if (productNames.some(name => name.includes('carne') || name.includes('pollo') || name.includes('ternera'))) {
+      if (recommendations.length < maxRecommendations) {
+        recommendations.push({
+          name: "Patatas",
+          reason: "Acompañamiento clásico para carnes",
+          confidenceScore: 80,
+          suggestedQuantity: 1,
+          unit: "kg",
+          suggestedCategory: "Verduras",
+          estimatedPrice: 1.50,
+          relatedProducts: ["Carne"],
+          tags: ["acompañamiento"],
+          recommendationType: "frequently_together"
+        });
+      }
+    }
+
+    // Regla 3: Si hay pan, sugerir mantequilla o mermelada
+    if (productNames.some(name => name.includes('pan'))) {
+      if (recommendations.length < maxRecommendations) {
+        recommendations.push({
+          name: "Mantequilla",
+          reason: "Complemento perfecto para el pan",
+          confidenceScore: 75,
+          suggestedQuantity: 1,
+          suggestedUnit: "paquete",
+          suggestedCategory: "Lácteos",
+          estimatedPrice: 2.00,
+          relatedProducts: ["Pan"],
+          tags: ["lácteo"],
+          recommendationType: "complement"
+        });
+      }
+    }
+
+    // Regla 4: Sugerencias genéricas si no hay suficientes
+    const genericSuggestions = [
+      {
+        name: "Aceite de oliva",
+        reason: "Ingrediente versátil para múltiples preparaciones",
+        confidenceScore: 60,
+        suggestedQuantity: 1,
+        suggestedUnit: "botella",
+        suggestedCategory: "Aceites",
+        estimatedPrice: 4.50,
+        relatedProducts: [],
+        tags: ["básico", "versátil"],
+        recommendationType: "category_match"
+      },
+      {
+        name: "Sal",
+        reason: "Condimento esencial para cualquier cocina",
+        confidenceScore: 55,
+        suggestedQuantity: 1,
+        suggestedUnit: "paquete",
+        suggestedCategory: "Condimentos",
+        estimatedPrice: 0.80,
+        relatedProducts: [],
+        tags: ["básico"],
+        recommendationType: "category_match"
+      },
+      {
+        name: "Ajo",
+        reason: "Ingrediente base para múltiples recetas",
+        confidenceScore: 50,
+        suggestedQuantity: 1,
+        suggestedUnit: "cabeza",
+        suggestedCategory: "Verduras",
+        estimatedPrice: 0.50,
+        relatedProducts: [],
+        tags: ["básico", "aromático"],
+        recommendationType: "category_match"
+      }
+    ];
+
+    while (recommendations.length < maxRecommendations && genericSuggestions.length > 0) {
+      recommendations.push(genericSuggestions.shift()!);
+    }
+
+    return JSON.stringify({
+      detectedContext: "Contexto general (IA no disponible)",
+      recommendations: recommendations.slice(0, maxRecommendations)
+    });
+  }
+
+  /**
    * Verifica si una cadena contiene JSON válido
    */
   private isValidJSON(str: string): boolean {
