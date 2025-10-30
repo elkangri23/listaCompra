@@ -15,6 +15,7 @@ import type { AdminController } from './controllers/AdminController';
 import { createAuthRoutes } from './routes/authRoutes';
 import { createInvitationRoutes } from './routes/invitationRoutes';
 import { createAdminRoutes } from './routes/adminRoutes';
+import recommendationsRoutes from './routes/recommendationsRoutes';
 import { devRoutes } from './routes/devRoutes';
 
 export interface ServerDependencies {
@@ -124,6 +125,7 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
     dependencies.authMiddleware,
     dependencies.authMiddleware // Por ahora usar authMiddleware en lugar de adminMiddleware
   ));
+  app.use('/api/v1/recommendations', recommendationsRoutes);
   
   // Rutas de desarrollo (solo en development)
   app.use('/api/v1/dev', devRoutes);
