@@ -52,6 +52,8 @@ export class DeleteProduct {
       ));
     }
 
+    const listaId = producto.listaId;
+
     // 3. Verificar permisos de eliminación
     if (!producto.puedeModificar(usuarioId)) {
       return failure(new UnauthorizedError(
@@ -70,6 +72,7 @@ export class DeleteProduct {
     const permanente = dto.permanente ?? true; // Por defecto permanente para productos
     const response: DeleteProductResponseDto = {
       id: productoId,
+      listaId,
       eliminado: true,
       permanente: permanente,
       fechaEliminacion: new Date().toISOString(),

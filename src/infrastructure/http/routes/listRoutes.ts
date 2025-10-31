@@ -93,6 +93,31 @@ export function createListRoutes(
 
   /**
    * @swagger
+   * /api/lists/{id}/stream:
+   *   get:
+   *     summary: Suscribirse a eventos en tiempo real de una lista
+   *     tags: [Listas]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: ID de la lista
+   *     responses:
+   *       200:
+   *         description: Conexión SSE establecida exitosamente
+   *       401:
+   *         description: No autenticado
+   *       403:
+   *         description: Sin permisos para acceder a la lista
+   */
+  router.get('/:id/stream', (req, res) => listController.stream(req, res));
+
+  /**
+   * @swagger
    * /api/lists/{id}:
    *   get:
    *     summary: Obtener lista por ID
