@@ -30,11 +30,15 @@ const redisConfig = {
 const redisClient = new Redis(redisConfig);
 
 // Store Redis para rate limiting
-const redisStore = new RedisStore({
-  sendCommand: async (...args: any[]) => {
-    return await redisClient.call(args[0], ...args.slice(1)) as any;
-  },
-});
+
+function createRedisStore(prefix: string) {
+  return new RedisStore({
+    sendCommand: async (...args: any[]) => {
+      return await redisClient.call(args[0], ...args.slice(1)) as any;
+    },
+    prefix,
+  });
+}
 
 /**
  * Configuraciones de rate limiting por tipo de endpoint
@@ -110,7 +114,7 @@ function createAdvancedRateLimit(
 ): RateLimitRequestHandler {
   
   return rateLimit({
-    store: redisStore,
+    store: createRedisStore(options.keyPrefix),
     windowMs: config.windowMs,
     max: config.max,
     standardHeaders: true,
@@ -257,7 +261,7 @@ export const blueprintAdvancedRateLimit = createAdvancedRateLimit(
  * Rate limiter dinámico basado en rol de usuario
  */
 export const dynamicRoleBasedRateLimit = rateLimit({
-  store: redisStore,
+  store: createRedisStore('dynamic'),
   windowMs: 15 * 60 * 1000, // 15 minutos
   
   // Max dinámico basado en rol
