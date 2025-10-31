@@ -84,16 +84,28 @@
 ## 📁 **DOCUMENTACIÓN TÉCNICA (Carpeta `Docs/`)**
 
 ### 6. **Docs/casos-uso-completos.md** 📋
-**Descripción**: 33 casos de uso detallados  
+**Descripción**: 33 casos de uso detallados
 **Contenido**: Especificaciones completas de todos los CU
 
 ### 7. **Docs/DiagramaClases_V1-mermaid.md** 🔷
-**Descripción**: Diagrama de clases del sistema  
+**Descripción**: Diagrama de clases del sistema
 **Contenido**: Relaciones entre entidades en formato Mermaid
 
 ### 8. **Docs/architecture.md** 🏗️
-**Descripción**: Arquitectura del sistema  
+**Descripción**: Arquitectura del sistema
 **Contenido**: Patrones, decisiones de diseño, capas
+
+### 9. **Docs/deployment-guide.md** 🚀
+**Descripción**: Guía avanzada de despliegue
+**Contenido**: Estrategias por entorno, CI/CD, monitoreo, recuperación
+
+### 10. **Docs/contribution-guide.md** 🤝
+**Descripción**: Manual para colaboradores
+**Contenido**: Flujo Git, estándares de código, QA, roles
+
+### 11. **Docs/video-tutorials.md** 🎬
+**Descripción**: Plan de capacitación audiovisual
+**Contenido**: Guiones, recursos, métricas y checklist de publicación
 
 ---
 
@@ -153,9 +165,9 @@ Los siguientes archivos fueron eliminados por estar **obsoletos** o **duplicados
 
 ## 📊 **MÉTRICAS DE DOCUMENTACIÓN**
 
-- **Total documentos activos**: 10 archivos
+- **Total documentos activos**: 13 archivos
 - **Documentos principales**: 5 archivos
-- **Documentos técnicos**: 3 archivos (Docs/)
+- **Documentos técnicos**: 6 archivos (Docs/)
 - **Documentos legales**: 2 archivos
 - **Archivos eliminados**: 9 archivos (consolidación 30 Oct)
 - **Última actualización**: 30 de Octubre, 2025
