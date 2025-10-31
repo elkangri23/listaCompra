@@ -10,16 +10,17 @@ import { UpdateProduct } from '../../../application/use-cases/products/UpdatePro
 import { MarkProductAsPurchased } from '../../../application/use-cases/products/MarkProductAsPurchased';
 import { DeleteProduct } from '../../../application/use-cases/products/DeleteProduct';
 import { GetProducts } from '../../../application/use-cases/products/GetProducts';
-import { 
-  AddProductDto, 
-  UpdateProductDto, 
-  MarkAsPurchasedDto, 
-  DeleteProductDto, 
-  GetProductsDto 
+import {
+  AddProductDto,
+  UpdateProductDto,
+  MarkAsPurchasedDto,
+  DeleteProductDto,
+  GetProductsDto
 } from '../../../application/dto/products';
 import { ValidationError } from '../../../application/errors/ValidationError';
 import { UnauthorizedError } from '../../../application/errors/UnauthorizedError';
 import { NotFoundError } from '../../../application/errors/NotFoundError';
+import { RealTimeGateway } from '../../realtime/RealTimeGateway';
 
 export class ProductController {
   constructor(
@@ -27,8 +28,13 @@ export class ProductController {
     private updateProductUseCase: UpdateProduct,
     private markProductAsPurchasedUseCase: MarkProductAsPurchased,
     private deleteProductUseCase: DeleteProduct,
-    private getProductsUseCase: GetProducts
+    private getProductsUseCase: GetProducts,
+    private readonly realTimeGateway: RealTimeGateway
   ) {}
+
+  private getUserId(req: AuthenticatedRequest): string | undefined {
+    return req.user?.userId ?? req.user?.id;
+  }
 
   /**
    * POST /lists/:listaId/products
@@ -36,7 +42,7 @@ export class ProductController {
   async addProductToList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId } = req.params;
-      const userId = req.user?.userId;
+      const userId = this.getUserId(req);
 
       if (!userId) {
         res.status(401).json({ success: false, error: 'Usuario no autenticado' });
@@ -67,6 +73,13 @@ export class ProductController {
       }
 
       res.status(201).json({ success: true, data: result.value });
+
+      this.realTimeGateway.publish({
+        listId: result.value.listaId,
+        type: 'PRODUCT_ADDED',
+        payload: result.value,
+        actorId: userId,
+      });
     } catch (error) {
       console.error('Error en addProductToList:', error);
       res.status(500).json({ success: false, error: 'Error interno del servidor' });
@@ -79,7 +92,7 @@ export class ProductController {
   async updateProductInList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId, productId } = req.params;
-      const userId = req.user?.userId;
+      const userId = this.getUserId(req);
 
       if (!userId) {
         res.status(401).json({ success: false, error: 'Usuario no autenticado' });
@@ -109,6 +122,13 @@ export class ProductController {
       }
 
       res.status(200).json({ success: true, data: result.value });
+
+      this.realTimeGateway.publish({
+        listId: result.value.listaId,
+        type: 'PRODUCT_UPDATED',
+        payload: result.value,
+        actorId: userId,
+      });
     } catch (error) {
       console.error('Error en updateProductInList:', error);
       res.status(500).json({ success: false, error: 'Error interno del servidor' });
@@ -121,7 +141,7 @@ export class ProductController {
   async markProductAsPurchased(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId, productId } = req.params;
-      const userId = req.user?.userId;
+      const userId = this.getUserId(req);
 
       if (!userId) {
         res.status(401).json({ success: false, error: 'Usuario no autenticado' });
@@ -145,6 +165,13 @@ export class ProductController {
       }
 
       res.status(200).json({ success: true, data: result.value });
+
+      this.realTimeGateway.publish({
+        listId: result.value.listaId,
+        type: 'PRODUCT_MARKED',
+        payload: result.value,
+        actorId: userId,
+      });
     } catch (error) {
       console.error('Error en markProductAsPurchased:', error);
       res.status(500).json({ success: false, error: 'Error interno del servidor' });
@@ -157,7 +184,7 @@ export class ProductController {
   async deleteProductFromList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId, productId } = req.params;
-      const userId = req.user?.userId;
+      const userId = this.getUserId(req);
 
       if (!userId) {
         res.status(401).json({ success: false, error: 'Usuario no autenticado' });
@@ -178,7 +205,14 @@ export class ProductController {
         return;
       }
 
-      res.status(200).json({ success: true, message: 'Producto eliminado correctamente' });
+      res.status(200).json({ success: true, data: result.value });
+
+      this.realTimeGateway.publish({
+        listId: result.value.listaId,
+        type: 'PRODUCT_DELETED',
+        payload: result.value,
+        actorId: userId,
+      });
     } catch (error) {
       console.error('Error en deleteProductFromList:', error);
       res.status(500).json({ success: false, error: 'Error interno del servidor' });
@@ -191,7 +225,7 @@ export class ProductController {
   async getProductsFromList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId } = req.params;
-      const userId = req.user?.userId;
+      const userId = this.getUserId(req);
 
       if (!userId) {
         res.status(401).json({ success: false, error: 'Usuario no autenticado' });
