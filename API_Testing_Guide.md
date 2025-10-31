@@ -89,99 +89,111 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 ## 📚 Endpoints Disponibles
 
 ### 🔐 Autenticación (5 endpoints)
-- ✅ Registrar Usuario
-- ✅ Login (guarda token automáticamente)
-- ✅ Obtener Perfil Usuario
-- ⏳ Refresh Token (pendiente implementar)
-- ✅ Logout
+- ✅ Registrar Usuario (`POST /auth/register`)
+- ✅ Login + guardado de token (`POST /auth/login`)
+- ✅ Refresh Token (`POST /auth/refresh`)
+- ✅ Logout (`POST /auth/logout`)
+- ✅ Perfil actual (`GET /auth/me`)
 
 ### 📝 Listas de Compra (5 endpoints)
-- ✅ Crear Lista
-- ✅ Obtener Mis Listas (con paginación)
-- ✅ Obtener Lista por ID
-- ✅ Actualizar Lista
-- ✅ Eliminar Lista
+- ✅ Crear Lista (`POST /lists`)
+- ✅ Listar mis listas con paginación (`GET /lists`)
+- ✅ Detalle de lista (`GET /lists/:id`)
+- ✅ Actualizar lista (`PUT /lists/:id`)
+- ✅ Eliminar lista (`DELETE /lists/:id`)
 
 ### 🛒 Productos (5 endpoints)
-- ✅ Agregar Producto a Lista
-- ✅ Obtener Productos de Lista (con filtros)
-- ✅ Marcar/Desmarcar como Comprado
-- ✅ Actualizar Producto
-- ✅ Eliminar Producto
+- ✅ Agregar Producto (`POST /lists/:listId/products`)
+- ✅ Listar Productos con filtros (`GET /lists/:listId/products`)
+- ✅ Actualizar Producto (`PUT /lists/:listId/products/:productId`)
+- ✅ Marcar como comprado (`PATCH /lists/:listId/products/:productId/purchased`)
+- ✅ Eliminar Producto (`DELETE /lists/:listId/products/:productId`)
 
-### 🏷️ Categorías (4 endpoints)
-- ✅ Crear Categoría Personalizada
-- ✅ Obtener Categorías por Tienda
-- ✅ Actualizar Categoría
-- ✅ Eliminar Categoría
+### 🏷️ Categorías (6 endpoints)
+- ✅ Crear Categoría (`POST /categories`)
+- ✅ Obtener Categorías (filtros por tienda/estado) (`GET /categories`)
+- ✅ Actualizar Categoría (`PUT /categories/:id`)
+- ✅ Eliminar Categoría (`DELETE /categories/:id`)
+- ✅ Toggle estado (`PATCH /categories/:id/toggle-status`)
+- ✅ Mover a otra tienda (`PUT /categories/:id/move-to-store`)
 
-### 🏪 Tiendas (5 endpoints)
-- ✅ Crear Tienda
-- ✅ Obtener Todas las Tiendas (con filtros)
-- ✅ Obtener Tienda por ID
-- ✅ Actualizar Tienda
-- ✅ Eliminar Tienda
+### 🏪 Tiendas (7 endpoints)
+- ✅ Crear Tienda (`POST /stores`)
+- ✅ Listar Tiendas (`GET /stores`)
+- ✅ Obtener Tienda (`GET /stores/:id`)
+- ✅ Actualizar Tienda (`PUT /stores/:id`)
+- ✅ Eliminar Tienda (`DELETE /stores/:id`)
+- ✅ Cambiar estado (`PATCH /stores/:id/toggle-status`)
+- ✅ Categorías asociadas (`GET /stores/:id/categories`)
 
-### 📤 Invitaciones (5 endpoints)
-- ✅ Compartir Lista (genera enlace)
-- ✅ Acceder a Lista Compartida (sin auth)
-- ✅ Obtener Invitaciones de Lista
-- ✅ Actualizar Permisos
-- ✅ Cancelar Invitación
+### 📤 Invitaciones y Permisos (7 endpoints)
+- ✅ Compartir Lista (`POST /invitations/:listId/share`)
+- ✅ Acceder vía hash (`GET /invitations/:hash/access`)
+- ✅ Listar invitaciones activas (`GET /invitations/:listId/list`)
+- ✅ Listar permisos (`GET /invitations/:listId/permissions`)
+- ✅ Cambiar permiso (`PUT /invitations/:listId/permissions/:targetUsuarioId`)
+- ✅ Revocar permiso (`DELETE /invitations/:listId/permissions/:targetUsuarioId`)
+- ✅ Cancelar invitación (`DELETE /invitations/:invitacionId`)
 
-### 🤖 Inteligencia Artificial (7 endpoints)
-- ✅ Sugerencias de Categorías (`POST /ai/category-suggestions`)
-- ✅ Health Check IA (`GET /ai/health`)
-- ✅ Información de Uso (`GET /ai/usage` - Solo Admin)
-- ✅ **CU-29:** Categorización Masiva (`POST /ai/bulk-categorize`) - 🆕 **30 Oct 2025**
-- ✅ **CU-32:** Obtener Ocasiones Disponibles (`GET /occasion-lists/occasions`)
-- ✅ **CU-32:** Generar Lista por Ocasión (`POST /occasion-lists/generate`)
-- ✅ **CU-32:** Preview Lista por Ocasión (`POST /occasion-lists/preview`)
-
-### 📋 Blueprints/Plantillas (6 endpoints)
+### 📋 Blueprints/Plantillas (8 endpoints)
 - ✅ Crear Blueprint (`POST /blueprints`)
-- ✅ Obtener Mis Blueprints (`GET /blueprints/my`)
-- ✅ Obtener Blueprints Públicos (`GET /blueprints/public`)
-- ✅ Obtener Blueprint por ID (`GET /blueprints/:id`)
-- ✅ Crear Lista desde Blueprint (`POST /blueprints/:id/create-list`)
-- ✅ Actualizar/Eliminar Blueprint (`PUT/DELETE /blueprints/:id`)
+- ✅ Mis Blueprints (`GET /blueprints`)
+- ✅ Blueprints Públicos (`GET /blueprints/publicos`)
+- ✅ Buscador avanzado (`GET /blueprints/buscar`)
+- ✅ Detalle (`GET /blueprints/:id`)
+- ✅ Actualizar (`PUT /blueprints/:id`)
+- ✅ Eliminar (`DELETE /blueprints/:id`)
+- ✅ Crear lista desde blueprint (`POST /blueprints/:id/crear-lista`)
 
-### 👑 Administración (4 endpoints)
-- ✅ Impersonar Usuario (`POST /admin/impersonate/:targetUserId`)
-- ✅ Finalizar Impersonación (`POST /admin/end-impersonation`)
-- ✅ Auditoría de Impersonaciones (`GET /admin/audit/impersonations`)
-- ✅ Health Check Admin (`GET /admin/health`)
+### 🤖 IA - Categorización (4 endpoints)
+- ✅ Sugerencias unitarias (`POST /ai/category-suggestions`)
+- ✅ Categorización masiva (CU-29) (`POST /ai/bulk-categorize`)
+- ✅ Health check (`GET /ai/health`)
+- ✅ Telemetría IA (solo admin) (`GET /ai/info`)
+
+### 🎉 IA - Listas por Ocasión (3 endpoints)
+- ✅ Ocasiones disponibles (`GET /occasion-lists/occasions`)
+- ✅ Generar lista por ocasión (`POST /occasion-lists/generate`)
+- ✅ Previsualizar sin guardar (`POST /occasion-lists/preview`)
+
+### 🧠 IA - Recomendaciones (3 endpoints)
+- ✅ Recomendaciones generales (`GET /recommendations/:listId`)
+- ✅ Recomendaciones por producto (`GET /recommendations/:listId/for-product/:productId`)
+- ✅ Ejemplos de contexto (`GET /recommendations/context-examples`)
+
+### 👑 Administración (5 endpoints)
+- ✅ Iniciar impersonación (`POST /admin/impersonate`)
+- ✅ Finalizar impersonación (`DELETE /admin/impersonate`)
+- ✅ Estado de impersonación (`GET /admin/impersonate/status`)
+- ✅ Auditoría (beta) (`GET /admin/audit/impersonations`)
+- ✅ Security Test Suite (`GET /admin/security/test`)
 
 ### 📊 Dashboard y Monitoreo (4 endpoints)
-- ✅ Métricas del Sistema (`GET /dashboard/metrics`)
-- ✅ Health Check Sistema (`GET /dashboard/health`)
-- ✅ Alertas del Sistema (`GET /dashboard/alerts`)
-- ✅ Análisis de Performance (`GET /dashboard/performance`)
+- ✅ Métricas (`GET /dashboard/metrics`)
+- ✅ Salud (`GET /dashboard/health`)
+- ✅ Alertas (`GET /dashboard/alerts`)
+- ✅ Performance (`GET /dashboard/performance`)
 
-### 🔒 Seguridad y Cache (5 endpoints) - **NUEVOS**
-- ✅ Estado de Integridad (`GET /admin/cache/integrity/status`)
-- ✅ Escanear Corrupción (`POST /admin/cache/integrity/scan`)
-- ✅ Limpiar Cache Corrupto (`POST /admin/cache/integrity/cleanup`)
-- ✅ Reparar Cache (`POST /admin/cache/integrity/repair`)
-- ✅ Métricas de Integridad (`GET /admin/cache/integrity/metrics`)
+### ♻️ Cache Analytics (5 endpoints)
+- ✅ Métricas en tiempo real (`GET /analytics/cache/realtime`)
+- ✅ Historial diario (`GET /analytics/cache/daily`)
+- ✅ Reporte de optimización (`GET /analytics/cache/optimization`)
+- ✅ Dataset para dashboards (`GET /analytics/cache/dashboard`)
+- ✅ Health del cache (`GET /analytics/cache/health`)
 
-### 🤖 Recomendaciones con IA (3 endpoints) - **CU-33 NUEVOS (30 Oct 2025)**
-- ✅ Recomendaciones Generales (`GET /recommendations/:listId`)
-- ✅ Recomendaciones Específicas (`GET /recommendations/:listId/for-product/:productId`)
-- ✅ Ejemplos de Contexto (`GET /recommendations/context-examples`) - Público
+### 🛡️ Cache Integrity (5 endpoints - Solo Admin)
+- ✅ Escanear integridad (`GET /admin/cache/integrity/scan`)
+- ✅ Validar clave (`POST /admin/cache/integrity/validate`)
+- ✅ Limpieza (con soporte dryRun) (`DELETE /admin/cache/integrity/cleanup`)
+- ✅ Estadísticas y health (`GET /admin/cache/integrity/stats`)
+- ✅ Reparación selectiva (`POST /admin/cache/integrity/repair`)
 
-**Total de Endpoints:** **47+ endpoints** (6 de IA: CU-28, CU-32, CU-33)
+### 🔧 Desarrollo (3 endpoints - entornos dev/test)
+- ✅ Listar eventos (`GET /dev/events`)
+- ✅ Limpiar eventos (`DELETE /dev/events`)
+- ✅ Publicar evento de prueba (`POST /dev/events/test`)
 
-### 📊 Dashboard de Monitoreo (4 endpoints)
-- ✅ Métricas del Sistema (`GET /dashboard/metrics`)
-- ✅ Estado de Salud (`GET /dashboard/health`)
-- ✅ Alertas Activas (`GET /dashboard/alerts`)
-- ✅ Performance Detallado (`GET /dashboard/performance`)
-
-### 🔧 Desarrollo (3 endpoints)
-- ✅ Info Sistema de Eventos
-- ✅ Reset Sistema de Eventos
-- ✅ Publicar Evento de Prueba
+**Total de Endpoints:** **57 endpoints** (12 dedicados a IA y observabilidad)
 
 ## 🎯 Ejemplos de Testing
 
@@ -217,12 +229,13 @@ GET /categories?tiendaId={storeId}&activas=true
 
 #### **Flujo de Testing:**
 ```
-1. Autenticación → Login como Admin
-2. Cache Integrity → Estado de Integridad
-3. Cache Integrity → Escanear Corrupción 
-4. Cache Integrity → Ver Métricas de Integridad
-5. Cache Integrity → Limpiar Cache (si hay corrupción)
-6. Cache Integrity → Reparar Cache (opcional)
+1. Autenticación → Login como Admin (guarda token)
+2. Cache Analytics → Health (GET /analytics/cache/health)
+3. Cache Analytics → Daily Metrics (GET /analytics/cache/daily)
+4. Cache Integrity → Scan (GET /admin/cache/integrity/scan?pattern=*)
+5. Cache Integrity → Stats (GET /admin/cache/integrity/stats)
+6. Cache Integrity → Cleanup (DELETE /admin/cache/integrity/cleanup) - usar dryRun=true inicialmente
+7. Cache Integrity → Repair (POST /admin/cache/integrity/repair) - opcional
 ```
 
 #### **Verificaciones de Seguridad:**
@@ -236,36 +249,60 @@ GET /categories?tiendaId={storeId}&activas=true
 ```json
 {
   "success": true,
-  "data": {
+  "integrity": {
+    "total": 150,
+    "valid": 150,
+    "corrupted": 0,
+    "byCorruptionLevel": {
+      "NONE": 150,
+      "MINOR": 0,
+      "SEVERE": 0,
+      "CRITICAL": 0
+    },
+    "byDataType": {
+      "ai_suggestion": 80,
+      "blueprint_metadata": 40,
+      "user_session": 30
+    }
+  },
+  "cache": {
+    "totalKeys": 320,
+    "memoryInfo": {
+      "used_memory_human": "5.12M",
+      "maxmemory_policy": "allkeys-lru"
+    },
+    "timestamp": "2025-10-31T19:40:12.123Z"
+  },
+  "health": {
     "status": "healthy",
-    "totalChecked": 150,
-    "corruptedFound": 0,
-    "integrityScore": 100,
-    "lastScan": "2025-10-29T10:30:00Z"
+    "corruptionRate": 0,
+    "recommendation": "Cache estable. Mantener escaneos cada hora."
   }
 }
 ```
 
 ## 🚨 Notas Importantes
 
-### ⚠️ Colección Postman Pendiente de Actualización
-**Endpoints disponibles en la colección actual:**
-- ✅ Autenticación (5 endpoints)
-- ✅ Listas de Compra (5 endpoints)  
-- ✅ Productos (5 endpoints)
-- ✅ Categorías (4 endpoints)
-- ✅ Tiendas (5 endpoints)
-- ✅ Invitaciones (5 endpoints)
-- ✅ Dashboard de Monitoreo (4 endpoints)
-- ✅ Desarrollo (3 endpoints)
-- ✅ **Inteligencia Artificial (7 endpoints)** - Fases 9, 15, 17 ✅ Implementados (CU-28, CU-29, CU-32)
-- ✅ **Blueprints/Plantillas (6 endpoints)** - Fase 10 ✅ Implementados
-- ✅ **Administración (4 endpoints)** - Fase 11 ✅ Implementados
-- ✅ **Seguridad y Cache (5 endpoints)** - Fase 12 ✅ Implementados
+### ✅ Colección Postman v2.0.0 - Resumen Rápido
+**Carpetas incluidas:**
+- ✅ 01. Autenticación (5)
+- ✅ 02. Listas de Compra (5)
+- ✅ 03. Productos (5)
+- ✅ 04. Categorías (6)
+- ✅ 05. Tiendas (7)
+- ✅ 06. Invitaciones & Permisos (7)
+- ✅ 07. Inteligencia Artificial (IA Core - 4)
+- ✅ 08. IA - Listas por Ocasión (3)
+- ✅ 09. IA - Recomendaciones Contextuales (3)
+- ✅ 10. Blueprints/Plantillas (8)
+- ✅ 11. 🛡️ Admin & Security (5)
+- ✅ 12. ♻️ Cache Observability (Analytics 5 + Integrity 5)
+- ✅ 13. Dashboard & Monitoring (4)
+- ✅ 14. Dev Utilities (solo dev/test) (3)
 
-**Total: 48 endpoints completamente documentados** ✅
+**Total:** **57 endpoints** listos para ejecutar (incluye CU-28, CU-29, CU-32, CU-33 y observabilidad de cache).
 
-> **✅ Actualizado**: Todos los endpoints de IA (incluye **Categorización Masiva CU-29**, **Listas Inteligentes por Ocasión CU-32**), Blueprints, Admin y Seguridad están completamente implementados, funcionando y **documentados en esta colección**. También disponibles en Swagger UI: `/api/docs`
+> Swagger UI actualizado en `/api/docs` y colección sincronizada con los nuevos endpoints de cache.
 
 ### Autenticación
 - Todos los endpoints (excepto registro, login y acceso a invitaciones) requieren token JWT
@@ -292,36 +329,50 @@ GET /categories?tiendaId={storeId}&activas=true
   "productId": "product-uuid-here",
   "categoryId": "category-uuid-here",
   "storeId": "store-uuid-here",
-  "invitationHash": "secure-hash-here"
+  "invitationHash": "secure-hash-here",
+  "targetUserId": "collaborator-uuid-here",
+  "invitationId": "invitation-uuid-here",
+  "blueprintId": "blueprint-uuid-here",
+  "adminSessionId": "impersonation-session-uuid"
 }
 ```
 
 #### Paso 5: Inteligencia Artificial (🤖 IA)
 ```
-11. AI → Sugerencias de Categorías (nombre producto)
-11. AI → 🆕 Categorización Masiva (hasta 50 productos)
-11. AI → Health Check IA
-11. AI → Información de Uso (solo admin)
-11. AI → Obtener Ocasiones Disponibles (20+ ocasiones)
-11. AI → Generar Lista por Ocasión (barbacoa, cena romántica, etc.)
-11. AI → Preview Lista por Ocasión (sin guardar en DB)
+07. IA Core → Sugerencias de Categorías (producto individual)
+07. IA Core → Categorización Masiva (hasta 50 productos)
+07. IA Core → Health Check IA
+07. IA Core → Telemetría IA (solo admin)
+08. IA Ocasiones → Obtener Ocasiones Disponibles (20+ plantillas)
+08. IA Ocasiones → Generar Lista por Ocasión (barbacoa, cena romántica, etc.)
+08. IA Ocasiones → Preview Lista por Ocasión (sin guardar en DB)
+09. IA Recomendaciones → Recomendaciones Generales / Por Producto
 ```
 
 #### Paso 6: Blueprints/Plantillas (📋 Templates)
 ```
-12. Blueprints → Crear Blueprint (desde lista existente)
-12. Blueprints → Obtener Mis Blueprints
-12. Blueprints → Obtener Blueprints Públicos
-12. Blueprints → Crear Lista desde Blueprint
-12. Blueprints → Actualizar/Eliminar Blueprint
+10. Blueprints → Crear Blueprint (desde lista existente)
+10. Blueprints → Obtener Mis Blueprints
+10. Blueprints → Obtener Blueprints Públicos / Buscar
+10. Blueprints → Crear Lista desde Blueprint
+10. Blueprints → Actualizar / Eliminar Blueprint
 ```
 
 #### Paso 7: Funcionalidades Administrativas (⚠️ Solo Admins)
 ```
-13. Admin → Impersonar Usuario
-13. Admin → Consultar Auditoría (filtros: fecha, usuario)
-13. Admin → Finalizar Impersonación
-13. Admin → Health Check Admin
+11. Admin & Security → Impersonar Usuario (por ID o email)
+11. Admin & Security → Consultar Estado de Impersonación
+11. Admin & Security → Auditoría de Impersonaciones (beta)
+11. Admin & Security → Ejecutar Security Test Suite
+11. Admin & Security → Finalizar Impersonación
+```
+
+#### Paso 8: Observabilidad de Caché (♻️ Opcional)
+```
+12.1 Cache Analytics → Métricas en tiempo real / diarias
+12.1 Cache Analytics → Optimization Report
+12.2 Cache Integrity → Scan (GET) y Stats (GET)
+12.2 Cache Integrity → Cleanup (dryRun=true) y Repair
 ```
 
 ### Probar Permisos

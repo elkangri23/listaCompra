@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Lista Compra API",
-    "description": "Colección completa de endpoints para la API de Lista de la Compra Colaborativa - 48 endpoints organizados en 11 categorías (incluye CU-27: Security Testing, CU-29: Categorización Masiva, CU-32: Listas por Ocasión, CU-33: Recomendaciones IA)",
-    "version": "1.4.0",
+    "description": "Colección Postman v2.0.0 - 57 endpoints cubriendo autenticación, gestión colaborativa, inteligencia artificial, plantillas, administración avanzada y observabilidad de caché.",
+    "version": "2.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -55,6 +55,30 @@
       "key": "invitationHash",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "targetUserId",
+      "value": "",
+      "type": "string",
+      "description": "ID del colaborador cuyo permiso se actualiza"
+    },
+    {
+      "key": "invitationId",
+      "value": "",
+      "type": "string",
+      "description": "ID de la invitación a cancelar"
+    },
+    {
+      "key": "adminSessionId",
+      "value": "",
+      "type": "string",
+      "description": "ID opcional de la sesión de impersonación"
+    },
+    {
+      "key": "blueprintId",
+      "value": "",
+      "type": "string",
+      "description": "ID del blueprint a consultar"
     }
   ],
   "item": [
@@ -77,8 +101,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             },
             "description": "Registra un nuevo usuario en el sistema. La contraseña debe tener al menos 8 caracteres, 1 mayúscula, 1 minúscula y 1 número."
           },
@@ -118,8 +147,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "description": "Autentica un usuario y devuelve tokens de acceso. El token se guarda automáticamente en las variables de colección."
           },
@@ -137,8 +171,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/me",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "me"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
             },
             "description": "Obtiene la información del usuario autenticado actual."
           },
@@ -160,8 +199,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/auth/refresh",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "refresh"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
             },
             "description": "Renueva un token de acceso usando el refresh token. (Pendiente de implementar)"
           },
@@ -179,8 +223,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/logout",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "logout"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
             },
             "description": "Cierra la sesión del usuario actual."
           },
@@ -228,8 +277,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/lists",
-              "host": ["{{baseUrl}}"],
-              "path": ["lists"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists"
+              ]
             },
             "description": "Crea una nueva lista de compra. Opcionalmente se puede asociar a una tienda específica."
           },
@@ -247,8 +300,12 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/lists?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["lists"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -276,8 +333,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/lists/{{listId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["lists", "{{listId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists",
+                "{{listId}}"
+              ]
             },
             "description": "Obtiene los detalles de una lista específica por su ID."
           },
@@ -303,8 +365,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/lists/{{listId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["lists", "{{listId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists",
+                "{{listId}}"
+              ]
             },
             "description": "Actualiza los datos de una lista existente. Solo el propietario puede hacerlo."
           },
@@ -322,8 +389,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/lists/{{listId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["lists", "{{listId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists",
+                "{{listId}}"
+              ]
             },
             "description": "Elimina permanentemente una lista y todos sus productos. Solo el propietario puede hacerlo."
           },
@@ -371,8 +443,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/lists/{{listId}}/products",
-              "host": ["{{baseUrl}}"],
-              "path": ["lists", "{{listId}}", "products"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists",
+                "{{listId}}",
+                "products"
+              ]
             },
             "description": "Agrega un nuevo producto a una lista específica."
           },
@@ -390,8 +468,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/lists/{{listId}}/products?comprado=false&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["lists", "{{listId}}", "products"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists",
+                "{{listId}}",
+                "products"
+              ],
               "query": [
                 {
                   "key": "comprado",
@@ -447,8 +531,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/lists/{{listId}}/products/{{productId}}/purchased",
-              "host": ["{{baseUrl}}"],
-              "path": ["lists", "{{listId}}", "products", "{{productId}}", "purchased"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists",
+                "{{listId}}",
+                "products",
+                "{{productId}}",
+                "purchased"
+              ]
             },
             "description": "Marca o desmarca un producto como comprado."
           },
@@ -474,8 +566,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/lists/{{listId}}/products/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["lists", "{{listId}}", "products", "{{productId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists",
+                "{{listId}}",
+                "products",
+                "{{productId}}"
+              ]
             },
             "description": "Actualiza la información de un producto existente."
           },
@@ -493,8 +592,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/lists/{{listId}}/products/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["lists", "{{listId}}", "products", "{{productId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists",
+                "{{listId}}",
+                "products",
+                "{{productId}}"
+              ]
             },
             "description": "Elimina un producto de la lista permanentemente."
           },
@@ -542,8 +648,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/categories",
-              "host": ["{{baseUrl}}"],
-              "path": ["categories"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ]
             },
             "description": "Crea una nueva categoría personalizada para organizar productos."
           },
@@ -561,8 +671,12 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/categories?tiendaId={{storeId}}&activas=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["categories"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ],
               "query": [
                 {
                   "key": "tiendaId",
@@ -598,8 +712,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/categories/{{categoryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["categories", "{{categoryId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories",
+                "{{categoryId}}"
+              ]
             },
             "description": "Actualiza una categoría existente. Solo el creador puede hacerlo."
           },
@@ -617,10 +736,81 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/categories/{{categoryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["categories", "{{categoryId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories",
+                "{{categoryId}}"
+              ]
             },
             "description": "Elimina una categoría. No se puede eliminar si tiene productos asociados."
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Estado Categoría",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}/toggle-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories",
+                "{{categoryId}}",
+                "toggle-status"
+              ]
+            },
+            "description": "Activa o desactiva una categoría existente.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activa\": false\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mover Categoría a Otra Tienda",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}/move-to-store",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories",
+                "{{categoryId}}",
+                "move-to-store"
+              ]
+            },
+            "description": "Reasigna una categoría a una tienda diferente.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tiendaId\": \"{{storeId}}\"\n}"
+            }
           },
           "response": []
         }
@@ -666,8 +856,12 @@
             },
             "url": {
               "raw": "{{baseUrl}}/stores",
-              "host": ["{{baseUrl}}"],
-              "path": ["stores"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores"
+              ]
             },
             "description": "Crea una nueva tienda en el sistema."
           },
@@ -685,8 +879,12 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/stores?page=1&limit=20&activas=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["stores"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -728,8 +926,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/stores/{{storeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["stores", "{{storeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "{{storeId}}"
+              ]
             },
             "description": "Obtiene los detalles de una tienda específica."
           },
@@ -755,8 +958,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/stores/{{storeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["stores", "{{storeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "{{storeId}}"
+              ]
             },
             "description": "Actualiza la información de una tienda existente."
           },
@@ -774,17 +982,80 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/stores/{{storeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["stores", "{{storeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "{{storeId}}"
+              ]
             },
             "description": "Elimina una tienda del sistema."
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Estado Tienda",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}/toggle-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "{{storeId}}",
+                "toggle-status"
+              ]
+            },
+            "description": "Activa o desactiva una tienda en el sistema.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activa\": false\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Categorías de Tienda",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "{{storeId}}",
+                "categories"
+              ]
+            },
+            "description": "Lista las categorías asociadas a una tienda específica."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "06. Invitaciones",
+      "name": "06. Invitaciones & Permisos",
       "item": [
         {
           "name": "Compartir Lista",
@@ -823,8 +1094,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/invitations/{{listId}}/share",
-              "host": ["{{baseUrl}}"],
-              "path": ["invitations", "{{listId}}", "share"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invitations",
+                "{{listId}}",
+                "share"
+              ]
             },
             "description": "Crea una invitación para compartir una lista con otro usuario."
           },
@@ -836,9 +1113,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/invitations/access/{{invitationHash}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["invitations", "access", "{{invitationHash}}"]
+              "raw": "{{baseUrl}}/invitations/{{invitationHash}}/access",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invitations",
+                "{{invitationHash}}",
+                "access"
+              ]
             },
             "description": "Accede a una lista compartida usando el hash de invitación. No requiere autenticación."
           },
@@ -855,9 +1138,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/invitations/{{listId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["invitations", "{{listId}}"]
+              "raw": "{{baseUrl}}/invitations/{{listId}}/list",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invitations",
+                "{{listId}}",
+                "list"
+              ]
             },
             "description": "Obtiene todas las invitaciones activas de una lista. Solo el propietario puede hacerlo."
           },
@@ -879,14 +1168,21 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"permiso\": \"solo-lectura\"\n}"
+              "raw": "{\n  \"nuevoTipoPermiso\": \"ESCRITURA\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/invitations/{{listId}}/permissions/{{invitationHash}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["invitations", "{{listId}}", "permissions", "{{invitationHash}}"]
+              "raw": "{{baseUrl}}/invitations/{{listId}}/permissions/{{targetUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invitations",
+                "{{listId}}",
+                "permissions",
+                "{{targetUserId}}"
+              ]
             },
-            "description": "Actualiza los permisos de una invitación existente."
+            "description": "Actualiza el tipo de permiso asignado a un colaborador específico."
           },
           "response": []
         },
@@ -901,52 +1197,138 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/invitations/{{listId}}/{{invitationHash}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["invitations", "{{listId}}", "{{invitationHash}}"]
+              "raw": "{{baseUrl}}/invitations/{{invitationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invitations",
+                "{{invitationId}}"
+              ]
             },
-            "description": "Cancela una invitación activa, revocando el acceso inmediatamente."
+            "description": "Cancela una invitación pendiente usando su ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Permisos de Lista",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invitations/{{listId}}/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invitations",
+                "{{listId}}",
+                "permissions"
+              ]
+            },
+            "description": "Recupera todos los permisos otorgados para la lista indicada."
+          },
+          "response": []
+        },
+        {
+          "name": "Revocar Permiso de Colaborador",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invitations/{{listId}}/permissions/{{targetUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invitations",
+                "{{listId}}",
+                "permissions",
+                "{{targetUserId}}"
+              ]
+            },
+            "description": "Revoca el acceso de un colaborador específico a la lista."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "07. Desarrollo y Testing",
+      "name": "07. Inteligencia Artificial (IA Core)",
       "item": [
         {
-          "name": "Info Sistema de Eventos",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/dev/events",
-              "host": ["{{baseUrl}}"],
-              "path": ["dev", "events"]
-            },
-            "description": "Obtiene información sobre el estado del sistema de eventos RabbitMQ. Solo disponible en development."
-          },
-          "response": []
-        },
-        {
-          "name": "Reset Sistema de Eventos",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/dev/events",
-              "host": ["{{baseUrl}}"],
-              "path": ["dev", "events"]
-            },
-            "description": "Reinicia el sistema de eventos para testing. Solo disponible en development."
-          },
-          "response": []
-        },
-        {
-          "name": "Publicar Evento de Prueba",
+          "name": "Sugerencias de Categorías (CU-28)",
           "request": {
             "method": "POST",
             "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/category-suggestions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "category-suggestions"
+              ]
+            },
+            "description": "Solicita sugerencias de categorías para un producto utilizando IA.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productName\": \"Café molido 250g\",\n  \"storeName\": \"Mercadona\",\n  \"existingCategories\": [\n    \"Bebidas\",\n    \"Desayuno\"\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Categorización Masiva (CU-29)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 207) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.success && jsonData.data.batchStats) {",
+                  "        console.log('Categorización exitosa:');",
+                  "        console.log('- Total productos:', jsonData.data.batchStats.totalProducts);",
+                  "        console.log('- Exitosos:', jsonData.data.batchStats.successful);",
+                  "        console.log('- Fallidos:', jsonData.data.batchStats.failed);",
+                  "        console.log('- Desde cache:', jsonData.data.batchStats.fromCache);",
+                  "        console.log('- Desde IA:', jsonData.data.batchStats.fromAI);",
+                  "        console.log('- Confianza promedio:', jsonData.data.batchStats.averageConfidence);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -954,21 +1336,74 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipo\": \"TEST_EVENT\",\n  \"datos\": {\n    \"mensaje\": \"Evento de prueba desde Postman\",\n    \"timestamp\": \"2025-10-28T12:00:00Z\"\n  }\n}"
+              "raw": "{\n  \"products\": [\n    {\n      \"nombre\": \"Leche entera Pascual 1L\",\n      \"descripcion\": \"Leche pasteurizada botella 1 litro\"\n    },\n    {\n      \"nombre\": \"Pan integral\"\n    },\n    {\n      \"nombre\": \"Coca Cola 2L\"\n    },\n    {\n      \"nombre\": \"Pechuga de pollo\",\n      \"descripcion\": \"Pollo fresco de granja\"\n    },\n    {\n      \"nombre\": \"Tomates cherry\"\n    }\n  ],\n  \"tiendaId\": \"{{storeId}}\",\n  \"enrichWithExistingCategories\": true\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/dev/events/test",
-              "host": ["{{baseUrl}}"],
-              "path": ["dev", "events", "test"]
+              "raw": "{{baseUrl}}/ai/bulk-categorize",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "bulk-categorize"
+              ]
             },
-            "description": "Publica un evento de prueba para verificar el sistema de mensajería."
+            "description": "🆕 CU-29: Categoriza automáticamente hasta 50 productos en un solo request usando IA (Perplexity Llama 3.1 Sonar). Características:\n\n- 📦 **Batching inteligente**: División automática en sub-lotes de 20 productos\n- 💾 **Cache Redis**: TTL 24h para reducir costos\n- 📊 **Enriquecimiento BD**: Usa categorías existentes de la tienda\n- 🛡️ **Validación 3 niveles**: DTO Zod + Use Case + Service\n- 📈 **Estadísticas completas**: Confidence, sources, timing\n- ⚠️ **Fallos parciales**: Código 207 si algunos productos fallan\n- 🔐 **Rate Limiting**: 5 requests/hora por usuario\n\n**Parámetros:**\n- `products` (array 1-50): Lista de productos con nombre (requerido) y descripción (opcional)\n- `tiendaId` (UUID opcional): Para enriquecer con categorías de esa tienda\n- `enrichWithExistingCategories` (boolean, default true): Si usar categorías de BD\n\n**Respuestas:**\n- `200 OK`: Todos los productos categorizados exitosamente\n- `207 Multi-Status`: Algunos productos fallaron (ver batchStats.failed)\n- `400 Bad Request`: Validación fallida (>50 productos, nombres inválidos, etc.)\n- `429 Too Many Requests`: Rate limit excedido (5 req/hora)\n\n**Ejemplo de respuesta:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"categorizedProducts\": [\n      {\n        \"nombre\": \"Leche entera Pascual 1L\",\n        \"suggestedCategory\": {\n          \"nombre\": \"Lácteos\",\n          \"tiendaId\": \"uuid\",\n          \"confidence\": 95\n        },\n        \"alternativeCategories\": [{\"nombre\": \"Bebidas\", \"confidence\": 60}],\n        \"source\": \"ai\",\n        \"processingTimeMs\": 1250\n      }\n    ],\n    \"batchStats\": {\n      \"totalProducts\": 5,\n      \"successful\": 5,\n      \"failed\": 0,\n      \"fromCache\": 2,\n      \"fromAI\": 3,\n      \"averageConfidence\": 88.5,\n      \"totalProcessingTimeMs\": 3200,\n      \"estimatedTokens\": 450\n    }\n  }\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check IA",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "health"
+              ]
+            },
+            "description": "Verifica el estado de salud del subsistema de IA."
+          },
+          "response": []
+        },
+        {
+          "name": "Telemetría IA (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/info",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "info"
+              ]
+            },
+            "description": "Obtiene métricas agregadas de uso de IA (requiere rol admin)."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "08. Inteligencia Artificial",
+      "name": "08. IA - Listas por Ocasión",
       "item": [
         {
           "name": "Obtener Ocasiones Disponibles",
@@ -977,8 +1412,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/occasion-lists/occasions",
-              "host": ["{{baseUrl}}"],
-              "path": ["occasion-lists", "occasions"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "occasion-lists",
+                "occasions"
+              ]
             },
             "description": "Obtiene la lista de 20 ocasiones predefinidas disponibles para generar listas inteligentes (barbacoa, cena romántica, etc.)."
           },
@@ -1017,8 +1457,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/occasion-lists/generate",
-              "host": ["{{baseUrl}}"],
-              "path": ["occasion-lists", "generate"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "occasion-lists",
+                "generate"
+              ]
             },
             "description": "Genera automáticamente una lista completa de productos usando IA basándose en una ocasión específica. Requiere: occasion (una de las 20 disponibles), numberOfPeople (1-50), budget (1-10000€). Opcional: dietaryRestrictions (máx 10), storeId."
           },
@@ -1040,123 +1485,22 @@
             },
             "url": {
               "raw": "{{baseUrl}}/occasion-lists/preview",
-              "host": ["{{baseUrl}}"],
-              "path": ["occasion-lists", "preview"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "occasion-lists",
+                "preview"
+              ]
             },
             "description": "Genera un preview de lista por ocasión SIN guardarla en la base de datos. Útil para ver qué productos sugeriría la IA antes de crear la lista real. Mismos parámetros que 'Generar Lista por Ocasión'."
           },
           "response": []
-        },
-        {
-          "name": "Categorización Masiva (CU-29)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200 || pm.response.code === 207) {",
-                  "    const jsonData = pm.response.json();",
-                  "    if (jsonData.success && jsonData.data.batchStats) {",
-                  "        console.log('Categorización exitosa:');",
-                  "        console.log('- Total productos:', jsonData.data.batchStats.totalProducts);",
-                  "        console.log('- Exitosos:', jsonData.data.batchStats.successful);",
-                  "        console.log('- Fallidos:', jsonData.data.batchStats.failed);",
-                  "        console.log('- Desde cache:', jsonData.data.batchStats.fromCache);",
-                  "        console.log('- Desde IA:', jsonData.data.batchStats.fromAI);",
-                  "        console.log('- Confianza promedio:', jsonData.data.batchStats.averageConfidence);",
-                  "    }",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"products\": [\n    {\n      \"nombre\": \"Leche entera Pascual 1L\",\n      \"descripcion\": \"Leche pasteurizada botella 1 litro\"\n    },\n    {\n      \"nombre\": \"Pan integral\"\n    },\n    {\n      \"nombre\": \"Coca Cola 2L\"\n    },\n    {\n      \"nombre\": \"Pechuga de pollo\",\n      \"descripcion\": \"Pollo fresco de granja\"\n    },\n    {\n      \"nombre\": \"Tomates cherry\"\n    }\n  ],\n  \"tiendaId\": \"{{storeId}}\",\n  \"enrichWithExistingCategories\": true\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/ai/bulk-categorize",
-              "host": ["{{baseUrl}}"],
-              "path": ["ai", "bulk-categorize"]
-            },
-            "description": "🆕 CU-29: Categoriza automáticamente hasta 50 productos en un solo request usando IA (Perplexity Llama 3.1 Sonar). Características:\n\n- 📦 **Batching inteligente**: División automática en sub-lotes de 20 productos\n- 💾 **Cache Redis**: TTL 24h para reducir costos\n- 📊 **Enriquecimiento BD**: Usa categorías existentes de la tienda\n- 🛡️ **Validación 3 niveles**: DTO Zod + Use Case + Service\n- 📈 **Estadísticas completas**: Confidence, sources, timing\n- ⚠️ **Fallos parciales**: Código 207 si algunos productos fallan\n- 🔐 **Rate Limiting**: 5 requests/hora por usuario\n\n**Parámetros:**\n- `products` (array 1-50): Lista de productos con nombre (requerido) y descripción (opcional)\n- `tiendaId` (UUID opcional): Para enriquecer con categorías de esa tienda\n- `enrichWithExistingCategories` (boolean, default true): Si usar categorías de BD\n\n**Respuestas:**\n- `200 OK`: Todos los productos categorizados exitosamente\n- `207 Multi-Status`: Algunos productos fallaron (ver batchStats.failed)\n- `400 Bad Request`: Validación fallida (>50 productos, nombres inválidos, etc.)\n- `429 Too Many Requests`: Rate limit excedido (5 req/hora)\n\n**Ejemplo de respuesta:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"categorizedProducts\": [\n      {\n        \"nombre\": \"Leche entera Pascual 1L\",\n        \"suggestedCategory\": {\n          \"nombre\": \"Lácteos\",\n          \"tiendaId\": \"uuid\",\n          \"confidence\": 95\n        },\n        \"alternativeCategories\": [{\"nombre\": \"Bebidas\", \"confidence\": 60}],\n        \"source\": \"ai\",\n        \"processingTimeMs\": 1250\n      }\n    ],\n    \"batchStats\": {\n      \"totalProducts\": 5,\n      \"successful\": 5,\n      \"failed\": 0,\n      \"fromCache\": 2,\n      \"fromAI\": 3,\n      \"averageConfidence\": 88.5,\n      \"totalProcessingTimeMs\": 3200,\n      \"estimatedTokens\": 450\n    }\n  }\n}\n```"
-          },
-          "response": []
         }
       ]
     },
     {
-      "name": "09. Dashboard de Monitoreo",
-      "item": [
-        {
-          "name": "Métricas del Sistema",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/dashboard/metrics",
-              "host": ["{{baseUrl}}"],
-              "path": ["dashboard", "metrics"]
-            },
-            "description": "Obtiene métricas completas del sistema: endpoints, cache y sistema."
-          },
-          "response": []
-        },
-        {
-          "name": "Estado de Salud",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/dashboard/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["dashboard", "health"]
-            },
-            "description": "Obtiene el estado de salud de los servicios del sistema."
-          },
-          "response": []
-        },
-        {
-          "name": "Alertas Activas",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/dashboard/alerts",
-              "host": ["{{baseUrl}}"],
-              "path": ["dashboard", "alerts"]
-            },
-            "description": "Obtiene alertas activas del sistema (error rate, response time, cache)."
-          },
-          "response": []
-        },
-        {
-          "name": "Performance Detallado",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/dashboard/performance",
-              "host": ["{{baseUrl}}"],
-              "path": ["dashboard", "performance"]
-            },
-            "description": "Obtiene análisis detallado de performance: endpoints lentos y con errores."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "10. Recomendaciones IA",
+      "name": "09. IA - Recomendaciones Contextuales",
       "item": [
         {
           "name": "Ejemplos de Contexto (Público)",
@@ -1168,8 +1512,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/recommendations/context-examples",
-              "host": ["{{baseUrl}}"],
-              "path": ["recommendations", "context-examples"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recommendations",
+                "context-examples"
+              ]
             },
             "description": "📚 Endpoint público (sin autenticación) que devuelve ejemplos de contextos útiles para mejorar recomendaciones: 'Cena romántica', 'Barbacoa familiar', 'Desayuno fitness', etc. con tips de uso."
           },
@@ -1202,8 +1551,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/recommendations/{{listId}}?creativityLevel=balanced&maxRecommendations=10&excludeExisting=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["recommendations", "{{listId}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recommendations",
+                "{{listId}}"
+              ],
               "query": [
                 {
                   "key": "creativityLevel",
@@ -1285,8 +1639,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/recommendations/{{listId}}/for-product/{{productId}}?creativityLevel=balanced&maxRecommendations=8",
-              "host": ["{{baseUrl}}"],
-              "path": ["recommendations", "{{listId}}", "for-product", "{{productId}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recommendations",
+                "{{listId}}",
+                "for-product",
+                "{{productId}}"
+              ],
               "query": [
                 {
                   "key": "creativityLevel",
@@ -1340,8 +1701,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/recommendations/{{listId}}?context=Cena italiana&creativityLevel=creative&maxRecommendations=12",
-              "host": ["{{baseUrl}}"],
-              "path": ["recommendations", "{{listId}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recommendations",
+                "{{listId}}"
+              ],
               "query": [
                 {
                   "key": "context",
@@ -1369,8 +1735,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/recommendations/{{listId}}?categoryId={{categoryId}}&maxRecommendations=15",
-              "host": ["{{baseUrl}}"],
-              "path": ["recommendations", "{{listId}}"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recommendations",
+                "{{listId}}"
+              ],
               "query": [
                 {
                   "key": "categoryId",
@@ -1390,8 +1761,270 @@
       ]
     },
     {
+      "name": "10. Blueprints / Plantillas",
+      "item": [
+        {
+          "name": "Crear Blueprint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blueprints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blueprints"
+              ]
+            },
+            "description": "Crea un blueprint privado a partir de la lista actual.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Lista semanal saludable\",\n  \"descripcion\": \"Plantilla base para compras saludables\",\n  \"productos\": [\n    {\n      \"nombre\": \"Manzanas\",\n      \"cantidad\": 6\n    },\n    {\n      \"nombre\": \"Pollo\",\n      \"cantidad\": 2,\n      \"categoriaId\": \"{{categoryId}}\"\n    }\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mis Blueprints",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blueprints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blueprints"
+              ]
+            },
+            "description": "Obtiene los blueprints creados por el usuario autenticado."
+          },
+          "response": []
+        },
+        {
+          "name": "Blueprints Públicos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/blueprints/publicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blueprints",
+                "publicos"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "limite",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista blueprints públicos con filtros opcionales."
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Blueprints",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/blueprints/buscar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blueprints",
+                "buscar"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "asado"
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Busca blueprints por nombre o descripción."
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle Blueprint",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blueprints/{{blueprintId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blueprints",
+                "{{blueprintId}}"
+              ]
+            },
+            "description": "Obtiene el detalle completo de un blueprint específico."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Blueprint",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blueprints/{{blueprintId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blueprints",
+                "{{blueprintId}}"
+              ]
+            },
+            "description": "Actualiza nombre, descripción y productos de un blueprint.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Lista semanal actualizada\",\n  \"descripcion\": \"Versión optimizada\",\n  \"publico\": true,\n  \"productos\": [\n    {\n      \"nombre\": \"Arroz integral\",\n      \"cantidad\": 2\n    },\n    {\n      \"nombre\": \"Atún\",\n      \"cantidad\": 4\n    }\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Blueprint",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blueprints/{{blueprintId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blueprints",
+                "{{blueprintId}}"
+              ]
+            },
+            "description": "Elimina un blueprint del usuario."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Lista desde Blueprint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blueprints/{{blueprintId}}/crear-lista",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blueprints",
+                "{{blueprintId}}",
+                "crear-lista"
+              ]
+            },
+            "description": "Genera una nueva lista basada en el blueprint seleccionado.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreLista\": \"Compra semanal desde blueprint\",\n  \"tiendaId\": \"{{storeId}}\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "11. 🛡️ Admin & Security",
       "item": [
+        {
+          "name": "Iniciar Impersonación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/impersonate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "impersonate"
+              ]
+            },
+            "description": "Permite a un administrador impersonar a otro usuario por ID o email.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetUserEmail\": \"usuario@cliente.com\",\n  \"reason\": \"Soporte técnico\",\n  \"durationMinutes\": 30\n}"
+            }
+          },
+          "response": []
+        },
         {
           "name": "Security Test - Vulnerability Scan",
           "request": {
@@ -1399,16 +2032,541 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+                "value": "Bearer {{token}}"
               }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/security/test",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "security", "test"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "security",
+                "test"
+              ]
             },
             "description": "🔍 **Endpoint de Testing de Seguridad Automático**\n\n**Ejecuta una suite completa de tests de vulnerabilidades:**\n- ✅ XSS Pattern Detection (6 vectores)\n- ✅ SQL Injection Detection (7 vectores)\n- ✅ Rate Limiting Validation\n- ✅ Security Headers Verification\n- ✅ HTTPS/SSL Configuration Check\n- ✅ Authentication Security Audit\n- ✅ Database Security Review\n\n**Response incluye:**\n- 📊 Security Score (0-100)\n- 📈 Total tests ejecutados\n- ❌ Tests fallidos con recomendaciones\n- 📋 Reporte detallado por severidad\n\n**⚠️ SOLO ADMINISTRADORES**\nRequiere rol 'admin' para acceder."
+          },
+          "response": []
+        },
+        {
+          "name": "Estado de Impersonación",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/impersonate/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "impersonate",
+                "status"
+              ]
+            },
+            "description": "Devuelve si existe una sesión de impersonación activa."
+          },
+          "response": []
+        },
+        {
+          "name": "Finalizar Impersonación",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/impersonate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "impersonate"
+              ]
+            },
+            "description": "Termina la sesión de impersonación actual.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"{{adminSessionId}}\",\n  \"reason\": \"Incidencia resuelta\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Auditoría de Impersonaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/audit/impersonations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "audit",
+                "impersonations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista el historial de sesiones de impersonación."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "12. ♻️ Cache Observability",
+      "item": [
+        {
+          "name": "12.1 Cache Analytics",
+          "item": [
+            {
+              "name": "Cache Analytics - Realtime",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/analytics/cache/realtime",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "analytics",
+                    "cache",
+                    "realtime"
+                  ]
+                },
+                "description": "Obtiene métricas en tiempo real del cache Redis."
+              },
+              "response": []
+            },
+            {
+              "name": "Cache Analytics - Daily Metrics",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/analytics/cache/daily",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "analytics",
+                    "cache",
+                    "daily"
+                  ]
+                },
+                "description": "Métricas agregadas de las últimas 24 horas."
+              },
+              "response": []
+            },
+            {
+              "name": "Cache Analytics - Optimization Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/analytics/cache/optimization",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "analytics",
+                    "cache",
+                    "optimization"
+                  ]
+                },
+                "description": "Genera recomendaciones de optimización de cache."
+              },
+              "response": []
+            },
+            {
+              "name": "Cache Analytics - Dashboard Dataset",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/analytics/cache/dashboard",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "analytics",
+                    "cache",
+                    "dashboard"
+                  ]
+                },
+                "description": "Devuelve datos formateados para dashboards de monitoreo."
+              },
+              "response": []
+            },
+            {
+              "name": "Cache Analytics - Health",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/analytics/cache/health",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "analytics",
+                    "cache",
+                    "health"
+                  ]
+                },
+                "description": "Verifica el estado general del sistema de cache."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "12.2 Cache Integrity (Admin)",
+          "item": [
+            {
+              "name": "Cache Integrity - Scan",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/cache/integrity/scan",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "cache",
+                    "integrity",
+                    "scan"
+                  ],
+                  "query": [
+                    {
+                      "key": "pattern",
+                      "value": "*"
+                    }
+                  ]
+                },
+                "description": "Escanea el cache en busca de datos corruptos."
+              },
+              "response": []
+            },
+            {
+              "name": "Cache Integrity - Validate Key",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/cache/integrity/validate",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "cache",
+                    "integrity",
+                    "validate"
+                  ]
+                },
+                "description": "Valida la integridad de una clave específica.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"key\": \"ai:category:leche\",\n  \"dataType\": \"ai_suggestion\"\n}"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cache Integrity - Stats",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/cache/integrity/stats",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "cache",
+                    "integrity",
+                    "stats"
+                  ]
+                },
+                "description": "Obtiene métricas agregadas de integridad de cache."
+              },
+              "response": []
+            },
+            {
+              "name": "Cache Integrity - Cleanup",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/cache/integrity/cleanup",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "cache",
+                    "integrity",
+                    "cleanup"
+                  ]
+                },
+                "description": "Elimina claves corruptas (usar dryRun en primera ejecución).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"pattern\": \"ai:*\",\n  \"dataType\": \"ai_suggestion\",\n  \"dryRun\": true\n}"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cache Integrity - Repair",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/cache/integrity/repair",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "cache",
+                    "integrity",
+                    "repair"
+                  ]
+                },
+                "description": "Repara claves específicas regenerando su información.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"keys\": [\n    \"ai:category:leche\"\n  ],\n  \"dataType\": \"ai_suggestion\"\n}"
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13. Dashboard & Monitoring",
+      "item": [
+        {
+          "name": "Métricas del Sistema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "metrics"
+              ]
+            },
+            "description": "Obtiene métricas completas del sistema: endpoints, cache y sistema."
+          },
+          "response": []
+        },
+        {
+          "name": "Estado de Salud",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "health"
+              ]
+            },
+            "description": "Obtiene el estado de salud de los servicios del sistema."
+          },
+          "response": []
+        },
+        {
+          "name": "Alertas Activas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "alerts"
+              ]
+            },
+            "description": "Obtiene alertas activas del sistema (error rate, response time, cache)."
+          },
+          "response": []
+        },
+        {
+          "name": "Performance Detallado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/performance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "performance"
+              ]
+            },
+            "description": "Obtiene análisis detallado de performance: endpoints lentos y con errores."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "14. Dev Utilities (solo dev/test)",
+      "item": [
+        {
+          "name": "Info Sistema de Eventos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dev/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "events"
+              ]
+            },
+            "description": "Obtiene información sobre el estado del sistema de eventos RabbitMQ. Solo disponible en development."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Sistema de Eventos",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dev/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "events"
+              ]
+            },
+            "description": "Reinicia el sistema de eventos para testing. Solo disponible en development."
+          },
+          "response": []
+        },
+        {
+          "name": "Publicar Evento de Prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"TEST_EVENT\",\n  \"datos\": {\n    \"mensaje\": \"Evento de prueba desde Postman\",\n    \"timestamp\": \"2025-10-28T12:00:00Z\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dev/events/test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "events",
+                "test"
+              ]
+            },
+            "description": "Publica un evento de prueba para verificar el sistema de mensajería."
           },
           "response": []
         }
