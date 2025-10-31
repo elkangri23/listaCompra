@@ -18,6 +18,13 @@ import { InvalidValueError } from '../../../src/domain/errors/DomainError';
 
 describe('Entidad Lista', () => {
 
+
+const createDateMock =
+  utils.createDate as jest.MockedFunction<
+    typeof import('../../../src/shared/utils')['createDate']
+  >;
+
+describe('Entidad Lista', () => {
   const advanceTime = (ms: number) => {
     currentTime += ms;
   };
