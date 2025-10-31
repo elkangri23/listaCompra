@@ -1,18 +1,18 @@
 # 📊 ESTADO DEL PROYECTO - Lista de la Compra Colaborativa
 
-**Última actualización**: 30 de Octubre, 2025 - 14:17 
-**Versión API**: 1.4.0  
-**Endpoints totales**: 48 (+ Security Test)  
-**Coverage**: 18.94%  
-**Tests unitarios**: **416/416 pasando (100%)** 🎉  
-**Tests totales**: **483/531 pasando (91%)**  
+**Última actualización**: 31 de Octubre, 2025 - 19:45
+**Versión API**: 2.0.0
+**Endpoints totales**: 57 (+ Security Test)
+**Coverage**: 18.94%
+**Tests unitarios**: **428/428 pasando (100%)** 🎉
+**Tests totales**: **495/543 pasando (91%)**
 **Estado general**: 🟢 **PRODUCTION-READY** (9.5/10) 🚀
 
 ---
 
 ## 📈 RESUMEN EJECUTIVO
 
-### ✅ Fases Completadas: **13.5 de 17** (79.41%)
+### ✅ Fases Completadas: **14 de 17** (82.35%)
 
 | Fase | Estado | Casos de Uso | Completitud |
 |------|--------|--------------|-------------|
@@ -36,7 +36,36 @@
 
 ---
 
-## 🎯 AVANCES RECIENTES (30 Oct 2025)
+## 🎯 AVANCES RECIENTES (31 Oct 2025)
+
+### ✅ **NUEVO: Observabilidad y Gobernanza de Caché (Fase 12 ampliada)**
+
+#### **📈 Analytics Operacional de Redis**
+- ✅ **Suite de métricas en tiempo real**: `/analytics/cache/realtime`, `/analytics/cache/daily`, `/analytics/cache/dashboard`
+- ✅ **Reporte de optimización automática**: `/analytics/cache/optimization` genera recomendaciones priorizadas
+- ✅ **Health check dedicado**: `/analytics/cache/health` valida ratio de aciertos, volumen y degradaciones
+- ✅ **Respuestas enriquecidas**: timestamps ISO, ventanas temporales y estados operativos listos para dashboards
+- ✅ **Integración Swagger & Postman**: endpoints documentados y disponibles para QA continuo
+
+#### **🛡️ Integridad Administrada de Cache**
+- ✅ **Escaneo profundo**: `/admin/cache/integrity/scan` con filtros por patrón y tipo de dato (IA, sesiones, blueprints…)
+- ✅ **Validación puntual**: `/admin/cache/integrity/validate` verifica claves críticas antes de servirlas
+- ✅ **Limpieza segura**: `/admin/cache/integrity/cleanup` soporta modo `dryRun` y reporta severidad
+- ✅ **Estadísticas accionables**: `/admin/cache/integrity/stats` expone métricas, health y recomendaciones
+- ✅ **Reparación selectiva**: `/admin/cache/integrity/repair` automatiza la regeneración de entradas corruptas
+- ✅ **Hardening operativo**: logs estructurados, enforcement admin + rate limiting dedicado
+
+### ✅ **COMPLETADO: Sincronización Tiempo Real Colaborativa (CU-21)**
+
+#### **⚡ Actualizaciones instantáneas**
+- ✅ Difusión en tiempo real de cambios de listas, productos y permisos
+- ✅ Canales dedicados por lista con control de concurrencia optimista
+- ✅ Eventos consistentes entre clientes gracias a integración con Outbox
+
+#### **🔔 Experiencia colaborativa enriquecida**
+- ✅ Gestión de sesiones colaborativas con reintentos y confirmaciones de entrega
+- ✅ Supervisión operativa mediante métricas en `/analytics/cache/realtime`
+- ✅ Documentación completa en Swagger y Postman para flujos colaborativos
 
 ### ✅ **COMPLETADO: Sistema de Seguridad Production-Ready (Fase 12)**
 
@@ -110,6 +139,13 @@
 - ✅ Graceful shutdown en close() method
 - ✅ Error handling en initializeRabbitMQ
 
+### ✅ **QA Refuerzo: Repositorios In-Memory Con Cobertura Total**
+- ✅ Nuevas suites para `InMemoryListaRepository` (7 tests) y `InMemoryUsuarioRepository` (5 tests)
+- ✅ Fixtures deterministas con `Lista.create` y `Usuario.create` para evitar race conditions
+- ✅ Validación de paginación, filtros avanzados, normalización de nombres y soft-delete
+- ✅ Verificaciones de integridad para `findByIdAndOwner`, `findByEmail` y sincronización de timestamps
+- ✅ Scripts incorporados a pipelines de QA y Postman auto-sync
+
 ### ✅ **COMPLETADO: Test Fixes Críticos (9 tests)**
 - 🔧 **ServerDependencies**: aiController añadido en 6 tests E2E
 - 🤖 **IA Service Mocks**: bulkCategorizeProducts en 2 use case tests
@@ -119,7 +155,7 @@
 
 ## 🎯 CASOS DE USO - ESTADO DETALLADO
 
-### ✅ **Completamente Implementados (27 de 33)**
+### ✅ **Completamente Implementados (28 de 33)**
 
 #### **Autenticación y Usuarios** (2/2)
 - ✅ **CU-01**: Registro de usuario - `RegisterUser` use case
@@ -150,6 +186,13 @@
 - ✅ **CU-16**: Acceder a lista compartida - `AccessSharedList` use case
 - ✅ **CU-17**: Gestionar permisos - `ManagePermissions` use case
 - ✅ **CU-18**: Cancelar invitación - `CancelInvitation` use case
+
+#### **Sincronización Tiempo Real** (1/1)
+- ✅ **CU-21**: Sincronización en tiempo real con WebSockets y actualizaciones instantáneas
+  - ✅ Broadcast de cambios de listas y productos en canales por lista
+  - ✅ Gestión de sesiones colaborativas con control de concurrencia optimista
+  - ✅ Eventos `list.updated`, `product.updated` y `permission.changed` propagados en tiempo real
+  - ✅ Integración con Outbox para garantizar entrega y reintentos
 
 #### **Notificaciones** (1/1)
 - ✅ **CU-19**: Sistema de notificaciones - **100% implementado** 🎉
@@ -185,7 +228,7 @@
 
 ---
 
-### ⏳ **Pendientes de Implementar (6 de 33)**
+### ⏳ **Pendientes de Implementar (5 de 33)**
 
 #### **Baja Prioridad (Futuras Versiones)**
 1. ❌ **CU-20**: Historial de cambios
@@ -193,28 +236,24 @@
    - Auditoría de productos
    - API para consultar historial
 
-2. ❌ **CU-21**: Sincronización en tiempo real
-   - WebSockets/SSE
-   - Notificaciones push
-
-3. ❌ **CU-30**: Alertas proactivas
+2. ❌ **CU-30**: Alertas proactivas
    - Worker para monitoreo de precios
    - Notificaciones de ofertas
 
-4. ❌ **CU-31**: Dashboard de análisis
+3. ❌ **CU-31**: Dashboard de análisis
    - Insights de frecuencia
    - Patrones estacionales
    - Métricas personalizadas
    - Actualización colaborativa
 
 #### **Media Prioridad**
-5. ❌ **CU-30**: Alertas proactivas (IA)
+4. ❌ **CU-30**: Alertas proactivas (IA)
    - Monitoreo de precios
    - Notificaciones automáticas
    - Sistema de ofertas
 
 #### **Baja Prioridad**
-7. ❌ **CU-31**: Búsqueda y filtrado avanzado
+5. ❌ **CU-31**: Búsqueda y filtrado avanzado
    - Filtros múltiples
    - Ordenamiento complejo
    - Búsqueda fulltext
@@ -281,75 +320,87 @@
 
 ---
 
-## 📊 ENDPOINTS REST (47 TOTALES)
+## 📊 ENDPOINTS REST (57 TOTALES)
 
-### **Autenticación** (2)
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/login`
+### **Autenticación** (5)
+- `POST /api/v1/auth/register` - Registrar usuario
+- `POST /api/v1/auth/login` - Obtener tokens
+- `POST /api/v1/auth/refresh` - Renovar access token
+- `POST /api/v1/auth/logout` - Cerrar sesión y revocar refresh token
+- `GET /api/v1/auth/me` - Perfil del usuario autenticado
 
-### **Listas** (6)
-- `GET /api/v1/lists` - Obtener listas del usuario
-- `POST /api/v1/lists` - Crear lista
-- `GET /api/v1/lists/:id` - Obtener lista específica
-- `PUT /api/v1/lists/:id` - Actualizar lista
-- `DELETE /api/v1/lists/:id` - Eliminar lista
-- `POST /api/v1/lists/:id/share` - Compartir lista
+### **Listas** (5)
+- `GET /api/v1/lists` - Listas paginadas del propietario
+- `POST /api/v1/lists` - Crear lista de compra
+- `GET /api/v1/lists/:id` - Obtener detalle por ID
+- `PUT /api/v1/lists/:id` - Actualizar metadatos de la lista
+- `DELETE /api/v1/lists/:id` - Eliminación lógica/permanente
 
-### **Productos** (6)
-- `GET /api/v1/lists/:listId/products` - Obtener productos
-- `POST /api/v1/lists/:listId/products` - Añadir producto
-- `GET /api/v1/products/:id` - Obtener producto
-- `PUT /api/v1/products/:id` - Actualizar producto
-- `PATCH /api/v1/products/:id/purchase` - Marcar como comprado
-- `DELETE /api/v1/products/:id` - Eliminar producto
+### **Productos** (5)
+- `GET /api/v1/lists/:listaId/products` - Obtener productos con filtros
+- `POST /api/v1/lists/:listaId/products` - Añadir producto a lista
+- `PUT /api/v1/lists/:listaId/products/:productId` - Editar producto
+- `PATCH /api/v1/lists/:listaId/products/:productId/purchased` - Marcar como comprado
+- `DELETE /api/v1/lists/:listaId/products/:productId` - Eliminar producto
 
-### **Categorías** (5)
-- `GET /api/v1/categories` - Todas las categorías
-- `GET /api/v1/stores/:storeId/categories` - Por tienda
-- `POST /api/v1/categories` - Crear categoría
-- `PUT /api/v1/categories/:id` - Actualizar categoría
-- `DELETE /api/v1/categories/:id` - Eliminar categoría
+### **Categorías** (6)
+- `GET /api/v1/categories` - Catálogo con filtros por tienda/estado
+- `POST /api/v1/categories` - Crear categoría personalizada
+- `PUT /api/v1/categories/:id` - Actualizar nombre, color o metadata
+- `DELETE /api/v1/categories/:id` - Soft delete de categoría
+- `PATCH /api/v1/categories/:id/toggle-status` - Activar/desactivar categoría
+- `PUT /api/v1/categories/:id/move-to-store` - Reasignar categoría a tienda
 
-### **Tiendas** (4)
-- `GET /api/v1/stores` - Todas las tiendas
+### **Tiendas** (7)
+- `GET /api/v1/stores` - Listado con paginación y filtros
 - `POST /api/v1/stores` - Crear tienda
-- `PUT /api/v1/stores/:id` - Actualizar tienda
+- `GET /api/v1/stores/:id` - Obtener tienda por ID
+- `PUT /api/v1/stores/:id` - Actualizar datos de tienda
 - `DELETE /api/v1/stores/:id` - Eliminar tienda
+- `PATCH /api/v1/stores/:id/toggle-status` - Cambiar estado activo
+- `GET /api/v1/stores/:id/categories` - Categorías asociadas a la tienda
 
-### **Invitaciones** (4)
-- `POST /api/v1/invitations/:hash/accept` - Aceptar invitación
-- `POST /api/v1/invitations/:id/permissions` - Gestionar permisos
-- `DELETE /api/v1/invitations/:id` - Cancelar invitación
-- `GET /api/v1/invitations/list/:listId` - Obtener invitaciones
+### **Invitaciones y Permisos** (7)
+- `POST /api/v1/invitations/:listaId/share` - Generar invitación con hash seguro
+- `GET /api/v1/invitations/:hash/access` - Acceder a lista compartida
+- `GET /api/v1/invitations/:listaId/list` - Listar invitaciones activas
+- `GET /api/v1/invitations/:listaId/permissions` - Permisos otorgados
+- `PUT /api/v1/invitations/:listaId/permissions/:targetUsuarioId` - Cambiar nivel de permiso
+- `DELETE /api/v1/invitations/:listaId/permissions/:targetUsuarioId` - Revocar permisos
+- `DELETE /api/v1/invitations/:invitacionId` - Cancelar invitación pendiente
 
-### **Blueprints** (6)
-- `GET /api/v1/blueprints` - Obtener blueprints usuario
-- `GET /api/v1/blueprints/:id` - Obtener blueprint específico
-- `POST /api/v1/blueprints` - Crear blueprint
-- `POST /api/v1/blueprints/:id/create-list` - Crear lista desde blueprint
+### **Blueprints / Plantillas** (8)
+- `POST /api/v1/blueprints` - Crear blueprint privado
+- `GET /api/v1/blueprints` - Listar blueprints del usuario
+- `GET /api/v1/blueprints/publicos` - Catálogo público
+- `GET /api/v1/blueprints/buscar` - Buscador avanzado por etiquetas
+- `GET /api/v1/blueprints/:id` - Detalle de blueprint
 - `PUT /api/v1/blueprints/:id` - Actualizar blueprint
 - `DELETE /api/v1/blueprints/:id` - Eliminar blueprint
+- `POST /api/v1/blueprints/:id/crear-lista` - Generar lista desde blueprint
 
-### **IA - Categorización** (3)
-- `POST /api/v1/ai/category-suggestions` - Sugerencias de categoría
+### **IA - Categorización** (4)
+- `POST /api/v1/ai/category-suggestions` - Sugerencias unitarias
+- `POST /api/v1/ai/bulk-categorize` - Categorización masiva (CU-29)
 - `GET /api/v1/ai/health` - Health check IA
-- `GET /api/v1/ai/info` - Info sistema IA (admin)
+- `GET /api/v1/ai/info` - Telemetría avanzada (solo admin)
 
 ### **IA - Listas por Ocasión** (3)
 - `GET /api/v1/occasion-lists/occasions` - Ocasiones disponibles
 - `POST /api/v1/occasion-lists/generate` - Generar lista
 - `POST /api/v1/occasion-lists/preview` - Preview sin guardar
 
-### **IA - Recomendaciones** (5)
-- `GET /api/v1/recommendations/context-examples` - Ejemplos contexto (público)
-- `GET /api/v1/recommendations/:listId` - Recomendaciones generales
-- `GET /api/v1/recommendations/:listId/for-product/:productId` - Específicas
+### **IA - Recomendaciones** (3)
+- `GET /api/v1/recommendations/context-examples` - Casos de uso y prompts sugeridos
+- `GET /api/v1/recommendations/:listId` - Recomendaciones contextuales para la lista
+- `GET /api/v1/recommendations/:listId/for-product/:productId` - Complementos focalizados
 
-### **Administración** (4)
-- `POST /api/v1/admin/impersonate/:userId` - Impersonar usuario
-- `POST /api/v1/admin/end-impersonation` - Finalizar impersonación
-- `GET /api/v1/admin/audit-logs` - Logs de auditoría
-- `GET /api/v1/admin/users` - Gestión de usuarios
+### **Administración** (5)
+- `POST /api/v1/admin/impersonate` - Iniciar impersonación (por ID o email)
+- `DELETE /api/v1/admin/impersonate` - Finalizar impersonación activa
+- `GET /api/v1/admin/impersonate/status` - Estado actual de impersonación
+- `GET /api/v1/admin/audit/impersonations` - Auditoría histórica (beta)
+- `GET /api/v1/admin/security/test` - Suite automática de seguridad
 
 ### **Dashboard/Monitoreo** (4)
 - `GET /api/v1/dashboard/metrics` - Métricas del sistema
@@ -357,14 +408,33 @@
 - `GET /api/v1/dashboard/alerts` - Alertas activas
 - `GET /api/v1/dashboard/performance` - Análisis de performance
 
+### **Cache Analytics** (5)
+- `GET /api/v1/analytics/cache/realtime` - Métricas últimos 5 minutos
+- `GET /api/v1/analytics/cache/daily` - Historial 24h de operaciones
+- `GET /api/v1/analytics/cache/optimization` - Recomendaciones automáticas
+- `GET /api/v1/analytics/cache/dashboard` - Dataset listo para dashboards
+- `GET /api/v1/analytics/cache/health` - Estado y ratio de aciertos
+
+### **Cache Integrity (Admin)** (5)
+- `GET /api/v1/admin/cache/integrity/scan` - Escaneo completo por patrón/tipo
+- `POST /api/v1/admin/cache/integrity/validate` - Validar clave específica
+- `DELETE /api/v1/admin/cache/integrity/cleanup` - Limpiar datos corruptos (dryRun soportado)
+- `GET /api/v1/admin/cache/integrity/stats` - Estadísticas y health global
+- `POST /api/v1/admin/cache/integrity/repair` - Reparación selectiva de claves
+
+### **Desarrollo (solo dev/test)** (3)
+- `GET /api/v1/dev/events` - Listar eventos publicados
+- `DELETE /api/v1/dev/events` - Resetear eventos de prueba
+- `POST /api/v1/dev/events/test` - Publicar evento de diagnóstico
+
 ---
 
 ## 🧪 TESTING
 
 ### **Estado Actual** 🎉 **TESTING UNITARIOS 100% COMPLETADO**
-- **Tests totales**: 543 tests
-- **Tests unitarios**: **416/416 pasando (100%)** 🎊
-- **Tests totales**: **483/531 pasando (91%)**
+- **Tests totales**: 543 tests (12 nuevos unitarios incorporados)
+- **Tests unitarios**: **428/428 pasando (100%)** 🎊
+- **Tests totales**: **495/543 pasando (91%)**
 - **Tests E2E**: 48 fallando (3 suites), 1 pasando
 - **Tests skipped**: 12 (WIP/experimental)
 - **Coverage**: 18.94%
@@ -372,7 +442,7 @@
 ### **Sprint 2 - Testing 100% COMPLETADO** 🎉
 **Fecha**: 30 Oct 2025  
 **Tests corregidos**: 11 archivos  
-**Resultado**: **416/416 tests unitarios pasando (100%)** ✅
+**Resultado**: **428/428 tests unitarios pasando (100%)** ✅
 
 #### **Archivos Corregidos** ✅
 1. ✅ `Password.test.ts` - 15/15 tests (toString security feature)
@@ -388,7 +458,7 @@
 11. ✅ TypeScript: 0 errores de compilación
 
 ### **Distribución**
-- **Unit tests**: **416/416 pasando (100%)** 🎊
+- **Unit tests**: **428/428 pasando (100%)** 🎊
 - **Integration tests**: 67/67 pasando (100%)
 - **E2E tests**: 1/49 pasando (3 suites fallando, 48 tests pendientes)
 
@@ -472,7 +542,7 @@
 
 ### **6. Documentación Interactiva**
 - Swagger/OpenAPI completo
-- 47 endpoints documentados
+- 57 endpoints documentados
 - UI interactiva en `/api/docs`
 - Schemas detallados
 
@@ -496,30 +566,24 @@
 - [ ] API para consultar historial
 - [ ] Tests completos
 
-#### 3. **Sincronización Tiempo Real (CU-21)** - 3-5 días
-- [ ] Implementar WebSockets/SSE
-- [ ] Notificaciones push
-- [ ] Actualización colaborativa
-- [ ] Tests de concurrencia
-
 ### **🟢 BAJA PRIORIDAD (Funcionalidades Adicionales)**
 
-#### 4. **Alertas Proactivas IA (CU-30)** - 3-4 días
+#### 3. **Alertas Proactivas IA (CU-30)** - 3-4 días
 - [ ] Worker monitoreo precios
 - [ ] Sistema de alertas
 - [ ] Notificaciones automáticas
 
-#### 5. **Dashboard de Análisis IA (CU-31)** - 2-3 días
+#### 4. **Dashboard de Análisis IA (CU-31)** - 2-3 días
 - [ ] Insights de frecuencia
 - [ ] Patrones estacionales
 - [ ] Métricas personalizadas
 
-#### 6. **Búsqueda Avanzada** - 1-2 días
+#### 5. **Búsqueda Avanzada** - 1-2 días
 - [ ] Filtros múltiples
 - [ ] Búsqueda fulltext
 - [ ] Ordenamiento complejo
 
-#### 7. **Documentación Avanzada** - 1-2 días
+#### 6. **Documentación Avanzada** - 1-2 días
 - [ ] Crear docs/architecture.md detallado
 - [ ] Crear docs/deployment.md
 - [ ] Guía de contribución
@@ -539,7 +603,7 @@
 
 ### **✅ Sprint Completado (30 Oct 2025)**
 1. ✅ **Sistema de Seguridad Production-Ready** (CU-27) - COMPLETADO
-2. ✅ **Testing Unitarios 100%** (416/416 tests) - COMPLETADO
+2. ✅ **Testing Unitarios 100%** (428/428 tests) - COMPLETADO
 3. ✅ **Sistema de Notificaciones** (CU-19) - COMPLETADO
 4. ✅ **Funcionalidades IA Avanzadas** (CU-28, CU-29, CU-32, CU-33) - COMPLETADO
 
@@ -550,8 +614,7 @@
 
 ### **🚀 Sprint Opcional 2 (1 semana) - Funcionalidades Adicionales**
 2. ⏳ **Historial de Cambios** (CU-20): Auditoría completa de productos
-3. ⏳ **Sincronización Tiempo Real** (CU-21): WebSockets para colaboración
-4. ⏳ **Documentación Avanzada**: Arquitectura y deployment detallados
+3. ⏳ **Documentación Avanzada**: Arquitectura y deployment detallados
 
 ### **🌟 Sprint Opcional 3 (1 semana) - Funcionalidades Premium**
 5. ⏳ **Alertas Proactivas IA** (CU-30): Monitoreo de precios automático
@@ -561,8 +624,8 @@
 ### **📋 Estado Actual del Proyecto**
 - **🟢 PRODUCTION-READY**: Sistema completamente funcional
 - **🛡️ Seguridad**: 9.5/10 (Enterprise grade)
-- **🧪 Testing**: 483/531 tests pasando (91%)
-- **📊 Casos de Uso**: 27/33 implementados (82%)
+- **🧪 Testing**: 495/543 tests pasando (91%)
+- **📊 Casos de Uso**: 28/33 implementados (85%)
 - **⚡ Performance**: Optimizado con Redis cache
 - **📚 Documentación**: Swagger completo con 48 endpoints
 
@@ -597,7 +660,7 @@
 1. ✅ **Arquitectura hexagonal** completa y funcional
 2. ✅ **3 funcionalidades de IA** implementadas y operativas
 3. ✅ **Sistema de seguridad** de clase empresarial (9.1/10)
-4. ✅ **47 endpoints REST** documentados con Swagger
+4. ✅ **57 endpoints REST** documentados con Swagger
 5. ✅ **380+ tests** con alta cobertura
 6. ✅ **Patrón Outbox** implementado
 7. ✅ **Sistema de blueprints** completo

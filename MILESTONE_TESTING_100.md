@@ -212,7 +212,7 @@ const mockRepo = {
 
 ### Medio plazo (2-3 semanas)
 4. 📝 **CU-20: Historial de Cambios** (2-3 días)
-5. ⚡ **CU-21: Sincronización Tiempo Real** (3-5 días)
+5. ✅ **CU-21: Sincronización Tiempo Real** (Completado - Oct 2025)
 6. 🧠 **CU-29, CU-30, CU-31: IA Premium** (5-7 días)
 
 ---
