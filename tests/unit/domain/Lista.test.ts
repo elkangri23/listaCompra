@@ -1,11 +1,22 @@
+const initialDate = new Date('2024-01-01T12:00:00.000Z');
+let currentTime = initialDate.getTime();
+
+const createDateMock = jest.fn((date?: string | Date) => {
+  if (date) {
+    return date instanceof Date ? date : new Date(date);
+  }
+  return new Date(currentTime);
+});
+
+jest.mock('../../../src/shared/utils', () => ({
+  ...(jest.requireActual('../../../src/shared/utils') as Record<string, unknown>),
+  createDate: (date?: string | Date) => createDateMock(date),
+}));
+
 import { Lista } from '../../../src/domain/entities/Lista';
 import { InvalidValueError } from '../../../src/domain/errors/DomainError';
-import * as utils from '../../../src/shared/utils';
 
 describe('Entidad Lista', () => {
-  const initialDate = new Date('2024-01-01T12:00:00.000Z');
-  let currentTime: number;
-  let createDateSpy: jest.SpiedFunction<typeof utils.createDate>;
 
   const advanceTime = (ms: number) => {
     currentTime += ms;
@@ -13,18 +24,16 @@ describe('Entidad Lista', () => {
 
   beforeEach(() => {
     currentTime = initialDate.getTime();
-    createDateSpy = jest
-      .spyOn(utils, 'createDate')
-      .mockImplementation((date?: string | Date) => {
-        if (date) {
-          return date instanceof Date ? date : new Date(date);
-        }
-        return new Date(currentTime);
-      });
+    createDateMock.mockImplementation((date?: string | Date) => {
+      if (date) {
+        return date instanceof Date ? date : new Date(date);
+      }
+      return new Date(currentTime);
+    });
   });
 
   afterEach(() => {
-    createDateSpy.mockRestore();
+    createDateMock.mockReset();
   });
 
   const validListaData = {
