@@ -1,7 +1,32 @@
 import { Lista } from '../../../src/domain/entities/Lista';
 import { InvalidValueError } from '../../../src/domain/errors/DomainError';
+import * as utils from '../../../src/shared/utils';
 
 describe('Entidad Lista', () => {
+  const initialDate = new Date('2024-01-01T12:00:00.000Z');
+  let currentTime: number;
+  let createDateSpy: jest.SpiedFunction<typeof utils.createDate>;
+
+  const advanceTime = (ms: number) => {
+    currentTime += ms;
+  };
+
+  beforeEach(() => {
+    currentTime = initialDate.getTime();
+    createDateSpy = jest
+      .spyOn(utils, 'createDate')
+      .mockImplementation((date?: string | Date) => {
+        if (date) {
+          return date instanceof Date ? date : new Date(date);
+        }
+        return new Date(currentTime);
+      });
+  });
+
+  afterEach(() => {
+    createDateSpy.mockRestore();
+  });
+
   const validListaData = {
     nombre: 'Lista de Supermercado',
     descripcion: 'Lista semanal de compras',
@@ -143,15 +168,15 @@ describe('Entidad Lista', () => {
       }
     });
 
-    it('debería actualizar el nombre correctamente', async () => {
-      // Pequeño delay para asegurar fechas diferentes
-      await new Promise(resolve => setTimeout(resolve, 1));
-      
+    it('debería actualizar el nombre correctamente', () => {
       const fechaOriginal = lista.fechaActualizacion.getTime();
+      advanceTime(1);
+      const expectedTimestamp = initialDate.getTime() + 1;
       const result = lista.actualizarNombre('Nuevo Nombre');
 
       expect(result.isSuccess).toBe(true);
       expect(lista.nombre).toBe('Nuevo Nombre');
+      expect(lista.fechaActualizacion.getTime()).toBe(expectedTimestamp);
       expect(lista.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
 
@@ -194,15 +219,16 @@ describe('Entidad Lista', () => {
       }
     });
 
-    it('debería actualizar la descripción correctamente', async () => {
-      await new Promise(resolve => setTimeout(resolve, 1));
-      
+    it('debería actualizar la descripción correctamente', () => {
       const fechaOriginal = lista.fechaActualizacion.getTime();
+      advanceTime(1);
+      const expectedTimestamp = initialDate.getTime() + 1;
       const result = lista.actualizarDescripcion('Nueva descripción');
 
       expect(result.isSuccess).toBe(true);
       expect(lista.descripcion).toBe('Nueva descripción');
-      expect(lista.fechaActualizacion.getTime()).toBeGreaterThan(fechaOriginal);
+      expect(lista.fechaActualizacion.getTime()).toBe(expectedTimestamp);
+      expect(lista.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
 
     it('debería permitir descripción vacía (null)', () => {
@@ -241,15 +267,16 @@ describe('Entidad Lista', () => {
       }
     });
 
-    it('debería actualizar la tienda correctamente', async () => {
-      await new Promise(resolve => setTimeout(resolve, 1));
-      
+    it('debería actualizar la tienda correctamente', () => {
       const fechaOriginal = lista.fechaActualizacion.getTime();
+      advanceTime(1);
+      const expectedTimestamp = initialDate.getTime() + 1;
       const result = lista.actualizarTienda('nueva-tienda-123');
 
       expect(result.isSuccess).toBe(true);
       expect(lista.tiendaId).toBe('nueva-tienda-123');
-      expect(lista.fechaActualizacion.getTime()).toBeGreaterThan(fechaOriginal);
+      expect(lista.fechaActualizacion.getTime()).toBe(expectedTimestamp);
+      expect(lista.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
 
     it('debería permitir quitar la tienda (null)', () => {
@@ -277,29 +304,33 @@ describe('Entidad Lista', () => {
       }
     });
 
-    it('debería activar la lista', async () => {
-      await new Promise(resolve => setTimeout(resolve, 5));
-      
+    it('debería activar la lista', () => {
       // Primero desactivar para probar la activación
+      advanceTime(10);
       lista.desactivar();
       expect(lista.activa).toBe(false);
-      
-      await new Promise(resolve => setTimeout(resolve, 5));
+      const fechaDesactivacion = lista.fechaActualizacion.getTime();
+      expect(fechaDesactivacion).toBe(initialDate.getTime() + 10);
+
+      advanceTime(10);
       const fechaOriginal = lista.fechaActualizacion.getTime();
-      
+
       lista.activar();
-      
+
       expect(lista.activa).toBe(true);
+      expect(lista.fechaActualizacion.getTime()).toBe(initialDate.getTime() + 20);
+      expect(lista.fechaActualizacion.getTime()).toBeGreaterThan(fechaDesactivacion);
       expect(lista.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
 
-    it('debería desactivar la lista', async () => {
-      await new Promise(resolve => setTimeout(resolve, 5));
-      
+    it('debería desactivar la lista', () => {
       const fechaOriginal = lista.fechaActualizacion.getTime();
+      advanceTime(10);
+      const expectedTimestamp = initialDate.getTime() + 10;
       lista.desactivar();
-      
+
       expect(lista.activa).toBe(false);
+      expect(lista.fechaActualizacion.getTime()).toBe(expectedTimestamp);
       expect(lista.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
 
