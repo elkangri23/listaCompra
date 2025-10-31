@@ -8,6 +8,11 @@ if (!process.env['NODE_ENV']) {
   process.env['NODE_ENV'] = 'test';
 }
 
+// Secretos JWT mínimos para entorno de tests
+if (!process.env['JWT_SECRET']) {
+  process.env['JWT_SECRET'] = 'test-secret-should-be-long-and-unique-1234567890';
+}
+
 // Mock global de bcrypt para evitar dependencias nativas en entornos de CI/Windows
 jest.mock('bcrypt', () => {
   const hash = async (value: string) => `hashed:${value}`;
