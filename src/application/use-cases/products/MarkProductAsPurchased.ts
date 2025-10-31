@@ -60,6 +60,8 @@ export class MarkProductAsPurchased {
       ));
     }
 
+    const listaId = producto.listaId;
+
     // 3. Verificar permisos de modificación
     if (!producto.puedeModificar(usuarioId)) {
       return failure(new UnauthorizedError(
@@ -96,6 +98,7 @@ export class MarkProductAsPurchased {
     const accion = dto.comprado ? 'comprado' : 'no comprado';
     const response: MarkAsPurchasedResponseDto = {
       id: productoActualizado.id,
+      listaId,
       nombre: productoActualizado.nombre,
       comprado: productoActualizado.comprado,
       ...(productoActualizado.fechaCompra && { fechaCompra: productoActualizado.fechaCompra.toISOString() }),

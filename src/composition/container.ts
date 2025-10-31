@@ -14,6 +14,7 @@ import { CreateList } from '@application/use-cases/lists/CreateList';
 import { GetUserLists } from '@application/use-cases/lists/GetUserLists';
 import { UpdateList } from '@application/use-cases/lists/UpdateList';
 import { DeleteList } from '@application/use-cases/lists/DeleteList';
+import { GetListById } from '@application/use-cases/lists/GetListById';
 import { AddProduct } from '@application/use-cases/products/AddProduct';
 import { UpdateProduct } from '@application/use-cases/products/UpdateProduct';
 import { MarkProductAsPurchased } from '@application/use-cases/products/MarkProductAsPurchased';
@@ -74,6 +75,7 @@ import { AdminController } from '@infrastructure/http/controllers/AdminControlle
 import { RecommendationsController } from '@infrastructure/http/controllers/RecommendationsController';
 import { AIController } from '@infrastructure/http/controllers/AIController';
 import { createAuthMiddleware } from '@infrastructure/http/middlewares/authMiddleware';
+import { RealTimeGateway } from '@infrastructure/realtime/RealTimeGateway';
 
 // Interfaces
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
@@ -115,6 +117,7 @@ export class Container {
   private _outboxWorker!: OutboxWorker;
   private _hashGenerator!: IInvitationHashGenerator;
   private _workerService!: WorkerService;
+  private _realTimeGateway!: RealTimeGateway;
 
   // Use Cases
   private _registerUser!: RegisterUser;
@@ -123,6 +126,7 @@ export class Container {
   private _getUserLists!: GetUserLists;
   private _updateList!: UpdateList;
   private _deleteList!: DeleteList;
+  private _getListById!: GetListById;
   private _addProduct!: AddProduct;
   private _updateProduct!: UpdateProduct;
   private _markProductAsPurchased!: MarkProductAsPurchased;
@@ -165,6 +169,7 @@ export class Container {
     this.initializeRepositories();
     this.initializeExternalServices();
     this.initializeUseCases();
+    this.initializeRealtime();
     this.initializeControllers();
   }
 
@@ -391,6 +396,10 @@ export class Container {
       this._listaRepository
     );
 
+    this._getListById = new GetListById(
+      this._listaRepository
+    );
+
     // Product use cases
     this._addProduct = new AddProduct({
       productoRepository: this._productoRepository,
@@ -509,6 +518,10 @@ export class Container {
     );
   }
 
+  private initializeRealtime(): void {
+    this._realTimeGateway = new RealTimeGateway();
+  }
+
   private initializeControllers(): void {
     this._authController = new AuthController({
       registerUser: this._registerUser,
@@ -519,7 +532,9 @@ export class Container {
       this._createList,
       this._getUserLists,
       this._updateList,
-      this._deleteList
+      this._deleteList,
+      this._getListById,
+      this._realTimeGateway
     );
 
     this._productController = new ProductController(
@@ -527,7 +542,8 @@ export class Container {
       this._updateProduct,
       this._markProductAsPurchased,
       this._deleteProduct,
-      this._getProducts
+      this._getProducts,
+      this._realTimeGateway
     );
 
     this._categoryController = new CategoryController(
@@ -767,6 +783,10 @@ export class Container {
 
   public get authMiddleware(): express.RequestHandler {
     return this._authMiddleware;
+  }
+
+  public get realTimeGateway(): RealTimeGateway {
+    return this._realTimeGateway;
   }
 
   /**

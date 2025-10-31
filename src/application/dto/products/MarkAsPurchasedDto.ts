@@ -18,6 +18,11 @@ export interface MarkAsPurchasedResponseDto {
   id: string;
 
   /**
+   * ID de la lista a la que pertenece el producto
+   */
+  listaId: string;
+
+  /**
    * Nombre del producto
    */
   nombre: string;

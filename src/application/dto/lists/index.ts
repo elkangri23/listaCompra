@@ -6,3 +6,4 @@ export type { CreateListDto, CreateListResponseDto } from './CreateListDto';
 export type { UpdateListDto, UpdateListResponseDto } from './UpdateListDto';
 export type { DeleteListDto, DeleteListResponseDto } from './DeleteListDto';
 export type { GetUserListsDto, GetUserListsResponseDto } from './GetUserListsDto';
+export type { GetListByIdDto } from './GetListByIdDto';
