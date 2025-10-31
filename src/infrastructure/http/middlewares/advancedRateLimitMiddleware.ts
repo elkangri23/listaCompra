@@ -27,11 +27,16 @@ const redisConfig = {
   ...(process.env['REDIS_PASSWORD'] && { password: process.env['REDIS_PASSWORD'] }),
 };
 
-const redisClient = new Redis(redisConfig);
+const isTestEnv = process.env['NODE_ENV'] === 'test';
+const redisClient = isTestEnv ? null : new Redis(redisConfig);
 
 // Store Redis para rate limiting
 
 function createRedisStore(prefix: string) {
+  if (!redisClient) {
+    return undefined;
+  }
+
   return new RedisStore({
     sendCommand: async (...args: any[]) => {
       return await redisClient.call(args[0], ...args.slice(1)) as any;
@@ -113,8 +118,10 @@ function createAdvancedRateLimit(
   }
 ): RateLimitRequestHandler {
   
+  const store = createRedisStore(options.keyPrefix);
+
   return rateLimit({
-    store: createRedisStore(options.keyPrefix),
+    ...(store ? { store } : {}),
     windowMs: config.windowMs,
     max: config.max,
     standardHeaders: true,
@@ -260,8 +267,10 @@ export const blueprintAdvancedRateLimit = createAdvancedRateLimit(
 /**
  * Rate limiter dinámico basado en rol de usuario
  */
+const dynamicStore = createRedisStore('dynamic');
+
 export const dynamicRoleBasedRateLimit = rateLimit({
-  store: createRedisStore('dynamic'),
+  ...(dynamicStore ? { store: dynamicStore } : {}),
   windowMs: 15 * 60 * 1000, // 15 minutos
   
   // Max dinámico basado en rol
@@ -320,6 +329,9 @@ export const dynamicRoleBasedRateLimit = rateLimit({
  */
 export const checkRedisConnection = async (): Promise<boolean> => {
   try {
+    if (!redisClient) {
+      return true;
+    }
     await redisClient.ping();
     return true;
   } catch (error) {
@@ -333,6 +345,9 @@ export const checkRedisConnection = async (): Promise<boolean> => {
  */
 export const closeRedisConnection = async (): Promise<void> => {
   try {
+    if (!redisClient) {
+      return;
+    }
     await redisClient.quit();
     console.log('✅ Redis rate limiting connection closed gracefully');
   } catch (error) {
