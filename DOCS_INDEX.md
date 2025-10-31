@@ -31,7 +31,7 @@
 - 47 endpoints documentados
 - Seguridad (9.1/10)
 - IA: 5 casos de uso implementados
-- Pendientes: CU-19, CU-27, CU-20, CU-21
+- Pendientes: CU-20, CU-30, CU-31 (mejoras roadmap)
 
 **Audiencia**: Product managers, stakeholders, equipo técnico
 
