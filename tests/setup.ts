@@ -18,6 +18,11 @@ jest.mock('bcrypt', () => {
 // Cargar variables de entorno para testing
 dotenv.config({ path: '.env' });
 
+// Variables obligatorias para servicios críticos
+if (!process.env['JWT_SECRET']) {
+  process.env['JWT_SECRET'] = 'test-jwt-secret-that-is-long-enough-1234567890';
+}
+
 // Configuración global para Jest
 global.beforeAll(async () => {
   // Setup global antes de todos los tests
