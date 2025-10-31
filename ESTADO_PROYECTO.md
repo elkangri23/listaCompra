@@ -55,18 +55,6 @@
 - ✅ **Reparación selectiva**: `/admin/cache/integrity/repair` automatiza la regeneración de entradas corruptas
 - ✅ **Hardening operativo**: logs estructurados, enforcement admin + rate limiting dedicado
 
-### ✅ **COMPLETADO: Sincronización Tiempo Real Colaborativa (CU-21)**
-
-#### **⚡ Actualizaciones instantáneas**
-- ✅ Difusión en tiempo real de cambios de listas, productos y permisos
-- ✅ Canales dedicados por lista con control de concurrencia optimista
-- ✅ Eventos consistentes entre clientes gracias a integración con Outbox
-
-#### **🔔 Experiencia colaborativa enriquecida**
-- ✅ Gestión de sesiones colaborativas con reintentos y confirmaciones de entrega
-- ✅ Supervisión operativa mediante métricas en `/analytics/cache/realtime`
-- ✅ Documentación completa en Swagger y Postman para flujos colaborativos
-
 ### ✅ **COMPLETADO: Sistema de Seguridad Production-Ready (Fase 12)**
 
 #### **🛡️ Rate Limiting Avanzado** 
@@ -625,7 +613,7 @@
 - **🟢 PRODUCTION-READY**: Sistema completamente funcional
 - **🛡️ Seguridad**: 9.5/10 (Enterprise grade)
 - **🧪 Testing**: 495/543 tests pasando (91%)
-- **📊 Casos de Uso**: 28/33 implementados (85%)
+- **📊 Casos de Uso**: 27/33 implementados (82%)
 - **⚡ Performance**: Optimizado con Redis cache
 - **📚 Documentación**: Swagger completo con 48 endpoints
 

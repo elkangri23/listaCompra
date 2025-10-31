@@ -7,6 +7,7 @@ import { CreateList } from '@application/use-cases/lists/CreateList';
 import { GetUserLists } from '@application/use-cases/lists/GetUserLists';
 import { UpdateList } from '@application/use-cases/lists/UpdateList';
 import { DeleteList } from '@application/use-cases/lists/DeleteList';
+import { GetListById } from '@application/use-cases/lists/GetListById';
 import type { CreateListDto } from '@application/dto/lists/CreateListDto';
 import type { UpdateListDto } from '@application/dto/lists/UpdateListDto';
 import type { DeleteListDto } from '@application/dto/lists/DeleteListDto';
@@ -14,10 +15,12 @@ import type { GetUserListsDto } from '@application/dto/lists/GetUserListsDto';
 import { ValidationError } from '@application/errors/ValidationError';
 import { NotFoundError } from '@application/errors/NotFoundError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import { RealTimeGateway } from '@infrastructure/realtime/RealTimeGateway';
 
 interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
+    userId?: string;
     email: string;
     nombre: string;
     rol: string;
@@ -29,15 +32,21 @@ export class ListController {
     private readonly createList: CreateList,
     private readonly getUserListsUseCase: GetUserLists,
     private readonly updateList: UpdateList,
-    private readonly deleteList: DeleteList
+    private readonly deleteList: DeleteList,
+    private readonly getListById: GetListById,
+    private readonly realTimeGateway: RealTimeGateway
   ) {}
+
+  private getUserId(req: AuthenticatedRequest): string | undefined {
+    return req.user?.id ?? req.user?.userId;
+  }
 
   /**
    * POST /lists - Crear nueva lista
    */
   async create(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = this.getUserId(req);
       if (!userId) {
         res.status(401).json({
           success: false,
@@ -74,6 +83,13 @@ export class ListController {
         success: true,
         data: result.value
       });
+
+      this.realTimeGateway.publish({
+        listId: result.value.id,
+        type: 'LIST_CREATED',
+        payload: result.value,
+        actorId: userId,
+      });
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -88,7 +104,7 @@ export class ListController {
    */
   async getUserLists(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = this.getUserId(req);
       if (!userId) {
         res.status(401).json({
           success: false,
@@ -145,7 +161,7 @@ export class ListController {
    */
   async update(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = this.getUserId(req);
       if (!userId) {
         res.status(401).json({
           success: false,
@@ -210,6 +226,13 @@ export class ListController {
         success: true,
         data: result.value
       });
+
+      this.realTimeGateway.publish({
+        listId: result.value.id,
+        type: 'LIST_UPDATED',
+        payload: result.value,
+        actorId: userId,
+      });
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -224,7 +247,7 @@ export class ListController {
    */
   async delete(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = this.getUserId(req);
       if (!userId) {
         res.status(401).json({
           success: false,
@@ -291,6 +314,13 @@ export class ListController {
         success: true,
         data: result.value
       });
+
+      this.realTimeGateway.publish({
+        listId: result.value.id,
+        type: 'LIST_DELETED',
+        payload: result.value,
+        actorId: userId,
+      });
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -305,7 +335,7 @@ export class ListController {
    */
   async getById(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = this.getUserId(req);
       if (!userId) {
         res.status(401).json({
           success: false,
@@ -325,13 +355,123 @@ export class ListController {
         return;
       }
 
-      // TODO: Implementar caso de uso GetListById
-      // Por ahora devolvemos un placeholder
-      res.status(501).json({
-        success: false,
-        error: 'Funcionalidad no implementada aún',
-        code: 'NOT_IMPLEMENTED'
+      const result = await this.getListById.execute({ id: listaId }, userId);
+
+      if (result.isFailure) {
+        if (result.error instanceof ValidationError) {
+          res.status(400).json({
+            success: false,
+            error: result.error.message,
+            field: result.error.field,
+            code: 'VALIDATION_ERROR'
+          });
+          return;
+        }
+
+        if (result.error instanceof NotFoundError) {
+          res.status(404).json({
+            success: false,
+            error: result.error.message,
+            code: 'NOT_FOUND'
+          });
+          return;
+        }
+
+        if (result.error instanceof UnauthorizedError) {
+          res.status(403).json({
+            success: false,
+            error: result.error.message,
+            code: 'FORBIDDEN'
+          });
+          return;
+        }
+
+        res.status(500).json({
+          success: false,
+          error: 'Error interno del servidor',
+          code: 'INTERNAL_ERROR'
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: result.value
       });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  /**
+   * GET /lists/:id/stream - Suscribir a eventos SSE de una lista
+   */
+  async stream(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = this.getUserId(req);
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          error: 'Usuario no autenticado',
+          code: 'UNAUTHORIZED'
+        });
+        return;
+      }
+
+      const listaId = req.params['id'];
+      if (!listaId) {
+        res.status(400).json({
+          success: false,
+          error: 'ID de lista requerido',
+          code: 'VALIDATION_ERROR'
+        });
+        return;
+      }
+
+      const result = await this.getListById.execute({ id: listaId }, userId);
+
+      if (result.isFailure) {
+        if (result.error instanceof ValidationError) {
+          res.status(400).json({
+            success: false,
+            error: result.error.message,
+            field: result.error.field,
+            code: 'VALIDATION_ERROR'
+          });
+          return;
+        }
+
+        if (result.error instanceof NotFoundError) {
+          res.status(404).json({
+            success: false,
+            error: result.error.message,
+            code: 'NOT_FOUND'
+          });
+          return;
+        }
+
+        if (result.error instanceof UnauthorizedError) {
+          res.status(403).json({
+            success: false,
+            error: result.error.message,
+            code: 'FORBIDDEN'
+          });
+          return;
+        }
+
+        res.status(500).json({
+          success: false,
+          error: 'Error interno del servidor',
+          code: 'INTERNAL_ERROR'
+        });
+        return;
+      }
+
+      this.realTimeGateway.subscribe(listaId, userId, res);
     } catch (error) {
       res.status(500).json({
         success: false,

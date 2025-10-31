@@ -18,6 +18,11 @@ export interface DeleteProductResponseDto {
   id: string;
 
   /**
+   * ID de la lista a la que pertenecía el producto
+   */
+  listaId: string;
+
+  /**
    * Indica si el producto fue eliminado exitosamente
    */
   eliminado: boolean;
