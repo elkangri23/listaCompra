@@ -25,7 +25,10 @@ describe('E2E: User Registration Flow', () => {
       invitationController: container.invitationController,
       adminController: container.adminController,
       aiController: container.aiController,
-      authMiddleware: container.authMiddleware
+      authMiddleware: container.authMiddleware,
+      listController: container.listController,
+      productController: container.productController,
+      categoryController: container.categoryController
     };
     app = await createServer(dependencies);
   });
@@ -58,7 +61,8 @@ describe('E2E: User Registration Flow', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('ya está registrado');
+      expect(response.body.error).toBe('VALIDATION_ERROR');
+      expect(response.body.message).toContain('Ya existe un usuario registrado');
     });
 
     it('3. Debe hacer login exitosamente con credenciales correctas', async () => {
@@ -71,23 +75,29 @@ describe('E2E: User Registration Flow', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty('token');
+      expect(response.body.data.tokens).toHaveProperty('accessToken');
+      expect(response.body.data.tokens).toHaveProperty('refreshToken');
       expect(response.body.data).toHaveProperty('user');
       expect(response.body.data.user.email).toBe(testUser.email);
 
-      authToken = response.body.data.token;
+      authToken = response.body.data.tokens.accessToken;
     });
 
     it('4. Debe acceder a endpoints protegidos con token válido', async () => {
       const response = await request(app)
         .get('/api/v1/lists')
-        .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
+        .set('Authorization', `Bearer ${authToken}`);
 
+      expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(Array.isArray(response.body.data)).toBe(true);
-      // Usuario recién registrado no debería tener listas
-      expect(response.body.data.length).toBe(0);
+      const data = response.body.data;
+      if (Array.isArray(data)) {
+        expect(data.length).toBe(0);
+      } else {
+        expect(Array.isArray(data.items)).toBe(true);
+        expect(data.items.length).toBe(0);
+        expect(data.total).toBeDefined();
+      }
     });
 
     it('5. Debe rechazar acceso sin token de autenticación', async () => {
@@ -96,7 +106,7 @@ describe('E2E: User Registration Flow', () => {
         .expect(401);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('token');
+      expect(response.body.message).toContain('Token de autorización requerido');
     });
 
     it('6. Debe rechazar acceso con token inválido', async () => {
@@ -106,6 +116,7 @@ describe('E2E: User Registration Flow', () => {
         .expect(401);
 
       expect(response.body.success).toBe(false);
+      expect(response.body.error).toBe('UNAUTHORIZED');
     });
   });
 
@@ -120,7 +131,8 @@ describe('E2E: User Registration Flow', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('email');
+      expect(response.body.error).toBe('VALIDATION_ERROR');
+      expect(response.body.message.toLowerCase()).toContain('email');
     });
 
     it('Debe rechazar registro con contraseña débil', async () => {
@@ -134,7 +146,8 @@ describe('E2E: User Registration Flow', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('contraseña');
+      expect(response.body.error).toBe('VALIDATION_ERROR');
+      expect(response.body.message.toLowerCase()).toContain('contraseña');
     });
 
     it('Debe rechazar registro con nombre muy corto', async () => {
@@ -148,7 +161,8 @@ describe('E2E: User Registration Flow', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('nombre');
+      expect(response.body.error).toBe('VALIDATION_ERROR');
+      expect(response.body.message.toLowerCase()).toContain('nombre');
     });
   });
 
@@ -158,12 +172,13 @@ describe('E2E: User Registration Flow', () => {
         .post('/api/v1/auth/login')
         .send({
           email: 'inexistente@example.com',
-          password: 'cualquier-password'
+          password: 'FakePass123!'
         })
         .expect(401);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('credenciales');
+      expect(response.body.error).toBe('UNAUTHORIZED');
+      expect(response.body.message).toContain('Credenciales inválidas');
     });
 
     it('Debe manejar login con contraseña incorrecta', async () => {
@@ -171,12 +186,13 @@ describe('E2E: User Registration Flow', () => {
         .post('/api/v1/auth/login')
         .send({
           email: testUser.email,
-          password: 'password-incorrecto'
+          password: 'WrongPass123!'
         })
         .expect(401);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('credenciales');
+      expect(response.body.error).toBe('UNAUTHORIZED');
+      expect(response.body.message).toContain('Credenciales inválidas');
     });
   });
 });

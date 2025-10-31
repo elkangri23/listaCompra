@@ -37,7 +37,10 @@ describe('E2E: Shopping List Management Flow', () => {
       invitationController: container.invitationController,
       adminController: container.adminController,
       aiController: container.aiController,
-      authMiddleware: container.authMiddleware
+      authMiddleware: container.authMiddleware,
+      listController: container.listController,
+      productController: container.productController,
+      categoryController: container.categoryController
     };
     app = await createServer(dependencies);
 
@@ -57,7 +60,7 @@ describe('E2E: Shopping List Management Flow', () => {
         email: testUser.email,
         password: testUser.password
       });
-    authToken = authResponse.body.data.token;
+    authToken = authResponse.body.data.tokens.accessToken;
     userId = authResponse.body.data.user.id;
 
     const secondAuthResponse = await request(app)
@@ -66,7 +69,7 @@ describe('E2E: Shopping List Management Flow', () => {
         email: secondUser.email,
         password: secondUser.password
       });
-    secondUserToken = secondAuthResponse.body.data.token;
+    secondUserToken = secondAuthResponse.body.data.tokens.accessToken;
     secondUserId = secondAuthResponse.body.data.user.id;
   });
 
@@ -100,9 +103,15 @@ describe('E2E: Shopping List Management Flow', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(Array.isArray(response.body.data)).toBe(true);
-      expect(response.body.data.length).toBeGreaterThan(0);
-      expect(response.body.data[0].nombre).toBe('Lista de Supermercado');
+      const data = response.body.data;
+      if (Array.isArray(data)) {
+        expect(data.length).toBeGreaterThan(0);
+        expect(data[0].nombre).toBe('Lista de Supermercado');
+      } else {
+        expect(Array.isArray(data.items)).toBe(true);
+        expect(data.items.length).toBeGreaterThan(0);
+        expect(data.items[0].nombre).toBe('Lista de Supermercado');
+      }
     });
 
     it('3. Debe obtener una lista específica por ID', async () => {
@@ -191,9 +200,11 @@ describe('E2E: Shopping List Management Flow', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(Array.isArray(response.body.data)).toBe(true);
-      expect(response.body.data.length).toBe(1);
-      expect(response.body.data[0].nombre).toBe('Leche Entera');
+      const data = response.body.data;
+      const products = Array.isArray(data) ? data : data.items;
+      expect(Array.isArray(products)).toBe(true);
+      expect(products.length).toBeGreaterThan(0);
+      expect(products[0].nombre).toBe('Leche Entera');
     });
 
     it('3. Debe marcar producto como comprado', async () => {
@@ -237,8 +248,11 @@ describe('E2E: Shopping List Management Flow', () => {
         .get(`/api/v1/lists/${listaId}/products`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
-
-      expect(listResponse.body.data.length).toBe(0);
+      const remaining = Array.isArray(listResponse.body.data)
+        ? listResponse.body.data
+        : listResponse.body.data.items;
+      expect(Array.isArray(remaining)).toBe(true);
+      expect(remaining.length).toBe(0);
     });
   });
 

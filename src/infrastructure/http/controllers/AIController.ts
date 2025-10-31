@@ -309,7 +309,8 @@ export class AIController {
       });
 
       // Por seguridad, solo usuarios admin pueden ver esta información
-      if (!req.user || req.user.role !== 'admin') {
+      const userRole = req.user?.rol ?? req.user?.role;
+      if (!req.user || (typeof userRole !== 'string' || userRole.toUpperCase() !== 'ADMIN')) {
         res.status(403).json({
           success: false,
           error: 'Acceso denegado. Solo administradores pueden ver esta información.',
