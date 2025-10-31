@@ -44,6 +44,13 @@ import { PrismaCategoriaRepository } from '@infrastructure/persistence/repositor
 import { PrismaTiendaRepository } from '@infrastructure/persistence/repositories/PrismaTiendaRepository';
 import { PrismaInvitacionRepository } from '@infrastructure/persistence/repositories/PrismaInvitacionRepository';
 import { PrismaPermisoRepository } from '@infrastructure/persistence/repositories/PrismaPermisoRepository';
+import { InMemoryUsuarioRepository } from '@infrastructure/persistence/in-memory/InMemoryUsuarioRepository';
+import { InMemoryListaRepository } from '@infrastructure/persistence/in-memory/InMemoryListaRepository';
+import { InMemoryProductoRepository } from '@infrastructure/persistence/in-memory/InMemoryProductoRepository';
+import { InMemoryCategoriaRepository } from '@infrastructure/persistence/in-memory/InMemoryCategoriaRepository';
+import { InMemoryTiendaRepository } from '@infrastructure/persistence/in-memory/InMemoryTiendaRepository';
+import { InMemoryInvitacionRepository } from '@infrastructure/persistence/in-memory/InMemoryInvitacionRepository';
+import { InMemoryPermisoRepository } from '@infrastructure/persistence/in-memory/InMemoryPermisoRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
@@ -54,6 +61,7 @@ import { NodemailerService } from '@infrastructure/external-services/email/Nodem
 import { PerplexityService } from '@infrastructure/external-services/ai/PerplexityService';
 import { PerplexityConfig } from '@infrastructure/config/ai.config';
 import { WorkerService } from '@infrastructure/messaging/WorkerService';
+import { InMemoryOutboxService } from '@infrastructure/messaging/outbox/InMemoryOutboxService';
 
 // HTTP Layer
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
@@ -86,6 +94,7 @@ import type { IAIService } from '@application/ports/external/IAIService';
 export class Container {
   private static instance: Container;
   private _prisma!: PrismaClient;
+  private readonly isTestEnv: boolean;
 
   // Repositories
   private _usuarioRepository!: IUsuarioRepository;
@@ -151,6 +160,7 @@ export class Container {
   private _authMiddleware!: express.RequestHandler;
 
   private constructor() {
+    this.isTestEnv = process.env['NODE_ENV'] === 'test';
     this.initializeInfrastructure();
     this.initializeRepositories();
     this.initializeExternalServices();
@@ -172,6 +182,9 @@ export class Container {
    * Inicializa la conexión RabbitMQ si está habilitado
    */
   public async initializeRabbitMQ(): Promise<void> {
+    if (this.isTestEnv) {
+      return;
+    }
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
     
     if (rabbitmqEnabled && this._eventPublisher instanceof RabbitMQEventPublisher) {
@@ -216,17 +229,35 @@ export class Container {
       await this._eventPublisher.close();
     }
     
-    await this._prisma.$disconnect();
-    console.log('✅ Container cerrado correctamente');
+    if (!this.isTestEnv && this._prisma && typeof this._prisma.$disconnect === 'function') {
+      await this._prisma.$disconnect();
+      console.log('✅ Container cerrado correctamente');
+    }
   }
 
   private initializeInfrastructure(): void {
+    if (this.isTestEnv) {
+      this._prisma = {} as PrismaClient;
+      return;
+    }
+
     this._prisma = new PrismaClient({
       log: process.env['NODE_ENV'] === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
     });
   }
 
   private initializeRepositories(): void {
+    if (this.isTestEnv) {
+      this._usuarioRepository = new InMemoryUsuarioRepository();
+      this._listaRepository = new InMemoryListaRepository();
+      this._productoRepository = new InMemoryProductoRepository();
+      this._categoriaRepository = new InMemoryCategoriaRepository();
+      this._tiendaRepository = new InMemoryTiendaRepository();
+      this._invitacionRepository = new InMemoryInvitacionRepository();
+      this._permisoRepository = new InMemoryPermisoRepository();
+      return;
+    }
+
     this._usuarioRepository = new PrismaUsuarioRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
     this._productoRepository = new PrismaProductoRepository(this._prisma);
@@ -240,7 +271,9 @@ export class Container {
     this._passwordHasher = new BcryptPasswordHasher();
     this._tokenService = new JWTTokenService();
     this._hashGenerator = new InvitationHashGenerator();
-    this._outboxService = new PrismaOutboxService(this._prisma);
+    this._outboxService = this.isTestEnv
+      ? new InMemoryOutboxService()
+      : new PrismaOutboxService(this._prisma);
     
     // Configurar EmailService con valores por defecto (configuración pendiente)
     const emailConfig = {
@@ -281,7 +314,11 @@ export class Container {
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
     const rabbitmqUrl = process.env['RABBITMQ_URL'] || 'amqp://guest:guest@localhost:5672';
     
-    if (rabbitmqEnabled) {
+    if (this.isTestEnv) {
+      this._eventPublisher = {
+        publish: async () => success(undefined),
+      };
+    } else if (rabbitmqEnabled) {
       this._eventPublisher = new RabbitMQEventPublisher(rabbitmqUrl);
       console.log('📡 Usando RabbitMQEventPublisher - RabbitMQ habilitado');
     } else {
@@ -296,19 +333,33 @@ export class Container {
     }
 
     // Configurar WorkerService (consumers de RabbitMQ)
-    this._workerService = new WorkerService({
-      rabbitmqUrl,
-      enabled: rabbitmqEnabled,
-      emailService: this._emailService,
-      usuarioRepository: this._usuarioRepository,
-      listaRepository: this._listaRepository
-    });
+    if (this.isTestEnv) {
+      this._workerService = {
+        start: async () => success(undefined),
+        stop: async () => success(undefined),
+      } as unknown as WorkerService;
+    } else {
+      this._workerService = new WorkerService({
+        rabbitmqUrl,
+        enabled: rabbitmqEnabled,
+        emailService: this._emailService,
+        usuarioRepository: this._usuarioRepository,
+        listaRepository: this._listaRepository
+      });
+    }
 
     // Configurar OutboxWorker (procesador de eventos outbox)
-    this._outboxWorker = new OutboxWorker(
-      this._outboxService,
-      this._eventPublisher
-    );
+    if (this.isTestEnv) {
+      this._outboxWorker = {
+        start: async () => success(undefined),
+        stop: async () => success(undefined),
+      } as unknown as OutboxWorker;
+    } else {
+      this._outboxWorker = new OutboxWorker(
+        this._outboxService,
+        this._eventPublisher
+      );
+    }
   }
 
   private initializeUseCases(): void {
@@ -723,6 +774,9 @@ export class Container {
    */
   public async connect(): Promise<void> {
     try {
+      if (this.isTestEnv) {
+        return;
+      }
       await this._prisma.$connect();
       console.log('✅ Base de datos conectada');
     } catch (error) {
@@ -736,6 +790,9 @@ export class Container {
    */
   public async disconnect(): Promise<void> {
     try {
+      if (this.isTestEnv) {
+        return;
+      }
       await this._prisma.$disconnect();
       console.log('✅ Base de datos desconectada');
     } catch (error) {
@@ -749,6 +806,9 @@ export class Container {
    */
   public async healthCheck(): Promise<boolean> {
     try {
+      if (this.isTestEnv) {
+        return true;
+      }
       await this._prisma.$queryRaw`SELECT 1`;
       return true;
     } catch (error) {

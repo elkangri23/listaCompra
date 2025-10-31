@@ -17,7 +17,10 @@ describe('Development Endpoints Integration', () => {
       invitationController: container.invitationController,
       adminController: container.adminController,
       aiController: container.aiController,
-      authMiddleware: container.authMiddleware
+      authMiddleware: container.authMiddleware,
+      listController: container.listController,
+      productController: container.productController,
+      categoryController: container.categoryController
     });
   });
 

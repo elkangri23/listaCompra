@@ -1196,3 +1196,22 @@ Desarrollado como proyecto educativo del **Máster de Desarrollo con IA de Big S
 ---
 
 ⭐ **Si este proyecto te resultó útil, considera darle una estrella en GitHub**
+
+## Licencia y Uso
+
+Este proyecto es **open source** bajo licencia MIT modificada.  
+Puedes copiar, modificar y reutilizar cualquier parte del código o ideas libremente.
+
+**Por favor, si usas algún módulo, fragmento, idea o funcionalidad, menciona el autor original:**
+- Autor principal: elkangri23
+
+**Exención de responsabilidad:**  
+El autor no se hace responsable del uso, modificaciones o consecuencias derivadas del uso de este software.
+
+### Licencia MIT (modificada)
+
+Copyright (c) 2025 elkangri23
+
+Se concede permiso, sin cargo, a cualquier persona que obtenga una copia de este software y los archivos de documentación asociados (el "Software"), para tratar el Software sin restricción, incluyendo sin limitación los derechos a usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del Software, y permitir a las personas a quienes se les proporcione el Software que lo hagan, **siempre que se incluya una mención al autor original**.
+
+EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O IMPLÍCITA, INCLUYENDO PERO NO LIMITADO A GARANTÍAS DE COMERCIALIZACIÓN, IDONEIDAD PARA UN PROPÓSITO PARTICULAR Y NO INFRACCIÓN. EN NINGÚN CASO LOS AUTORES SERÁN RESPONSABLES DE NINGÚN RECLAMO, DAÑO O OTRA RESPONSABILIDAD.

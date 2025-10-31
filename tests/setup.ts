@@ -8,6 +8,13 @@ if (!process.env['NODE_ENV']) {
   process.env['NODE_ENV'] = 'test';
 }
 
+// Mock global de bcrypt para evitar dependencias nativas en entornos de CI/Windows
+jest.mock('bcrypt', () => {
+  const hash = async (value: string) => `hashed:${value}`;
+  const compare = async (value: string, hashed: string) => hashed === `hashed:${value}`;
+  return { hash, compare };
+});
+
 // Cargar variables de entorno para testing
 dotenv.config({ path: '.env' });
 

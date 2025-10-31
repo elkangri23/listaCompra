@@ -52,7 +52,16 @@ export function createAuthMiddleware(dependencies: AuthMiddlewareDependencies) {
       }
 
       // Añadir información del usuario a la request
-      (req as any).user = verifyResult.value;
+      const payload = verifyResult.value;
+      (req as any).user = {
+        id: payload.userId,
+        userId: payload.userId,
+        email: payload.email,
+        rol: payload.role,
+        role: payload.role,
+        tokenIssuedAt: payload.iat,
+        tokenExpiry: payload.exp,
+      };
       next();
     } catch (error) {
       res.status(500).json({
@@ -92,8 +101,16 @@ export function createOptionalAuthMiddleware(dependencies: AuthMiddlewareDepende
       // Verificar token
       const verifyResult = await dependencies.tokenService.verifyAccessToken(token);
       if (verifyResult.isSuccess) {
-        // Añadir información del usuario solo si es válido
-        (req as any).user = verifyResult.value;
+        const payload = verifyResult.value;
+        (req as any).user = {
+          id: payload.userId,
+          userId: payload.userId,
+          email: payload.email,
+          rol: payload.role,
+          role: payload.role,
+          tokenIssuedAt: payload.iat,
+          tokenExpiry: payload.exp,
+        };
       }
 
       next();
