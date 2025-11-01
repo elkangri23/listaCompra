@@ -24,9 +24,12 @@ export function validationMiddleware(schema: z.ZodSchema) {
           code: error.code
         }));
 
+        const primaryError = errors[0]?.message ?? 'Los datos proporcionados no son válidos';
+
         res.status(400).json({
           success: false,
-          error: 'VALIDATION_ERROR',
+          error: primaryError,
+          code: 'VALIDATION_ERROR',
           message: 'Los datos proporcionados no son válidos',
           details: errors,
           timestamp: new Date().toISOString()
