@@ -31,7 +31,8 @@ describe('Invitation Endpoints Integration', () => {
       authMiddleware: container.authMiddleware,
       listController: container.listController,
       productController: container.productController,
-      categoryController: container.categoryController
+      categoryController: container.categoryController,
+      auditController: container.auditController
     });
 
     // Registrar usuario de prueba (si no existe) o usar existente

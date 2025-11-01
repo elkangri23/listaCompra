@@ -1,12 +1,16 @@
 import { Router } from 'express';
-import { AuditController } from '../controllers/AuditController';
-import { container } from '../../../composition/container';
-import { authMiddleware } from '../middlewares/authMiddleware';
-import { authorize } from '../middlewares/authorizeMiddleware';
-import { RolUsuario } from '@prisma/client';
+import { Container } from '../../../composition/container';
+import { requireRole } from '../middlewares/roleMiddleware';
+import { RolUsuario } from '@domain/entities/Usuario';
 
-export const auditRoutes = (router: Router) => {
-  const auditController = container.resolve<AuditController>('auditController');
+export const auditRoutes = (router: Router): void => {
+  const container = Container.getInstance();
+  const auditController = container.auditController;
+  const authMiddleware = container.authMiddleware;
+
+  const listAuditHandler = auditController.getListAuditHistory.bind(auditController);
+  const productAuditHandler = auditController.getProductAuditHistory.bind(auditController);
+  const globalAuditHandler = auditController.getGlobalAuditHistoryRoute.bind(auditController);
 
   /**
    * @swagger
@@ -78,7 +82,7 @@ export const auditRoutes = (router: Router) => {
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  router.get('/audit/lists/:listId', authMiddleware, auditController.getListAuditHistory);
+  router.get('/audit/lists/:listId', authMiddleware, listAuditHandler);
 
   /**
    * @swagger
@@ -150,7 +154,7 @@ export const auditRoutes = (router: Router) => {
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  router.get('/audit/products/:productId', authMiddleware, auditController.getProductAuditHistory);
+  router.get('/audit/products/:productId', authMiddleware, productAuditHandler);
 
   /**
    * @swagger
@@ -229,5 +233,10 @@ export const auditRoutes = (router: Router) => {
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  router.get('/admin/audit', authMiddleware, authorize([RolUsuario.ADMIN]), auditController.getGlobalAuditHistory);
+  router.get(
+    '/admin/audit',
+    authMiddleware,
+    requireRole([RolUsuario.ADMIN]),
+    globalAuditHandler
+  );
 };

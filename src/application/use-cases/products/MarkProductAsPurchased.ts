@@ -108,7 +108,7 @@ export class MarkProductAsPurchased {
       changedByUserId: usuarioId,
       changedFields: ['comprado', 'fechaCompra'],
     });
-    await this.outboxService.save(auditEvent);
+    await this.outboxService.saveEvent(auditEvent);
 
     // 8. Construir respuesta
     const accion = dto.comprado ? 'comprado' : 'no comprado';

@@ -79,7 +79,7 @@ export class DeleteProduct {
       deletedByUserId: usuarioId,
       deletedValue,
     });
-    await this.outboxService.save(auditEvent);
+    await this.outboxService.saveEvent(auditEvent);
 
     // 6. Construir respuesta
     const permanente = dto.permanente ?? true; // Por defecto permanente para productos

@@ -32,12 +32,12 @@ export class GetAuditHistoryForProduct {
     const query: AuditEntryQuery = {
       entityType: 'Producto',
       entityId: dto.productId,
-      page: dto.page || 1,
-      pageSize: dto.pageSize || 10,
-      changeType: dto.changeType,
-      changedByUserId: dto.changedByUserId,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      page: dto.page ?? 1,
+      pageSize: dto.pageSize ?? 10,
+      ...(dto.changeType && { changeType: dto.changeType }),
+      ...(dto.changedByUserId && { changedByUserId: dto.changedByUserId }),
+      ...(dto.startDate && { startDate: dto.startDate }),
+      ...(dto.endDate && { endDate: dto.endDate }),
     };
 
     const findResult = await this.auditRepository.find(query);

@@ -103,7 +103,7 @@ export class DeleteList {
       deletedByUserId: propietarioId,
       deletedValue,
     });
-    await this.outboxService.save(auditEvent);
+    await this.outboxService.saveEvent(auditEvent);
 
     // 7. Retornar respuesta
     const response: DeleteListResponseDto = {

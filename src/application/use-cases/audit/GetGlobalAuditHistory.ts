@@ -29,12 +29,12 @@ export class GetGlobalAuditHistory {
     const query: AuditEntryQuery = {
       page: dto.page || 1,
       pageSize: dto.pageSize || 10,
-      entityType: dto.entityType,
-      entityId: dto.entityId,
-      changeType: dto.changeType,
-      changedByUserId: dto.changedByUserId,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      ...(dto.entityType && { entityType: dto.entityType }),
+      ...(dto.entityId && { entityId: dto.entityId }),
+      ...(dto.changeType && { changeType: dto.changeType }),
+      ...(dto.changedByUserId && { changedByUserId: dto.changedByUserId }),
+      ...(dto.startDate && { startDate: dto.startDate }),
+      ...(dto.endDate && { endDate: dto.endDate }),
     };
 
     const findResult = await this.auditRepository.find(query);

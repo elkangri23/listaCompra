@@ -175,7 +175,7 @@ export class UpdateProduct {
       changedByUserId: usuarioId,
       changedFields,
     });
-    await this.outboxService.save(auditEvent);
+    await this.outboxService.saveEvent(auditEvent);
 
     // 7. Construir respuesta
     const response: UpdateProductResponseDto = {
