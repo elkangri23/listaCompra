@@ -260,6 +260,31 @@ export class Container {
       this._tiendaRepository = new InMemoryTiendaRepository();
       this._invitacionRepository = new InMemoryInvitacionRepository();
       this._permisoRepository = new InMemoryPermisoRepository();
+      this._analyticsRepository = {
+        getCollaborativeDashboard: async () => success({
+          summary: {
+            totalLists: 0,
+            activeLists: 0,
+            sharedLists: 0,
+            totalCollaborators: 0,
+            totalProducts: 0,
+            purchasedProducts: 0,
+            pendingProducts: 0,
+            urgentProducts: 0,
+            completionRate: 0,
+            averagePurchaseTimeHours: null
+          },
+          collaboration: {
+            activeCollaborators: 0,
+            leaderboard: [],
+            sharedLists: []
+          },
+          patterns: {
+            topCategories: [],
+            weeklyActivity: []
+          }
+        })
+      } as IAnalyticsRepository;
       return;
     }
 
@@ -270,6 +295,7 @@ export class Container {
     this._tiendaRepository = new PrismaTiendaRepository(this._prisma);
     this._invitacionRepository = new PrismaInvitacionRepository(this._prisma);
     this._permisoRepository = new PrismaPermisoRepository(this._prisma);
+    this._analyticsRepository = new PrismaAnalyticsRepository(this._prisma);
   }
 
   private initializeExternalServices(): void {
@@ -517,6 +543,10 @@ export class Container {
       this._aiService,
       this._usuarioRepository,
       this._categoriaRepository
+    );
+
+    this._getCollaborativeDashboard = new GetCollaborativeDashboard(
+      this._analyticsRepository
     );
   }
 
@@ -783,6 +813,10 @@ export class Container {
 
   public get aiController(): AIController {
     return this._aiController;
+  }
+
+  public get dashboardController(): DashboardController {
+    return this._dashboardController;
   }
 
   public get authMiddleware(): express.RequestHandler {

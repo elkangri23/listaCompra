@@ -17,10 +17,12 @@ import type { AIController } from './controllers/AIController';
 import type { ListController } from './controllers/ListController';
 import type { ProductController } from './controllers/ProductController';
 import type { CategoryController } from './controllers/CategoryController';
+import type { DashboardController } from './controllers/DashboardController';
 import { createAuthRoutes } from './routes/authRoutes';
 import { createInvitationRoutes } from './routes/invitationRoutes';
 import { createAdminRoutes } from './routes/adminRoutes';
 import { createAIRoutes } from './routes/aiRoutes';
+import { createDashboardRoutes } from './routes/dashboardRoutes';
 import recommendationsRoutes from './routes/recommendationsRoutes';
 import { devRoutes } from './routes/devRoutes';
 
@@ -33,6 +35,7 @@ export interface ServerDependencies {
   listController: ListController;
   productController: ProductController;
   categoryController: CategoryController;
+  dashboardController?: DashboardController;
 }
 
 export async function createServer(dependencies: ServerDependencies): Promise<Application> {
@@ -154,6 +157,13 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
   app.use('/api/v1/lists', createListRoutes(listController, authMiddleware));
   app.use('/api/v1/lists', createProductRoutes(productController, authMiddleware));
   app.use('/api/v1/categories', createCategoryRoutes(categoryController));
+
+  if (dependencies.dashboardController) {
+    app.use('/api/v1/dashboard', createDashboardRoutes({
+      dashboardController: dependencies.dashboardController,
+      authMiddleware: dependencies.authMiddleware
+    }));
+  }
 
   // Rutas de desarrollo (solo en development)
   app.use('/api/v1/dev', devRoutes);
