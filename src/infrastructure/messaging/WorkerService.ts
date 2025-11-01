@@ -130,7 +130,7 @@ export class WorkerService {
 
     const consumerOptions: ConsumerOptions = {
       queueName: 'audit_queue',
-      exchangeName: 'lista_compra_exchange',
+      exchangeName: 'lista_compra_events',
       exchangeType: 'topic',
       routingKey: 'lista.#', // Listen to all list-related events
       // routingKey: '#' // Listen to all domain events
