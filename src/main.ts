@@ -76,6 +76,7 @@ async function bootstrap(): Promise<void> {
       productController: container.productController,
       categoryController: container.categoryController,
       dashboardController: container.dashboardController,
+      auditController: container.auditController,
     });
     const port = process.env['PORT'] || 3000;
 

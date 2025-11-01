@@ -1,4 +1,4 @@
-import { DomainEvent } from './DomainEvent';
+import { BaseDomainEvent } from './DomainEvent';
 
 interface ProductoUpdatedEventPayload {
   productoId: string;
@@ -9,8 +9,8 @@ interface ProductoUpdatedEventPayload {
   changedFields: string[];
 }
 
-export class ProductoUpdatedEvent extends DomainEvent<ProductoUpdatedEventPayload> {
+export class ProductoUpdatedEvent extends BaseDomainEvent {
   constructor(payload: ProductoUpdatedEventPayload) {
-    super('producto.updated', payload);
+    super(payload.productoId, 'Producto', payload);
   }
 }

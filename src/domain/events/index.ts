@@ -45,13 +45,13 @@ export class DomainEventFactory {
       case 'InvitacionEnviada':
         return InvitacionEnviada.fromJSON(json);
       case 'lista.updated':
-        return new ListaUpdatedEvent(json.payload);
+        return new ListaUpdatedEvent(json['payload']);
       case 'producto.updated':
-        return new ProductoUpdatedEvent(json.payload);
+        return new ProductoUpdatedEvent(json['payload']);
       case 'lista.deleted':
-        return new ListaDeletedEvent(json.payload);
+        return new ListaDeletedEvent(json['payload']);
       case 'producto.deleted':
-        return new ProductoDeletedEvent(json.payload);
+        return new ProductoDeletedEvent(json['payload']);
       default:
         throw new Error(`Unknown event type: ${eventType}`);
     }

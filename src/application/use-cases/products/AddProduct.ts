@@ -10,7 +10,9 @@ import type { IProductoRepository } from '@application/ports/repositories/IProdu
 import type { IListaRepository } from '@application/ports/repositories/IListaRepository';
 import type { ICategoriaRepository } from '@application/ports/repositories/ICategoriaRepository';
 import type { ITiendaRepository } from '@application/ports/repositories/ITiendaRepository';
+import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
 import type { IAIService } from '@application/ports/external/IAIService';
+import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
 import type { AddProductDto, AddProductResponseDto } from '@application/dto/products/AddProductDto';
 import { Producto } from '@domain/entities/Producto';
 import { Categoria } from '@domain/entities/Categoria';
@@ -24,7 +26,9 @@ interface AddProductDependencies {
   listaRepository: IListaRepository;
   categoriaRepository: ICategoriaRepository;
   tiendaRepository: ITiendaRepository;
+  permisoRepository: IPermisoRepository;
   aiService?: IAIService; // Opcional - IA para categorización automática
+  outboxService?: IOutboxService; // Opcional - Para eventos de auditoría
 }
 
 export class AddProduct {
