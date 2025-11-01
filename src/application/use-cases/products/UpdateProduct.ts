@@ -10,10 +10,13 @@ import type { UpdateProductDto, UpdateProductResponseDto } from '@application/dt
 import { ValidationError } from '@application/errors/ValidationError';
 import { NotFoundError } from '@application/errors/NotFoundError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
+import { ProductoUpdatedEvent } from '@domain/events/ProductoUpdatedEvent';
 
 export class UpdateProduct {
   constructor(
-    private readonly productoRepository: IProductoRepository
+    private readonly productoRepository: IProductoRepository,
+    private readonly outboxService: IOutboxService
   ) {}
 
   async execute(
@@ -70,6 +73,9 @@ export class UpdateProduct {
       ));
     }
 
+    const oldValue = { ...producto.toJSON() };
+    const changedFields: string[] = [];
+
     // 4. Aplicar actualizaciones según campos presentes
     if (dto.nombre) {
       const nombreResult = producto.actualizarNombre(dto.nombre);
@@ -80,6 +86,7 @@ export class UpdateProduct {
           dto.nombre
         ));
       }
+      changedFields.push('nombre');
     }
 
     if (dto.descripcion !== undefined) {
@@ -91,6 +98,7 @@ export class UpdateProduct {
           dto.descripcion
         ));
       }
+      changedFields.push('descripcion');
     }
 
     if (dto.cantidad !== undefined) {
@@ -102,6 +110,7 @@ export class UpdateProduct {
           dto.cantidad
         ));
       }
+      changedFields.push('cantidad');
     }
 
     if (dto.unidad !== undefined) {
@@ -113,6 +122,7 @@ export class UpdateProduct {
           dto.unidad
         ));
       }
+      changedFields.push('unidad');
     }
 
     if (dto.precio !== undefined) {
@@ -124,6 +134,7 @@ export class UpdateProduct {
           dto.precio
         ));
       }
+      changedFields.push('precio');
     }
 
     if (dto.urgente !== undefined) {
@@ -132,6 +143,7 @@ export class UpdateProduct {
       } else {
         producto.marcarComoNoUrgente();
       }
+      changedFields.push('urgente');
     }
 
     if (dto.categoriaId !== undefined) {
@@ -143,6 +155,7 @@ export class UpdateProduct {
           dto.categoriaId
         ));
       }
+      changedFields.push('categoriaId');
     }
 
     // 5. Guardar el producto actualizado
@@ -153,7 +166,18 @@ export class UpdateProduct {
 
     const productoActualizado = saveResult.value;
 
-    // 6. Construir respuesta
+    // 6. Crear y guardar evento de auditoría
+    const auditEvent = new ProductoUpdatedEvent({
+      productoId: productoActualizado.id,
+      listaId: productoActualizado.listaId,
+      oldValue,
+      newValue: productoActualizado.toJSON(),
+      changedByUserId: usuarioId,
+      changedFields,
+    });
+    await this.outboxService.save(auditEvent);
+
+    // 7. Construir respuesta
     const response: UpdateProductResponseDto = {
       id: productoActualizado.id,
       nombre: productoActualizado.nombre,

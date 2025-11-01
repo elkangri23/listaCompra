@@ -10,10 +10,13 @@ import type { DeleteListDto, DeleteListResponseDto } from '@application/dto/list
 import { ValidationError } from '@application/errors/ValidationError';
 import { NotFoundError } from '@application/errors/NotFoundError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
+import { ListaDeletedEvent } from '@domain/events/ListaDeletedEvent';
 
 export class DeleteList {
   constructor(
-    private readonly listaRepository: IListaRepository
+    private readonly listaRepository: IListaRepository,
+    private readonly outboxService: IOutboxService
   ) {}
 
   async execute(
@@ -68,6 +71,8 @@ export class DeleteList {
       ));
     }
 
+    const deletedValue = { ...lista.toJSON() };
+
     // 5. Eliminar la lista (soft delete o hard delete según configuración)
     const eliminacionPermanente = dto.permanente || false;
     
@@ -92,7 +97,15 @@ export class DeleteList {
       return failure(deleteResult.error);
     }
 
-    // 6. Retornar respuesta
+    // 6. Crear y guardar evento de auditoría
+    const auditEvent = new ListaDeletedEvent({
+      listaId: listaId,
+      deletedByUserId: propietarioId,
+      deletedValue,
+    });
+    await this.outboxService.save(auditEvent);
+
+    // 7. Retornar respuesta
     const response: DeleteListResponseDto = {
       id: listaId,
       eliminada: true,
