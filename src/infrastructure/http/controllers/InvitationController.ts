@@ -10,13 +10,17 @@ import { AccessSharedList } from '@application/use-cases/invitations/AccessShare
 import { ManagePermissions } from '@application/use-cases/invitations/ManagePermissions';
 import { CancelInvitation } from '@application/use-cases/invitations/CancelInvitation';
 import { ValidationError, NotFoundError, UnauthorizedError } from '@application/errors';
+import type { IInvitacionRepository } from '@application/ports/repositories/IInvitacionRepository';
+import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
 
 export class InvitationController {
   constructor(
     private readonly shareListUseCase: ShareList,
     private readonly accessSharedListUseCase: AccessSharedList,
     private readonly managePermissionsUseCase: ManagePermissions,
-    private readonly cancelInvitationUseCase: CancelInvitation
+    private readonly cancelInvitationUseCase: CancelInvitation,
+    private readonly invitacionRepository: IInvitacionRepository,
+    private readonly permisoRepository: IPermisoRepository
   ) {}
 
   /**
@@ -26,11 +30,12 @@ export class InvitationController {
   async shareList(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId } = req.params;
-      const { tipoPermiso, diasExpiracion } = req.body;
+      const { tipoPermiso, diasExpiracion, duracionHoras } = req.body;
       const usuarioComparteId = req.user?.userId; // Asumiendo middleware de autenticación
 
       if (!listaId) {
         res.status(400).json({
+          success: false,
           error: 'ID de lista es requerido',
           code: 'VALIDATION_ERROR'
         });
@@ -39,17 +44,22 @@ export class InvitationController {
 
       if (!usuarioComparteId) {
         res.status(401).json({
+          success: false,
           error: 'Usuario no autenticado',
           code: 'UNAUTHORIZED'
         });
         return;
       }
 
+      const expirationDays = diasExpiracion ?? (
+        duracionHoras !== undefined ? Math.max(1, Math.ceil(Number(duracionHoras) / 24)) : undefined
+      );
+
       const result = await this.shareListUseCase.execute({
         listaId,
         usuarioComparteId,
         tipoPermiso,
-        diasExpiracion
+        diasExpiracion: expirationDays
       });
 
       if (result.isFailure) {
@@ -58,12 +68,14 @@ export class InvitationController {
       }
 
       res.status(201).json({
+        success: true,
         message: 'Lista compartida exitosamente',
         data: result.value
       });
     } catch (error) {
       console.error('Error en shareList:', error);
       res.status(500).json({
+        success: false,
         error: 'Error interno del servidor',
         code: 'INTERNAL_ERROR'
       });
@@ -81,6 +93,7 @@ export class InvitationController {
 
       if (!hash) {
         res.status(400).json({
+          success: false,
           error: 'Hash de invitación es requerido',
           code: 'VALIDATION_ERROR'
         });
@@ -89,6 +102,7 @@ export class InvitationController {
 
       if (!usuarioId) {
         res.status(401).json({
+          success: false,
           error: 'Usuario no autenticado',
           code: 'UNAUTHORIZED'
         });
@@ -106,12 +120,14 @@ export class InvitationController {
       }
 
       res.status(200).json({
+        success: true,
         message: 'Acceso a lista compartida exitoso',
         data: result.value
       });
     } catch (error) {
       console.error('Error en accessSharedList:', error);
       res.status(500).json({
+        success: false,
         error: 'Error interno del servidor',
         code: 'INTERNAL_ERROR'
       });
@@ -125,7 +141,7 @@ export class InvitationController {
   async changePermissions(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { listaId, targetUsuarioId } = req.params;
-      const { nuevoTipoPermiso } = req.body;
+      const nuevoTipoPermiso = req.body['nuevoTipoPermiso'] ?? req.body['tipoPermiso'];
       const adminUsuarioId = req.user?.userId;
 
       const validationError = this.validateParams({ listaId, targetUsuarioId }, adminUsuarioId);
@@ -147,13 +163,25 @@ export class InvitationController {
         return;
       }
 
+      const permisoActualizado = result.value.permiso
+        ? {
+            ...result.value.permiso,
+            creadoEn: result.value.permiso.creadoEn instanceof Date
+              ? result.value.permiso.creadoEn.toISOString()
+              : result.value.permiso.creadoEn,
+            mensaje: result.value.mensaje
+          }
+        : { mensaje: result.value.mensaje };
+
       res.status(200).json({
+        success: true,
         message: 'Permisos actualizados exitosamente',
-        data: result.value
+        data: permisoActualizado
       });
     } catch (error) {
       console.error('Error en changePermissions:', error);
       res.status(500).json({
+        success: false,
         error: 'Error interno del servidor',
         code: 'INTERNAL_ERROR'
       });
@@ -188,12 +216,14 @@ export class InvitationController {
       }
 
       res.status(200).json({
+        success: true,
         message: 'Permisos eliminados exitosamente',
         data: result.value
       });
     } catch (error) {
       console.error('Error en removePermissions:', error);
       res.status(500).json({
+        success: false,
         error: 'Error interno del servidor',
         code: 'INTERNAL_ERROR'
       });
@@ -226,12 +256,14 @@ export class InvitationController {
       }
 
       res.status(200).json({
+        success: true,
         message: 'Invitación cancelada exitosamente',
         data: result.value
       });
     } catch (error) {
       console.error('Error en cancelInvitation:', error);
       res.status(500).json({
+        success: false,
         error: 'Error interno del servidor',
         code: 'INTERNAL_ERROR'
       });
@@ -247,26 +279,44 @@ export class InvitationController {
       const { listaId } = req.params;
       const usuarioId = req.user?.userId;
 
+      if (!listaId) {
+        res.status(400).json({
+          success: false,
+          error: 'ID de lista es requerido',
+          code: 'VALIDATION_ERROR'
+        });
+        return;
+      }
+
       if (!usuarioId) {
         res.status(401).json({
+          success: false,
           error: 'Usuario no autenticado',
           code: 'UNAUTHORIZED'
         });
         return;
       }
 
-      // TODO: Implementar caso de uso para obtener invitaciones
-      // Por ahora retornamos un placeholder
+      const invitaciones = await this.invitacionRepository.findActiveByListaId(listaId);
+      const data = invitaciones.map(invitacion => ({
+        id: invitacion.id,
+        listaId: invitacion.listaId,
+        hash: invitacion.hash.value,
+        tipoPermiso: invitacion.tipoPermiso.value,
+        creadaEn: invitacion.creadaEn.toISOString(),
+        expiraEn: invitacion.expiraEn.toISOString(),
+        activa: invitacion.activa,
+      }));
+
       res.status(200).json({
+        success: true,
         message: 'Invitaciones obtenidas exitosamente',
-        data: {
-          listaId,
-          invitaciones: []
-        }
+        data
       });
     } catch (error) {
       console.error('Error en getListInvitations:', error);
       res.status(500).json({
+        success: false,
         error: 'Error interno del servidor',
         code: 'INTERNAL_ERROR'
       });
@@ -282,26 +332,42 @@ export class InvitationController {
       const { listaId } = req.params;
       const usuarioId = req.user?.userId;
 
+      if (!listaId) {
+        res.status(400).json({
+          success: false,
+          error: 'ID de lista es requerido',
+          code: 'VALIDATION_ERROR'
+        });
+        return;
+      }
+
       if (!usuarioId) {
         res.status(401).json({
+          success: false,
           error: 'Usuario no autenticado',
           code: 'UNAUTHORIZED'
         });
         return;
       }
 
-      // TODO: Implementar caso de uso para obtener permisos
-      // Por ahora retornamos un placeholder
+      const permisos = await this.permisoRepository.findByListaId(listaId);
+      const data = permisos.map(permiso => ({
+        id: permiso.id,
+        usuarioId: permiso.usuarioId,
+        listaId: permiso.listaId,
+        tipoPermiso: permiso.tipoPermiso.value,
+        creadoEn: permiso.creadoEn.toISOString(),
+      }));
+
       res.status(200).json({
+        success: true,
         message: 'Permisos obtenidos exitosamente',
-        data: {
-          listaId,
-          permisos: []
-        }
+        data
       });
     } catch (error) {
       console.error('Error en getListPermissions:', error);
       res.status(500).json({
+        success: false,
         error: 'Error interno del servidor',
         code: 'INTERNAL_ERROR'
       });
@@ -314,6 +380,7 @@ export class InvitationController {
   private handleError(error: ValidationError | NotFoundError | UnauthorizedError, res: Response): void {
     if (error instanceof ValidationError) {
       res.status(400).json({
+        success: false,
         error: error.message,
         code: error.code,
         field: error.field,
@@ -321,6 +388,7 @@ export class InvitationController {
       });
     } else if (error instanceof NotFoundError) {
       res.status(404).json({
+        success: false,
         error: error.message,
         code: error.code,
         resource: error.resource,
@@ -328,11 +396,13 @@ export class InvitationController {
       });
     } else if (error instanceof UnauthorizedError) {
       res.status(403).json({
+        success: false,
         error: error.message,
         code: error.code
       });
     } else {
       res.status(500).json({
+        success: false,
         error: 'Error interno del servidor',
         code: 'INTERNAL_ERROR'
       });
@@ -351,6 +421,7 @@ export class InvitationController {
       return {
         status: 401,
         body: {
+          success: false,
           error: 'Usuario no autenticado',
           code: 'UNAUTHORIZED'
         }
@@ -363,6 +434,7 @@ export class InvitationController {
         return {
           status: 400,
           body: {
+            success: false,
             error: `${key} es requerido`,
             code: 'VALIDATION_ERROR'
           }
