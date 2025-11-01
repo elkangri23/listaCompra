@@ -1,4 +1,10 @@
-import type { IListaRepository, ListaFilters, PaginationOptions, PaginatedResult } from '@application/ports/repositories/IListaRepository';
+import type {
+  IListaRepository,
+  ListaFilters,
+  PaginationOptions,
+  PaginatedResult,
+  ListaSortOption
+} from '@application/ports/repositories/IListaRepository';
 import { Lista } from '@domain/entities/Lista';
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
@@ -26,13 +32,86 @@ export class InMemoryListaRepository implements IListaRepository {
   async findByOwner(
     propietarioId: string,
     filters?: ListaFilters,
-    pagination: PaginationOptions = { page: 1, limit: 10 }
+    pagination: PaginationOptions = { page: 1, limit: 10 },
+    sort?: ListaSortOption[]
   ): Promise<Result<PaginatedResult<Lista>, Error>> {
     let items = Array.from(this.listas.values()).filter(lista => lista.propietarioId === propietarioId);
 
     if (filters?.activa !== undefined) {
       items = items.filter(lista => lista.activa === filters.activa);
     }
+
+    if (filters?.tiendaId) {
+      items = items.filter(lista => lista.tiendaId === filters.tiendaId);
+    }
+
+    if (filters?.busqueda) {
+      const termino = filters.busqueda.toLowerCase();
+      items = items.filter(lista => {
+        const nombre = lista.nombre.toLowerCase();
+        const descripcion = lista.descripcion?.toLowerCase() ?? '';
+        return nombre.includes(termino) || descripcion.includes(termino);
+      });
+    }
+
+    if (filters?.fechaCreacionDesde) {
+      items = items.filter(lista => lista.fechaCreacion >= filters.fechaCreacionDesde!);
+    }
+
+    if (filters?.fechaCreacionHasta) {
+      items = items.filter(lista => lista.fechaCreacion <= filters.fechaCreacionHasta!);
+    }
+
+    if (filters?.fechaActualizacionDesde) {
+      items = items.filter(lista => lista.fechaActualizacion >= filters.fechaActualizacionDesde!);
+    }
+
+    if (filters?.fechaActualizacionHasta) {
+      items = items.filter(lista => lista.fechaActualizacion <= filters.fechaActualizacionHasta!);
+    }
+
+    const sortCriteria = (sort && sort.length > 0)
+      ? sort
+      : [{ field: 'fechaActualizacion', direction: 'desc' as const }];
+
+    items = [...items].sort((a, b) => {
+      for (const criterio of sortCriteria) {
+        let comparison = 0;
+
+        switch (criterio.field) {
+          case 'nombre': {
+            const nombreA = a.nombre.toLowerCase();
+            const nombreB = b.nombre.toLowerCase();
+            if (nombreA < nombreB) comparison = -1;
+            else if (nombreA > nombreB) comparison = 1;
+            break;
+          }
+          case 'fechaCreacion': {
+            const diff = a.fechaCreacion.getTime() - b.fechaCreacion.getTime();
+            comparison = diff === 0 ? 0 : diff > 0 ? 1 : -1;
+            break;
+          }
+          case 'fechaActualizacion': {
+            const diff = a.fechaActualizacion.getTime() - b.fechaActualizacion.getTime();
+            comparison = diff === 0 ? 0 : diff > 0 ? 1 : -1;
+            break;
+          }
+          case 'activa': {
+            comparison = Number(a.activa) - Number(b.activa);
+            break;
+          }
+          default:
+            comparison = 0;
+            break;
+        }
+
+        if (comparison !== 0) {
+          return criterio.direction === 'asc' ? comparison : -comparison;
+        }
+      }
+
+      return 0;
+    });
 
     const page = pagination.page ?? 1;
     const limit = pagination.limit ?? 10;
