@@ -10,10 +10,13 @@ import type { DeleteProductDto, DeleteProductResponseDto } from '@application/dt
 import { ValidationError } from '@application/errors/ValidationError';
 import { NotFoundError } from '@application/errors/NotFoundError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
+import { ProductoDeletedEvent } from '@domain/events/ProductoDeletedEvent';
 
 export class DeleteProduct {
   constructor(
-    private readonly productoRepository: IProductoRepository
+    private readonly productoRepository: IProductoRepository,
+    private readonly outboxService: IOutboxService
   ) {}
 
   async execute(
@@ -53,6 +56,7 @@ export class DeleteProduct {
     }
 
     const listaId = producto.listaId;
+    const deletedValue = { ...producto.toJSON() };
 
     // 3. Verificar permisos de eliminación
     if (!producto.puedeModificar(usuarioId)) {
@@ -68,7 +72,16 @@ export class DeleteProduct {
       return failure(deleteResult.error);
     }
 
-    // 5. Construir respuesta
+    // 5. Crear y guardar evento de auditoría
+    const auditEvent = new ProductoDeletedEvent({
+      productoId: productoId,
+      listaId: listaId,
+      deletedByUserId: usuarioId,
+      deletedValue,
+    });
+    await this.outboxService.save(auditEvent);
+
+    // 6. Construir respuesta
     const permanente = dto.permanente ?? true; // Por defecto permanente para productos
     const response: DeleteProductResponseDto = {
       id: productoId,
