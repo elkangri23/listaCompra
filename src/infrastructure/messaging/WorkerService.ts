@@ -11,7 +11,6 @@ import type { IUsuarioRepository } from '../../application/ports/repositories/IU
 import type { IListaRepository } from '../../application/ports/repositories/IListaRepository';
 import type { IAuditRepository } from '../../application/ports/repositories/IAuditRepository';
 import type { Logger } from '../observability/logger/Logger';
-import type { IAuditRepository } from '../../application/ports/repositories/IAuditRepository';
 
 export interface WorkerServiceConfig {
   rabbitmqUrl: string;
@@ -133,7 +132,7 @@ export class WorkerService {
       queueName: 'audit_queue',
       exchangeName: 'lista_compra_exchange',
       exchangeType: 'topic',
-      routingKey: 'lista.#' // Listen to all list-related events
+      routingKey: 'lista.#', // Listen to all list-related events
       // routingKey: '#' // Listen to all domain events
       prefetch: 5,
       autoAck: false,

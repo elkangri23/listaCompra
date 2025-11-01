@@ -30,7 +30,8 @@ describe('List realtime streaming (SSE)', () => {
       authMiddleware: container.authMiddleware,
       listController: container.listController,
       productController: container.productController,
-      categoryController: container.categoryController
+      categoryController: container.categoryController,
+      auditController: container.auditController
     });
 
     server = app.listen(0);

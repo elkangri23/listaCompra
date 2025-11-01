@@ -3,7 +3,7 @@
  * Valida que el usuario tenga el rol requerido para acceder a endpoints protegidos
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, type RequestHandler } from 'express';
 import { RolUsuario } from '@domain/entities/Usuario';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 
@@ -26,8 +26,8 @@ export interface AuthenticatedRequest extends Request {
  * @param allowedRoles Array de roles permitidos para acceder al endpoint
  * @returns Middleware function
  */
-export const requireRole = (allowedRoles: RolUsuario[]) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+export const requireRole = (allowedRoles: RolUsuario[]): RequestHandler => {
+  const handler = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     try {
       // VALIDACIÓN 1: Usuario autenticado
       if (!req.user) {
@@ -151,6 +151,8 @@ export const requireRole = (allowedRoles: RolUsuario[]) => {
       });
     }
   };
+
+  return handler as unknown as RequestHandler;
 };
 
 /**

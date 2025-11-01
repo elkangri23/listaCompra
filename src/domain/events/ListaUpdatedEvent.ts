@@ -1,4 +1,4 @@
-import { DomainEvent } from './DomainEvent';
+import { BaseDomainEvent } from './DomainEvent';
 
 interface ListaUpdatedEventPayload {
   listaId: string;
@@ -8,8 +8,8 @@ interface ListaUpdatedEventPayload {
   changedFields: string[];
 }
 
-export class ListaUpdatedEvent extends DomainEvent<ListaUpdatedEventPayload> {
+export class ListaUpdatedEvent extends BaseDomainEvent {
   constructor(payload: ListaUpdatedEventPayload) {
-    super('lista.updated', payload);
+    super(payload.listaId, 'Lista', payload);
   }
 }

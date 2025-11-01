@@ -18,51 +18,51 @@ export class AuditEventHandler {
       let auditEntry: AuditEntry | null = null;
 
       switch (event.eventType) {
-        case 'lista.updated': {
-          const payload = (event as ListaUpdatedEvent).payload;
+        case ListaUpdatedEvent.name: {
+          const payload = (event as ListaUpdatedEvent).eventData;
           auditEntry = AuditEntry.create({
             entityType: 'Lista',
-            entityId: payload.listaId,
+            entityId: payload['listaId'],
             changeType: 'UPDATE',
-            changedByUserId: payload.changedByUserId,
-            oldValue: payload.oldValue,
-            newValue: payload.newValue,
-            changedFields: payload.changedFields,
+            changedByUserId: payload['changedByUserId'],
+            oldValue: payload['oldValue'],
+            newValue: payload['newValue'],
+            changedFields: payload['changedFields'],
           });
           break;
         }
-        case 'producto.updated': {
-          const payload = (event as ProductoUpdatedEvent).payload;
+        case ProductoUpdatedEvent.name: {
+          const payload = (event as ProductoUpdatedEvent).eventData;
           auditEntry = AuditEntry.create({
             entityType: 'Producto',
-            entityId: payload.productoId,
+            entityId: payload['productoId'],
             changeType: 'UPDATE',
-            changedByUserId: payload.changedByUserId,
-            oldValue: payload.oldValue,
-            newValue: payload.newValue,
-            changedFields: payload.changedFields,
+            changedByUserId: payload['changedByUserId'],
+            oldValue: payload['oldValue'],
+            newValue: payload['newValue'],
+            changedFields: payload['changedFields'],
           });
           break;
         }
-        case 'lista.deleted': {
-          const payload = (event as ListaDeletedEvent).payload;
+        case ListaDeletedEvent.name: {
+          const payload = (event as ListaDeletedEvent).eventData;
           auditEntry = AuditEntry.create({
             entityType: 'Lista',
-            entityId: payload.listaId,
+            entityId: payload['listaId'],
             changeType: 'DELETE',
-            changedByUserId: payload.deletedByUserId,
-            oldValue: payload.deletedValue,
+            changedByUserId: payload['deletedByUserId'],
+            oldValue: payload['deletedValue'],
           });
           break;
         }
-        case 'producto.deleted': {
-          const payload = (event as ProductoDeletedEvent).payload;
+        case ProductoDeletedEvent.name: {
+          const payload = (event as ProductoDeletedEvent).eventData;
           auditEntry = AuditEntry.create({
             entityType: 'Producto',
-            entityId: payload.productoId,
+            entityId: payload['productoId'],
             changeType: 'DELETE',
-            changedByUserId: payload.deletedByUserId,
-            oldValue: payload.deletedValue,
+            changedByUserId: payload['deletedByUserId'],
+            oldValue: payload['deletedValue'],
           });
           break;
         }

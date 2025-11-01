@@ -32,12 +32,12 @@ export class GetAuditHistoryForList {
     const query: AuditEntryQuery = {
       entityType: 'Lista',
       entityId: dto.listId,
-      page: dto.page || 1,
-      pageSize: dto.pageSize || 10,
-      changeType: dto.changeType,
-      changedByUserId: dto.changedByUserId,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      page: dto.page ?? 1,
+      pageSize: dto.pageSize ?? 10,
+      ...(dto.changeType && { changeType: dto.changeType }),
+      ...(dto.changedByUserId && { changedByUserId: dto.changedByUserId }),
+      ...(dto.startDate && { startDate: dto.startDate }),
+      ...(dto.endDate && { endDate: dto.endDate }),
     };
 
     const findResult = await this.auditRepository.find(query);

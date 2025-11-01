@@ -39,6 +39,8 @@ import { BulkCategorizeProducts } from '@application/use-cases/ai/BulkCategorize
 import { GetAuditHistoryForList } from '@application/use-cases/audit/GetAuditHistoryForList';
 import { GetAuditHistoryForProduct } from '@application/use-cases/audit/GetAuditHistoryForProduct';
 import { GetGlobalAuditHistory } from '@application/use-cases/audit/GetGlobalAuditHistory';
+import { GetCollaborativeDashboard } from '@application/use-cases/analytics/GetCollaborativeDashboard';
+import { GetCategorySuggestionsUseCase } from '@application/use-cases/ai/GetCategorySuggestions';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
@@ -48,7 +50,8 @@ import { PrismaCategoriaRepository } from '@infrastructure/persistence/repositor
 import { PrismaTiendaRepository } from '@infrastructure/persistence/repositories/PrismaTiendaRepository';
 import { PrismaInvitacionRepository } from '@infrastructure/persistence/repositories/PrismaInvitacionRepository';
 import { PrismaPermisoRepository } from '@infrastructure/persistence/repositories/PrismaPermisoRepository';
-import { PrismaAuditRepository } from '@infrastructure/persistence/repositories/PrismaAuditRepository';
+import { PrismaAuditRepository } from '@infrastructure/persistence/prisma/repositories/PrismaAuditRepository';
+import { PrismaAnalyticsRepository } from '@infrastructure/persistence/repositories/PrismaAnalyticsRepository';
 import { InMemoryUsuarioRepository } from '@infrastructure/persistence/in-memory/InMemoryUsuarioRepository';
 import { InMemoryListaRepository } from '@infrastructure/persistence/in-memory/InMemoryListaRepository';
 import { InMemoryProductoRepository } from '@infrastructure/persistence/in-memory/InMemoryProductoRepository';
@@ -60,7 +63,7 @@ import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/Bcr
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
 import { PrismaOutboxService } from '@infrastructure/messaging/outbox/PrismaOutboxService';
-import { OutboxWorker } from '@infrastructure/messaging/outbox/OutboxWorker';
+import { OutboxWorker, DEFAULT_WORKER_CONFIG } from '@infrastructure/messaging/outbox/OutboxWorker';
 import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import { NodemailerService } from '@infrastructure/external-services/email/NodemailerService';
 import { PerplexityService } from '@infrastructure/external-services/ai/PerplexityService';
@@ -79,9 +82,13 @@ import { AdminController } from '@infrastructure/http/controllers/AdminControlle
 import { RecommendationsController } from '@infrastructure/http/controllers/RecommendationsController';
 import { AIController } from '@infrastructure/http/controllers/AIController';
 import { AuditController } from '@infrastructure/http/controllers/AuditController';
+import { DashboardController } from '@infrastructure/http/controllers/DashboardController';
 import { createAuthMiddleware } from '@infrastructure/http/middlewares/authMiddleware';
 import { RealTimeGateway } from '@infrastructure/realtime/RealTimeGateway';
 import { Logger } from '@infrastructure/observability/logger/Logger';
+import { MetricsCollector } from '@infrastructure/observability/metrics/MetricsCollector';
+import { CachedAIService } from '@infrastructure/external-services/ai/CachedAIService';
+import getRedisConfig, { type RedisConfig } from '@infrastructure/config/redis.config';
 
 // Interfaces
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
@@ -92,6 +99,7 @@ import type { ITiendaRepository } from '@application/ports/repositories/ITiendaR
 import type { IInvitacionRepository } from '@application/ports/repositories/IInvitacionRepository';
 import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
 import type { IAuditRepository } from '@application/ports/repositories/IAuditRepository';
+import type { IAnalyticsRepository } from '@application/ports/repositories/IAnalyticsRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
 import type { IEventPublisher } from '@application/ports/messaging/IEventPublisher';
@@ -114,6 +122,7 @@ export class Container {
   private _invitacionRepository!: IInvitacionRepository;
   private _permisoRepository!: IPermisoRepository;
   private _auditRepository!: IAuditRepository;
+  private _analyticsRepository!: IAnalyticsRepository;
 
   // External Services
   private _passwordHasher!: IPasswordHasher;
@@ -126,6 +135,8 @@ export class Container {
   private _hashGenerator!: IInvitationHashGenerator;
   private _workerService!: WorkerService;
   private _realTimeGateway!: RealTimeGateway;
+  private _metricsCollector!: MetricsCollector;
+  private _cachedAIService!: CachedAIService;
 
   // Use Cases
   private _registerUser!: RegisterUser;
@@ -159,6 +170,8 @@ export class Container {
   private _getAuditHistoryForList!: GetAuditHistoryForList;
   private _getAuditHistoryForProduct!: GetAuditHistoryForProduct;
   private _getGlobalAuditHistory!: GetGlobalAuditHistory;
+  private _getCollaborativeDashboard!: GetCollaborativeDashboard;
+  private _getCategorySuggestions!: GetCategorySuggestionsUseCase;
 
   // Controllers
   private _authController!: AuthController;
@@ -171,6 +184,7 @@ export class Container {
   private _recommendationsController!: RecommendationsController;
   private _aiController!: AIController;
   private _auditController!: AuditController;
+  private _dashboardController!: DashboardController;
 
   // Middlewares
   private _authMiddleware!: express.RequestHandler;
@@ -192,9 +206,6 @@ export class Container {
     return Container.instance;
   }
 
-  /**
-   * Inicializa la conexión RabbitMQ si está habilitado
-   */
   /**
    * Inicializa la conexión RabbitMQ si está habilitado
    */
@@ -253,6 +264,7 @@ export class Container {
   }
 
   private initializeInfrastructure(): void {
+    this._metricsCollector = new MetricsCollector();
     if (this.isTestEnv) {
       this._prisma = {} as PrismaClient;
       return;
@@ -271,9 +283,9 @@ export class Container {
       this._categoriaRepository = new InMemoryCategoriaRepository();
       this._tiendaRepository = new InMemoryTiendaRepository();
       this._invitacionRepository = new InMemoryInvitacionRepository();
-          this._permisoRepository = new InMemoryPermisoRepository();
-          this._auditRepository = { save: async () => success({} as any), findById: async () => success(null), find: async () => success([]), count: async () => success(0) };
-          this._analyticsRepository = {        getCollaborativeDashboard: async () => success({
+      this._permisoRepository = new InMemoryPermisoRepository();
+      this._auditRepository = { save: async () => success({} as any), findById: async () => success(null), find: async () => success([]), count: async () => success(0) };
+      this._analyticsRepository = {        getCollaborativeDashboard: async () => success({
           summary: {
             totalLists: 0,
             activeLists: 0,
@@ -353,6 +365,13 @@ export class Container {
       }
     };
     this._aiService = new PerplexityService(aiConfig);
+
+    const redisConfig: RedisConfig = getRedisConfig();
+
+    this._cachedAIService = new CachedAIService({
+      aiConfig,
+      redisConfig,
+    });
     
     // Configurar EventPublisher según variables de entorno
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
@@ -403,7 +422,8 @@ export class Container {
     } else {
       this._outboxWorker = new OutboxWorker(
         this._outboxService,
-        this._eventPublisher
+        this._eventPublisher,
+        DEFAULT_WORKER_CONFIG
       );
     }
   }
@@ -421,20 +441,20 @@ export class Container {
     );
 
     // Lista use cases
-    this._createList = new CreateList(
-      this._listaRepository
-    );
+    this._createList = new CreateList(this._listaRepository);
 
     this._getUserLists = new GetUserLists(
       this._listaRepository
     );
 
     this._updateList = new UpdateList(
-      this._listaRepository
+      this._listaRepository,
+      this._outboxService
     );
 
     this._deleteList = new DeleteList(
-      this._listaRepository
+      this._listaRepository,
+      this._outboxService
     );
 
     this._getListById = new GetListById(
@@ -449,19 +469,23 @@ export class Container {
       categoriaRepository: this._categoriaRepository,
       tiendaRepository: this._tiendaRepository,
       permisoRepository: this._permisoRepository,
-      aiService: this._aiService // Opcional
+      aiService: this._aiService,
+      outboxService: this._outboxService // Opcional
     });
 
     this._updateProduct = new UpdateProduct(
-      this._productoRepository
+      this._productoRepository,
+      this._outboxService
     );
 
     this._markProductAsPurchased = new MarkProductAsPurchased(
-      this._productoRepository
+      this._productoRepository,
+      this._outboxService
     );
 
     this._deleteProduct = new DeleteProduct(
-      this._productoRepository
+      this._productoRepository,
+      this._outboxService
     );
 
     this._getProducts = new GetProducts(
@@ -560,9 +584,14 @@ export class Container {
       this._categoriaRepository
     );
 
+    // Analytics
     this._getCollaborativeDashboard = new GetCollaborativeDashboard(
       this._analyticsRepository
     );
+
+    this._getCategorySuggestions = new GetCategorySuggestionsUseCase({
+      aiService: this._aiService,
+    });
 
     this._getAuditHistoryForList = new GetAuditHistoryForList(this._auditRepository);
     this._getAuditHistoryForProduct = new GetAuditHistoryForProduct(this._auditRepository);
@@ -630,7 +659,7 @@ export class Container {
     );
 
     this._aiController = new AIController(
-      undefined, // getCategorySuggestionsUseCase - por implementar
+      this._getCategorySuggestions,
       this._bulkCategorizeProducts
     );
 
@@ -638,6 +667,12 @@ export class Container {
       this._getAuditHistoryForList,
       this._getAuditHistoryForProduct,
       this._getGlobalAuditHistory
+    );
+
+    this._dashboardController = new DashboardController(
+      this._metricsCollector,
+      this._cachedAIService,
+      this._getCollaborativeDashboard
     );
 
     // Inicializar middleware de autenticación

@@ -1,4 +1,4 @@
-import { DomainEvent } from './DomainEvent';
+import { BaseDomainEvent } from './DomainEvent';
 
 interface ListaDeletedEventPayload {
   listaId: string;
@@ -6,8 +6,8 @@ interface ListaDeletedEventPayload {
   deletedValue: Record<string, any>;
 }
 
-export class ListaDeletedEvent extends DomainEvent<ListaDeletedEventPayload> {
+export class ListaDeletedEvent extends BaseDomainEvent {
   constructor(payload: ListaDeletedEventPayload) {
-    super('lista.deleted', payload);
+    super(payload.listaId, 'Lista', payload);
   }
 }

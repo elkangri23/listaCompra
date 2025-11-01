@@ -28,11 +28,12 @@ export class AuditEntry {
     this.entityType = props.entityType;
     this.entityId = props.entityId;
     this.changeType = props.changeType;
-    this.changedByUserId = props.changedByUserId;
     this.timestamp = props.timestamp || new Date();
-    this.oldValue = props.oldValue;
-    this.newValue = props.newValue;
-    this.changedFields = props.changedFields;
+
+    if (props.changedByUserId) this.changedByUserId = props.changedByUserId;
+    if (props.oldValue) this.oldValue = props.oldValue;
+    if (props.newValue) this.newValue = props.newValue;
+    if (props.changedFields) this.changedFields = props.changedFields;
   }
 
   public static create(props: AuditEntryProps): AuditEntry {
