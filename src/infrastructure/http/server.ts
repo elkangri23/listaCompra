@@ -18,6 +18,7 @@ import type { ListController } from './controllers/ListController';
 import type { ProductController } from './controllers/ProductController';
 import type { CategoryController } from './controllers/CategoryController';
 import type { DashboardController } from './controllers/DashboardController';
+import type { AuditController } from './controllers/AuditController';
 import { createAuthRoutes } from './routes/authRoutes';
 import { createInvitationRoutes } from './routes/invitationRoutes';
 import { createAdminRoutes } from './routes/adminRoutes';
@@ -25,6 +26,7 @@ import { createAIRoutes } from './routes/aiRoutes';
 import { createDashboardRoutes } from './routes/dashboardRoutes';
 import recommendationsRoutes from './routes/recommendationsRoutes';
 import { devRoutes } from './routes/devRoutes';
+import { auditRoutes } from './routes/audit.routes';
 
 export interface ServerDependencies {
   authController: AuthController;
@@ -36,6 +38,7 @@ export interface ServerDependencies {
   productController: ProductController;
   categoryController: CategoryController;
   dashboardController?: DashboardController;
+  auditController: AuditController;
 }
 
 export async function createServer(dependencies: ServerDependencies): Promise<Application> {
@@ -164,6 +167,9 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
       authMiddleware: dependencies.authMiddleware
     }));
   }
+
+  // Rutas de auditoría
+  app.use('/api/v1', auditRoutes);
 
   // Rutas de desarrollo (solo en development)
   app.use('/api/v1/dev', devRoutes);

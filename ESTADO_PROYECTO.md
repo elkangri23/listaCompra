@@ -154,7 +154,7 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 
 ## 🎯 CASOS DE USO - ESTADO DETALLADO
 
-### ✅ **Completamente Implementados (32 de 34)**
+### ✅ **Completamente Implementados (33 de 34)**
 
 #### **Autenticación y Usuarios** (2/2)
 - ✅ **CU-01**: Registro de usuario - `RegisterUser` use case
@@ -203,6 +203,9 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 - ✅ **CU-24**: Impersonar usuario - `ImpersonateUser` use case
 - ✅ **CU-25**: Finalizar impersonación - `EndImpersonation` use case
 
+#### **Auditoría** (1/1)
+- ✅ **CU-20**: Historial de Cambios - `GetAuditHistoryForList` y `GetAuditHistoryForProduct` use cases ✨ **(NUEVO)**
+
 #### **Inteligencia Artificial** (5/6)
 - ✅ **CU-28**: Categorización automática - `GetCategorySuggestions` use case
 - ✅ **CU-29**: Categorización masiva - `BulkCategorizeProducts` use case
@@ -213,13 +216,9 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 
 ---
 
-### ⏳ **Pendientes de Implementar (2 de 34)**
+### ⏳ **Pendientes de Implementar (1 de 34)**
 
-1.  ❌ **CU-20: Historial de Cambios (Auditoría)**
-    *   **Prioridad**: Media
-    *   **Descripción**: Registrar un historial de cambios en listas y productos para auditoría y trazabilidad.
-
-2.  ❌ **CU-30: Alertas Proactivas (IA)**
+1.  ❌ **CU-30: Alertas Proactivas (IA)**
     *   **Prioridad**: Baja
     *   **Descripción**: Implementar un worker que monitorice precios o patrones para enviar notificaciones y alertas a los usuarios.
 
@@ -281,7 +280,7 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 
 ---
 
-## 📊 ENDPOINTS REST (58 TOTALES)
+## 📊 ENDPOINTS REST (61 TOTALES)
 
 ### **Autenticación** (5)
 - `POST /api/v1/auth/register` - Registrar usuario
@@ -362,6 +361,11 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 - `GET /api/v1/admin/impersonate/status` - Estado actual de impersonación
 - `GET /api/v1/admin/audit/impersonations` - Auditoría histórica (beta)
 - `GET /api/v1/admin/security/test` - Suite automática de seguridad
+
+### **Auditoría** (3)
+- `GET /api/v1/audit/lists/:listId` - Historial de cambios para una lista.
+- `GET /api/v1/audit/products/:productId` - Historial de cambios para un producto.
+- `GET /api/v1/admin/audit` - Historial de cambios global (solo para administradores).
 
 ### **Dashboard y Analíticas** (5)
 - `GET /api/v1/dashboard/metrics` - Métricas de performance del sistema.

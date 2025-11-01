@@ -10,10 +10,13 @@ import type { UpdateListDto, UpdateListResponseDto } from '@application/dto/list
 import { ValidationError } from '@application/errors/ValidationError';
 import { NotFoundError } from '@application/errors/NotFoundError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
+import { ListaUpdatedEvent } from '@domain/events/ListaUpdatedEvent';
 
 export class UpdateList {
   constructor(
-    private readonly listaRepository: IListaRepository
+    private readonly listaRepository: IListaRepository,
+    private readonly outboxService: IOutboxService
   ) {}
 
   async execute(
@@ -68,6 +71,9 @@ export class UpdateList {
       ));
     }
 
+    const oldValue = { ...lista.toJSON() };
+    const changedFields: string[] = [];
+
     // 4. Actualizar campos según sea necesario
     if (dto.nombre) {
       // Verificar que no exista otra lista con el mismo nombre (si está cambiando el nombre)
@@ -94,6 +100,7 @@ export class UpdateList {
           dto.nombre
         ));
       }
+      changedFields.push('nombre');
     }
 
     if (dto.descripcion !== undefined) {
@@ -105,6 +112,7 @@ export class UpdateList {
           dto.descripcion
         ));
       }
+      changedFields.push('descripcion');
     }
 
     if (dto.tiendaId !== undefined) {
@@ -116,6 +124,7 @@ export class UpdateList {
           dto.tiendaId
         ));
       }
+      changedFields.push('tiendaId');
     }
 
     // 5. Guardar la lista actualizada
@@ -126,7 +135,17 @@ export class UpdateList {
 
     const listaActualizada = saveResult.value;
 
-    // 6. Retornar respuesta
+    // 6. Crear y guardar evento de auditoría
+    const auditEvent = new ListaUpdatedEvent({
+      listaId: listaActualizada.id,
+      oldValue,
+      newValue: listaActualizada.toJSON(),
+      changedByUserId: propietarioId,
+      changedFields,
+    });
+    await this.outboxService.save(auditEvent);
+
+    // 7. Retornar respuesta
     const response: UpdateListResponseDto = {
       id: listaActualizada.id,
       nombre: listaActualizada.nombre,

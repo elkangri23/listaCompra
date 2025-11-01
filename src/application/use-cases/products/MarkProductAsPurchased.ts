@@ -10,10 +10,13 @@ import type { MarkAsPurchasedDto, MarkAsPurchasedResponseDto } from '@applicatio
 import { ValidationError } from '@application/errors/ValidationError';
 import { NotFoundError } from '@application/errors/NotFoundError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
+import { ProductoUpdatedEvent } from '@domain/events/ProductoUpdatedEvent';
 
 export class MarkProductAsPurchased {
   constructor(
-    private readonly productoRepository: IProductoRepository
+    private readonly productoRepository: IProductoRepository,
+    private readonly outboxService: IOutboxService
   ) {}
 
   async execute(
@@ -79,6 +82,8 @@ export class MarkProductAsPurchased {
       ));
     }
 
+    const oldValue = { ...producto.toJSON() };
+
     // 5. Aplicar el cambio de estado
     if (dto.comprado) {
       producto.marcarComoComprado();
@@ -94,7 +99,18 @@ export class MarkProductAsPurchased {
 
     const productoActualizado = saveResult.value;
 
-    // 7. Construir respuesta
+    // 7. Crear y guardar evento de auditoría
+    const auditEvent = new ProductoUpdatedEvent({
+      productoId: productoActualizado.id,
+      listaId: productoActualizado.listaId,
+      oldValue,
+      newValue: productoActualizado.toJSON(),
+      changedByUserId: usuarioId,
+      changedFields: ['comprado', 'fechaCompra'],
+    });
+    await this.outboxService.save(auditEvent);
+
+    // 8. Construir respuesta
     const accion = dto.comprado ? 'comprado' : 'no comprado';
     const response: MarkAsPurchasedResponseDto = {
       id: productoActualizado.id,

@@ -5,9 +5,13 @@
 
 import { RabbitMQConsumer, type ConsumerOptions } from './rabbitmq/RabbitMQConsumer';
 import { NotificationConsumer } from './consumers/NotificationConsumer';
+import { AuditEventHandler } from './consumers/AuditEventHandler';
 import type { IEmailService } from '../../application/ports/external/IEmailService';
 import type { IUsuarioRepository } from '../../application/ports/repositories/IUsuarioRepository';
 import type { IListaRepository } from '../../application/ports/repositories/IListaRepository';
+import type { IAuditRepository } from '../../application/ports/repositories/IAuditRepository';
+import type { Logger } from '../observability/logger/Logger';
+import type { IAuditRepository } from '../../application/ports/repositories/IAuditRepository';
 
 export interface WorkerServiceConfig {
   rabbitmqUrl: string;
@@ -15,6 +19,8 @@ export interface WorkerServiceConfig {
   emailService: IEmailService;
   usuarioRepository: IUsuarioRepository;
   listaRepository: IListaRepository;
+  auditRepository: IAuditRepository;
+  logger: Logger;
 }
 
 export class WorkerService {
@@ -39,6 +45,9 @@ export class WorkerService {
     try {
       // Crear y iniciar NotificationConsumer
       await this.startNotificationConsumer();
+
+      // Crear y iniciar AuditConsumer
+      await this.startAuditConsumer();
 
       this.isRunning = true;
       console.log('✅ Todos los Workers iniciados exitosamente');
@@ -112,6 +121,43 @@ export class WorkerService {
     }
   }
 
+  private async startAuditConsumer(): Promise<void> {
+    console.log('🔍 Iniciando AuditConsumer...');
+
+    const auditHandler = new AuditEventHandler(
+      this.config.auditRepository,
+      this.config.logger // Assuming logger is available in config or passed separately
+    );
+
+    const consumerOptions: ConsumerOptions = {
+      queueName: 'audit_queue',
+      exchangeName: 'lista_compra_exchange',
+      exchangeType: 'topic',
+      routingKey: 'lista.#' // Listen to all list-related events
+      // routingKey: '#' // Listen to all domain events
+      prefetch: 5,
+      autoAck: false,
+      maxRetries: 3,
+      retryDelay: 2000,
+      deadLetterQueue: 'audit_dlq'
+    };
+
+    try {
+      const consumer = await RabbitMQConsumer.createAndStart(
+        this.config.rabbitmqUrl,
+        auditHandler,
+        consumerOptions
+      );
+
+      this.consumers.push(consumer);
+      console.log('✅ AuditConsumer iniciado exitosamente');
+
+    } catch (error) {
+      console.error('💥 Error iniciando AuditConsumer:', error);
+      throw error;
+    }
+  }
+
   // Métodos de monitoreo
   public getStatus(): {
     isRunning: boolean;
@@ -170,6 +216,8 @@ export class WorkerService {
       // Reiniciar según el tipo de consumer
       if (queueName === 'notifications_queue') {
         await this.startNotificationConsumer();
+      } else if (queueName === 'audit_queue') {
+        await this.startAuditConsumer();
       }
       
       console.log(`✅ Consumer ${queueName} reiniciado exitosamente`);

@@ -162,6 +162,23 @@ model OutboxEvent {
   @@map("outbox_events")
 }
 
+model AuditEntry {
+  id              String    @id @default(uuid())
+  entityType      String    // e.g., 'Lista', 'Producto'
+  entityId        String    // ID of the entity that was changed
+  changeType      String    // e.g., 'CREATE', 'UPDATE', 'DELETE'
+  changedByUserId String?   // ID of the user who made the change (optional, for system changes)
+  timestamp       DateTime  @default(now())
+  oldValue        Json?     // JSON representation of the entity before the change
+  newValue        Json?     // JSON representation of the entity after the change
+  changedFields   Json?     // JSON array of strings indicating which fields were modified
+
+  @@index([entityType, entityId])
+  @@index([changedByUserId])
+  @@index([timestamp])
+  @@map("audit_entries")
+}
+
 enum RolUsuario {
   USUARIO
   ADMIN
