@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import { apiRateLimit } from './middlewares/rateLimitMiddleware';
 import { corsConfig, corsSecurityHeaders } from '../config/cors.config';
 import { errorMiddleware, notFoundMiddleware, requestIdMiddleware, httpLoggerMiddleware } from './middlewares/errorMiddleware';
+import { traceContextMiddleware } from './middlewares/tracingMiddleware';
 import { setupSwagger } from '../config/swagger-simple.config';
 import type { AuthController } from './controllers/AuthController';
 import type { InvitationController } from './controllers/InvitationController';
@@ -42,6 +43,9 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
 
   // 🆔 Request ID para tracking
   app.use(requestIdMiddleware);
+
+  // 🔍 Propagar contexto de tracing distribuido
+  app.use(traceContextMiddleware);
 
   // 🔒 Headers de seguridad con Helmet (configuración estricta)
   app.use(helmet({
