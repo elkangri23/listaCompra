@@ -3,17 +3,19 @@
  * Expone métricas unificadas del sistema
  */
 
-import { Router } from 'express';
+import { Router, type RequestHandler } from 'express';
 import { DashboardController } from '../controllers/DashboardController';
-import { MetricsCollector } from '../../observability/metrics/MetricsCollector';
-import { CachedAIService } from '../../external-services/ai/CachedAIService';
 
-export function createDashboardRoutes(
-  metricsCollector: MetricsCollector,
-  aiService: CachedAIService
-): Router {
+interface DashboardRouteDependencies {
+  dashboardController: DashboardController;
+  authMiddleware?: RequestHandler;
+}
+
+export function createDashboardRoutes({
+  dashboardController,
+  authMiddleware
+}: DashboardRouteDependencies): Router {
   const router = Router();
-  const dashboardController = new DashboardController(metricsCollector, aiService);
 
   /**
    * GET /dashboard/metrics
@@ -43,8 +45,18 @@ export function createDashboardRoutes(
    * GET /dashboard/performance
    * Métricas de performance detalladas
    */
-  router.get('/performance', (req, res) => 
+  router.get('/performance', (req, res) =>
     dashboardController.getPerformance(req, res)
+  );
+
+  /**
+   * GET /dashboard/analytics
+   * Métricas colaborativas y patrones de consumo (requiere auth)
+   */
+  router.get(
+    '/analytics',
+    ...(authMiddleware ? [authMiddleware] : []),
+    (req, res) => dashboardController.getCollaborativeAnalytics(req, res)
   );
 
   /**
