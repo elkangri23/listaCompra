@@ -5,7 +5,12 @@
 
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import type { IListaRepository, PaginatedResult } from '@application/ports/repositories/IListaRepository';
+import type {
+  IListaRepository,
+  PaginatedResult,
+  ListaFilters,
+  ListaSortOption
+} from '@application/ports/repositories/IListaRepository';
 import type { GetUserListsDto, GetUserListsResponseDto } from '@application/dto/lists/GetUserListsDto';
 import { ValidationError } from '@application/errors/ValidationError';
 
@@ -25,11 +30,122 @@ export class GetUserLists {
     }
 
     // 2. Preparar filtros
-    const filters = {
-      ...(dto.activa !== undefined && { activa: dto.activa }),
-      ...(dto.tiendaId && { tiendaId: dto.tiendaId }),
+    const filters: ListaFilters = {
       propietarioId,
     };
+
+    if (dto.activa !== undefined) {
+      filters.activa = dto.activa;
+    }
+
+    if (dto.tiendaId) {
+      filters.tiendaId = dto.tiendaId;
+    }
+
+    if (dto.busqueda) {
+      const terminoBusqueda = dto.busqueda.trim();
+      if (terminoBusqueda.length > 0) {
+        filters.busqueda = terminoBusqueda;
+      }
+    }
+
+    if (dto.fechaCreacionDesde) {
+      const fechaCreacionDesde = new Date(dto.fechaCreacionDesde);
+      if (Number.isNaN(fechaCreacionDesde.getTime())) {
+        return failure(ValidationError.create(
+          'La fecha de inicio de creación no es válida',
+          'fechaCreacionDesde',
+          dto.fechaCreacionDesde
+        ));
+      }
+      filters.fechaCreacionDesde = fechaCreacionDesde;
+    }
+
+    if (dto.fechaCreacionHasta) {
+      const fechaCreacionHasta = new Date(dto.fechaCreacionHasta);
+      if (Number.isNaN(fechaCreacionHasta.getTime())) {
+        return failure(ValidationError.create(
+          'La fecha de fin de creación no es válida',
+          'fechaCreacionHasta',
+          dto.fechaCreacionHasta
+        ));
+      }
+      filters.fechaCreacionHasta = fechaCreacionHasta;
+    }
+
+    if (
+      filters.fechaCreacionDesde &&
+      filters.fechaCreacionHasta &&
+      filters.fechaCreacionDesde > filters.fechaCreacionHasta
+    ) {
+      return failure(ValidationError.create(
+        'La fecha de inicio de creación no puede ser posterior a la fecha de fin',
+        'rangoFechaCreacion',
+        `${dto.fechaCreacionDesde} > ${dto.fechaCreacionHasta}`
+      ));
+    }
+
+    if (dto.fechaActualizacionDesde) {
+      const fechaActualizacionDesde = new Date(dto.fechaActualizacionDesde);
+      if (Number.isNaN(fechaActualizacionDesde.getTime())) {
+        return failure(ValidationError.create(
+          'La fecha de inicio de actualización no es válida',
+          'fechaActualizacionDesde',
+          dto.fechaActualizacionDesde
+        ));
+      }
+      filters.fechaActualizacionDesde = fechaActualizacionDesde;
+    }
+
+    if (dto.fechaActualizacionHasta) {
+      const fechaActualizacionHasta = new Date(dto.fechaActualizacionHasta);
+      if (Number.isNaN(fechaActualizacionHasta.getTime())) {
+        return failure(ValidationError.create(
+          'La fecha de fin de actualización no es válida',
+          'fechaActualizacionHasta',
+          dto.fechaActualizacionHasta
+        ));
+      }
+      filters.fechaActualizacionHasta = fechaActualizacionHasta;
+    }
+
+    if (
+      filters.fechaActualizacionDesde &&
+      filters.fechaActualizacionHasta &&
+      filters.fechaActualizacionDesde > filters.fechaActualizacionHasta
+    ) {
+      return failure(ValidationError.create(
+        'La fecha de inicio de actualización no puede ser posterior a la fecha de fin',
+        'rangoFechaActualizacion',
+        `${dto.fechaActualizacionDesde} > ${dto.fechaActualizacionHasta}`
+      ));
+    }
+
+    const sortOptions: ListaSortOption[] = [];
+    if (dto.sort && dto.sort.length > 0) {
+      for (const sortOption of dto.sort) {
+        if (!['nombre', 'fechaCreacion', 'fechaActualizacion', 'activa'].includes(sortOption.field)) {
+          return failure(ValidationError.create(
+            `Campo de ordenamiento inválido: ${sortOption.field}`,
+            'sort',
+            sortOption.field
+          ));
+        }
+
+        if (sortOption.direction !== 'asc' && sortOption.direction !== 'desc') {
+          return failure(ValidationError.create(
+            `Dirección de ordenamiento inválida: ${sortOption.direction}`,
+            'sort',
+            sortOption.direction
+          ));
+        }
+
+        sortOptions.push({
+          field: sortOption.field,
+          direction: sortOption.direction,
+        });
+      }
+    }
 
     // 3. Preparar paginación
     const pagination = {
@@ -56,7 +172,12 @@ export class GetUserLists {
     }
 
     // 4. Buscar listas
-    const listasResult = await this.listaRepository.findByOwner(propietarioId, filters, pagination);
+    const listasResult = await this.listaRepository.findByOwner(
+      propietarioId,
+      filters,
+      pagination,
+      sortOptions.length > 0 ? sortOptions : undefined
+    );
     if (listasResult.isFailure) {
       return failure(listasResult.error);
     }
