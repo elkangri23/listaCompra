@@ -11,7 +11,7 @@ import { GetListById } from '@application/use-cases/lists/GetListById';
 import type { CreateListDto } from '@application/dto/lists/CreateListDto';
 import type { UpdateListDto } from '@application/dto/lists/UpdateListDto';
 import type { DeleteListDto } from '@application/dto/lists/DeleteListDto';
-import type { GetUserListsDto } from '@application/dto/lists/GetUserListsDto';
+import type { GetUserListsDto, ListaSortOption } from '@application/dto/lists/GetUserListsDto';
 import { ValidationError } from '@application/errors/ValidationError';
 import { NotFoundError } from '@application/errors/NotFoundError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
@@ -197,9 +197,13 @@ export class ListController {
         }
 
         if (result.error instanceof NotFoundError) {
+          const errorMessage = result.error.resource === 'Lista'
+            ? `Lista no encontrada con identificador "${result.error.identifier}"`
+            : result.error.message;
+
           res.status(404).json({
             success: false,
-            error: result.error.message,
+            error: errorMessage,
             code: 'NOT_FOUND'
           });
           return;
@@ -285,9 +289,13 @@ export class ListController {
         }
 
         if (result.error instanceof NotFoundError) {
+          const errorMessage = result.error.resource === 'Lista'
+            ? `Lista no encontrada con identificador "${result.error.identifier}"`
+            : result.error.message;
+
           res.status(404).json({
             success: false,
-            error: result.error.message,
+            error: errorMessage,
             code: 'NOT_FOUND'
           });
           return;
@@ -369,9 +377,13 @@ export class ListController {
         }
 
         if (result.error instanceof NotFoundError) {
+          const errorMessage = result.error.resource === 'Lista'
+            ? `Lista no encontrada con identificador "${result.error.identifier}"`
+            : result.error.message;
+
           res.status(404).json({
             success: false,
-            error: result.error.message,
+            error: errorMessage,
             code: 'NOT_FOUND'
           });
           return;
@@ -405,6 +417,36 @@ export class ListController {
         code: 'INTERNAL_ERROR'
       });
     }
+  }
+
+  private parseSortParam(sortParam: string | string[] | undefined): ListaSortOption[] | undefined {
+    if (!sortParam) {
+      return undefined;
+    }
+
+    const rawValues = Array.isArray(sortParam) ? sortParam : sortParam.split(',');
+    const sortOptions: ListaSortOption[] = [];
+
+    for (const rawValue of rawValues) {
+      const trimmed = rawValue.trim();
+      if (!trimmed) {
+        continue;
+      }
+
+      const [fieldRaw, directionRaw] = trimmed.split(':').map(part => part.trim());
+      if (!fieldRaw) {
+        continue;
+      }
+
+      const directionValue = directionRaw?.toLowerCase() === 'desc' ? 'desc' : 'asc';
+
+      sortOptions.push({
+        field: fieldRaw as ListaSortOption['field'],
+        direction: directionValue,
+      });
+    }
+
+    return sortOptions.length > 0 ? sortOptions : undefined;
   }
 
   /**
@@ -446,9 +488,13 @@ export class ListController {
         }
 
         if (result.error instanceof NotFoundError) {
+          const errorMessage = result.error.resource === 'Lista'
+            ? `Lista no encontrada con identificador "${result.error.identifier}"`
+            : result.error.message;
+
           res.status(404).json({
             success: false,
-            error: result.error.message,
+            error: errorMessage,
             code: 'NOT_FOUND'
           });
           return;
