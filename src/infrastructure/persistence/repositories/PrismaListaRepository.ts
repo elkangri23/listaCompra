@@ -2,10 +2,16 @@
  * Implementación del repositorio de listas usando Prisma
  */
 
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import type { IListaRepository, ListaFilters, PaginationOptions, PaginatedResult } from '@application/ports/repositories/IListaRepository';
+import type {
+  IListaRepository,
+  ListaFilters,
+  PaginationOptions,
+  PaginatedResult,
+  ListaSortOption
+} from '@application/ports/repositories/IListaRepository';
 import { Lista } from '@domain/entities/Lista';
 import { ListaMapper } from '@infrastructure/persistence/mappers/ListaMapper';
 
@@ -92,23 +98,47 @@ export class PrismaListaRepository implements IListaRepository {
   }
 
   async findByOwner(
-    propietarioId: string, 
+    propietarioId: string,
     filters?: ListaFilters,
-    pagination?: PaginationOptions
+    pagination?: PaginationOptions,
+    sort?: ListaSortOption[]
   ): Promise<Result<PaginatedResult<Lista>, Error>> {
     try {
       // Construir condiciones de filtrado
-      const where: any = {
-        propietarioId: propietarioId,
+      const where: Prisma.ListaWhereInput = {
+        propietarioId,
       };
 
       if (filters) {
         if (filters.activa !== undefined) {
           where.activa = filters.activa;
         }
+
         if (filters.tiendaId) {
-          // Nota: tiendaId no está en el schema actual, pero lo mantenemos para futura implementación
-          // where.tiendaId = filters.tiendaId;
+          // Nota: el schema actual no expone tiendaId para listas, por lo que
+          // se ignora este filtro hasta que se incorpore la columna
+          // correspondiente mediante una migración.
+        }
+
+        if (filters.busqueda) {
+          where.OR = [
+            { nombre: { contains: filters.busqueda, mode: 'insensitive' } },
+            { descripcion: { contains: filters.busqueda, mode: 'insensitive' } },
+          ];
+        }
+
+        if (filters.fechaCreacionDesde || filters.fechaCreacionHasta) {
+          where.fechaCreacion = {
+            ...(filters.fechaCreacionDesde && { gte: filters.fechaCreacionDesde }),
+            ...(filters.fechaCreacionHasta && { lte: filters.fechaCreacionHasta }),
+          };
+        }
+
+        if (filters.fechaActualizacionDesde || filters.fechaActualizacionHasta) {
+          where.fechaActualizacion = {
+            ...(filters.fechaActualizacionDesde && { gte: filters.fechaActualizacionDesde }),
+            ...(filters.fechaActualizacionHasta && { lte: filters.fechaActualizacionHasta }),
+          };
         }
       }
 
@@ -117,13 +147,13 @@ export class PrismaListaRepository implements IListaRepository {
       const limit = Math.min(pagination?.limit || 10, 100); // Máximo 100 elementos
       const skip = (page - 1) * limit;
 
+      const orderBy = this.buildOrderBy(sort);
+
       // Obtener listas y total
       const [listas, total] = await Promise.all([
         this.prisma.lista.findMany({
           where,
-          orderBy: {
-            fechaActualizacion: 'desc',
-          },
+          orderBy,
           skip,
           take: limit,
         }),
@@ -154,6 +184,39 @@ export class PrismaListaRepository implements IListaRepository {
     } catch (error) {
       return failure(new Error(`Error al buscar listas del propietario: ${error instanceof Error ? error.message : 'Error desconocido'}`));
     }
+  }
+
+  private buildOrderBy(sort?: ListaSortOption[]): Prisma.ListaOrderByWithRelationInput[] {
+    if (!sort || sort.length === 0) {
+      return [{ fechaActualizacion: 'desc' }];
+    }
+
+    const orderBy: Prisma.ListaOrderByWithRelationInput[] = [];
+
+    for (const option of sort) {
+      switch (option.field) {
+        case 'nombre':
+          orderBy.push({ nombre: option.direction });
+          break;
+        case 'fechaCreacion':
+          orderBy.push({ fechaCreacion: option.direction });
+          break;
+        case 'fechaActualizacion':
+          orderBy.push({ fechaActualizacion: option.direction });
+          break;
+        case 'activa':
+          orderBy.push({ activa: option.direction });
+          break;
+        default:
+          break;
+      }
+    }
+
+    if (orderBy.length === 0) {
+      orderBy.push({ fechaActualizacion: 'desc' });
+    }
+
+    return orderBy;
   }
 
   async findByNameAndOwner(nombre: string, propietarioId: string): Promise<Result<Lista | null, Error>> {
