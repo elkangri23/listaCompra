@@ -17,7 +17,11 @@ const shareListSchema = z.object({
 
 const changePermissionsSchema = z.object({
   body: z.object({
-    nuevoTipoPermiso: z.enum(['LECTURA', 'ESCRITURA'])
+    nuevoTipoPermiso: z.enum(['LECTURA', 'ESCRITURA', 'ADMIN']).optional(),
+    tipoPermiso: z.enum(['LECTURA', 'ESCRITURA', 'ADMIN']).optional()
+  }).refine(data => data.nuevoTipoPermiso || data.tipoPermiso, {
+    message: 'tipoPermiso es requerido',
+    path: ['tipoPermiso']
   }),
   params: z.object({
     listaId: z.string().uuid('ID de lista debe ser un UUID válido'),

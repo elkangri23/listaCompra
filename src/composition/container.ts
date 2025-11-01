@@ -397,7 +397,8 @@ export class Container {
     );
 
     this._getListById = new GetListById(
-      this._listaRepository
+      this._listaRepository,
+      this._permisoRepository
     );
 
     // Product use cases
@@ -406,6 +407,7 @@ export class Container {
       listaRepository: this._listaRepository,
       categoriaRepository: this._categoriaRepository,
       tiendaRepository: this._tiendaRepository,
+      permisoRepository: this._permisoRepository,
       aiService: this._aiService // Opcional
     });
 
@@ -564,7 +566,9 @@ export class Container {
       this._shareList,
       this._accessSharedList,
       this._managePermissions,
-      this._cancelInvitation
+      this._cancelInvitation,
+      this._invitacionRepository,
+      this._permisoRepository
     );
 
     this._adminController = new AdminController(
