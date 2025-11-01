@@ -114,58 +114,13 @@ export class ListController {
         return;
       }
 
-      const activaParam = req.query['activa'];
-      const tiendaIdParam = req.query['tiendaId'];
-      const busquedaParam = (req.query['busqueda'] ?? req.query['search'] ?? req.query['q']) as string | undefined;
-      const fechaCreacionDesdeParam = (req.query['fechaCreacionDesde'] ?? req.query['fechaDesde']) as string | undefined;
-      const fechaCreacionHastaParam = (req.query['fechaCreacionHasta'] ?? req.query['fechaHasta']) as string | undefined;
-      const fechaActualizacionDesdeParam = (req.query['fechaActualizacionDesde'] ?? req.query['actualizadaDesde']) as string | undefined;
-      const fechaActualizacionHastaParam = (req.query['fechaActualizacionHasta'] ?? req.query['actualizadaHasta']) as string | undefined;
-      const sortParam = (req.query['sort'] ?? req.query['orden']) as string | string[] | undefined;
-      const sortOptions = this.parseSortParam(sortParam);
-
+      const activaParam = req.query['activa'] as string;
       const dto: GetUserListsDto = {
-        page: parseInt(req.query['page'] as string, 10) || 1,
-        limit: parseInt(req.query['limit'] as string, 10) || 10,
+        page: parseInt(req.query['page'] as string) || 1,
+        limit: parseInt(req.query['limit'] as string) || 10,
+        ...(activaParam && { activa: activaParam === 'true' }),
+        ...(req.query['tiendaId'] && { tiendaId: req.query['tiendaId'] as string }),
       };
-
-      if (typeof activaParam === 'string') {
-        dto.activa = activaParam === 'true';
-      }
-
-      if (typeof tiendaIdParam === 'string') {
-        const tiendaId = tiendaIdParam.trim();
-        if (tiendaId.length > 0) {
-          dto.tiendaId = tiendaId;
-        }
-      }
-
-      if (busquedaParam) {
-        const busqueda = busquedaParam.trim();
-        if (busqueda.length > 0) {
-          dto.busqueda = busqueda;
-        }
-      }
-
-      if (fechaCreacionDesdeParam) {
-        dto.fechaCreacionDesde = fechaCreacionDesdeParam;
-      }
-
-      if (fechaCreacionHastaParam) {
-        dto.fechaCreacionHasta = fechaCreacionHastaParam;
-      }
-
-      if (fechaActualizacionDesdeParam) {
-        dto.fechaActualizacionDesde = fechaActualizacionDesdeParam;
-      }
-
-      if (fechaActualizacionHastaParam) {
-        dto.fechaActualizacionHasta = fechaActualizacionHastaParam;
-      }
-
-      if (sortOptions) {
-        dto.sort = sortOptions;
-      }
 
       const result = await this.getUserListsUseCase.execute(dto, userId);
       
@@ -242,9 +197,13 @@ export class ListController {
         }
 
         if (result.error instanceof NotFoundError) {
+          const errorMessage = result.error.resource === 'Lista'
+            ? `Lista no encontrada con identificador "${result.error.identifier}"`
+            : result.error.message;
+
           res.status(404).json({
             success: false,
-            error: result.error.message,
+            error: errorMessage,
             code: 'NOT_FOUND'
           });
           return;
@@ -330,9 +289,13 @@ export class ListController {
         }
 
         if (result.error instanceof NotFoundError) {
+          const errorMessage = result.error.resource === 'Lista'
+            ? `Lista no encontrada con identificador "${result.error.identifier}"`
+            : result.error.message;
+
           res.status(404).json({
             success: false,
-            error: result.error.message,
+            error: errorMessage,
             code: 'NOT_FOUND'
           });
           return;
@@ -414,9 +377,13 @@ export class ListController {
         }
 
         if (result.error instanceof NotFoundError) {
+          const errorMessage = result.error.resource === 'Lista'
+            ? `Lista no encontrada con identificador "${result.error.identifier}"`
+            : result.error.message;
+
           res.status(404).json({
             success: false,
-            error: result.error.message,
+            error: errorMessage,
             code: 'NOT_FOUND'
           });
           return;
@@ -521,9 +488,13 @@ export class ListController {
         }
 
         if (result.error instanceof NotFoundError) {
+          const errorMessage = result.error.resource === 'Lista'
+            ? `Lista no encontrada con identificador "${result.error.identifier}"`
+            : result.error.message;
+
           res.status(404).json({
             success: false,
-            error: result.error.message,
+            error: errorMessage,
             code: 'NOT_FOUND'
           });
           return;
