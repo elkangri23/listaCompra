@@ -154,7 +154,7 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 
 ## 🎯 CASOS DE USO - ESTADO DETALLADO
 
-### ✅ **Completamente Implementados (28 de 33)**
+### ✅ **Completamente Implementados (32 de 34)**
 
 #### **Autenticación y Usuarios** (2/2)
 - ✅ **CU-01**: Registro de usuario - `RegisterUser` use case
@@ -188,27 +188,12 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 
 #### **Sincronización Tiempo Real** (1/1)
 - ✅ **CU-21**: Sincronización en tiempo real con WebSockets y actualizaciones instantáneas
-  - ✅ Broadcast de cambios de listas y productos en canales por lista
-  - ✅ Gestión de sesiones colaborativas con control de concurrencia optimista
-  - ✅ Eventos `list.updated`, `product.updated` y `permission.changed` propagados en tiempo real
-  - ✅ Integración con Outbox para garantizar entrega y reintentos
 
 #### **Notificaciones** (1/1)
 - ✅ **CU-19**: Sistema de notificaciones - **100% implementado** 🎉
-  - ✅ Tabla Outbox creada
-  - ✅ OutboxService implementado
-  - ✅ OutboxWorker completamente funcional
-  - ✅ RabbitMQ configurado y operativo
-  - ✅ NotificationConsumer implementado
-  - ✅ NodemailerService con templates HTML
 
 #### **Seguridad y Validación** (1/1)
 - ✅ **CU-27**: Validación y seguridad avanzada - **95% implementado** 🛡️
-  - ✅ Rate limiting Redis-based con 7 configuraciones
-  - ✅ SecurityScheduler con cron jobs automáticos
-  - ✅ Input sanitization enterprise (XSS/SQL/Command injection)
-  - ✅ Security headers avanzados con CSP
-  - ✅ Security testing automático con endpoint `/admin/security/test`
 
 #### **Blueprints/Plantillas** (2/2)
 - ✅ **CU-22**: Crear blueprint - `CreateBlueprint` use case
@@ -218,49 +203,26 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 - ✅ **CU-24**: Impersonar usuario - `ImpersonateUser` use case
 - ✅ **CU-25**: Finalizar impersonación - `EndImpersonation` use case
 
-#### **Inteligencia Artificial** (4/5)
+#### **Inteligencia Artificial** (5/6)
 - ✅ **CU-28**: Categorización automática - `GetCategorySuggestions` use case
 - ✅ **CU-29**: Categorización masiva - `BulkCategorizeProducts` use case
+- ✅ **CU-31**: Dashboard de Análisis Colaborativo - `GetCollaborativeDashboard` use case ✨ **(NUEVO)**
 - ✅ **CU-32**: Listas por ocasión - `CreateOccasionList` use case
 - ✅ **CU-33**: Recomendaciones contextuales - `GetProductRecommendations` use case
 - ❌ **CU-30**: Alertas proactivas - **NO IMPLEMENTADO**
 
 ---
 
-### ⏳ **Pendientes de Implementar (5 de 33)**
+### ⏳ **Pendientes de Implementar (2 de 34)**
 
-#### **Baja Prioridad (Futuras Versiones)**
-1. ❌ **CU-20**: Historial de cambios
-   - Tracking de modificaciones
-   - Auditoría de productos
-   - API para consultar historial
+1.  ❌ **CU-20: Historial de Cambios (Auditoría)**
+    *   **Prioridad**: Media
+    *   **Descripción**: Registrar un historial de cambios en listas y productos para auditoría y trazabilidad.
 
-2. ❌ **CU-30**: Alertas proactivas
-   - Worker para monitoreo de precios
-   - Notificaciones de ofertas
+2.  ❌ **CU-30: Alertas Proactivas (IA)**
+    *   **Prioridad**: Baja
+    *   **Descripción**: Implementar un worker que monitorice precios o patrones para enviar notificaciones y alertas a los usuarios.
 
-3. ❌ **CU-31**: Dashboard de análisis
-   - Insights de frecuencia
-   - Patrones estacionales
-   - Métricas personalizadas
-   - Actualización colaborativa
-
-#### **Media Prioridad**
-4. ❌ **CU-30**: Alertas proactivas (IA)
-   - Monitoreo de precios
-   - Notificaciones automáticas
-   - Sistema de ofertas
-
-#### **Baja Prioridad**
-5. ❌ **CU-31**: Búsqueda y filtrado avanzado
-   - Filtros múltiples
-   - Ordenamiento complejo
-   - Búsqueda fulltext
-
-8. ❌ **CU-34+**: Funcionalidades futuras
-   - Exportación PDF
-   - Importación desde otros sistemas
-   - Integración con supermercados
 
 ---
 
@@ -319,7 +281,7 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 
 ---
 
-## 📊 ENDPOINTS REST (57 TOTALES)
+## 📊 ENDPOINTS REST (58 TOTALES)
 
 ### **Autenticación** (5)
 - `POST /api/v1/auth/register` - Registrar usuario
@@ -401,11 +363,12 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 - `GET /api/v1/admin/audit/impersonations` - Auditoría histórica (beta)
 - `GET /api/v1/admin/security/test` - Suite automática de seguridad
 
-### **Dashboard/Monitoreo** (4)
-- `GET /api/v1/dashboard/metrics` - Métricas del sistema
-- `GET /api/v1/dashboard/health` - Health checks
-- `GET /api/v1/dashboard/alerts` - Alertas activas
-- `GET /api/v1/dashboard/performance` - Análisis de performance
+### **Dashboard y Analíticas** (5)
+- `GET /api/v1/dashboard/metrics` - Métricas de performance del sistema.
+- `GET /api/v1/dashboard/health` - Health checks de los servicios.
+- `GET /api/v1/dashboard/alerts` - Alertas activas del sistema (ej. alto error rate).
+- `GET /api/v1/dashboard/performance` - Análisis de performance de endpoints.
+- `GET /api/v1/dashboard/analytics` - Dashboard de analíticas y patrones de usuario (CU-31).
 
 ### **Cache Analytics** (5)
 - `GET /api/v1/analytics/cache/realtime` - Métricas últimos 5 minutos
