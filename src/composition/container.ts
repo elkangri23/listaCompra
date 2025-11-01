@@ -36,6 +36,7 @@ import { CancelInvitation } from '@application/use-cases/invitations/CancelInvit
 import { ImpersonateUser } from '@application/use-cases/admin/ImpersonateUser';
 import { EndImpersonation } from '@application/use-cases/admin/EndImpersonation';
 import { BulkCategorizeProducts } from '@application/use-cases/ai/BulkCategorizeProducts';
+import { GetCollaborativeDashboard } from '@application/use-cases/analytics/GetCollaborativeDashboard';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
@@ -59,10 +60,15 @@ import { PrismaOutboxService } from '@infrastructure/messaging/outbox/PrismaOutb
 import { OutboxWorker } from '@infrastructure/messaging/outbox/OutboxWorker';
 import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import { NodemailerService } from '@infrastructure/external-services/email/NodemailerService';
-import { PerplexityService } from '@infrastructure/external-services/ai/PerplexityService';
 import { PerplexityConfig } from '@infrastructure/config/ai.config';
 import { WorkerService } from '@infrastructure/messaging/WorkerService';
 import { InMemoryOutboxService } from '@infrastructure/messaging/outbox/InMemoryOutboxService';
+import { PrismaAnalyticsRepository } from '@infrastructure/persistence/repositories/PrismaAnalyticsRepository';
+import { DashboardController } from '@infrastructure/http/controllers/DashboardController';
+import { MetricsCollector } from '@infrastructure/observability/metrics/MetricsCollector';
+import getRedisConfig, { RedisConfig } from '@infrastructure/config/redis.config';
+import { CachedAIService } from '@infrastructure/external-services/ai/CachedAIService';
+import type { CachedAIServiceDependencies } from '@infrastructure/external-services/ai/CachedAIService';
 
 // HTTP Layer
 import { AuthController } from '@infrastructure/http/controllers/AuthController';
@@ -85,6 +91,7 @@ import type { ICategoriaRepository } from '@application/ports/repositories/ICate
 import type { ITiendaRepository } from '@application/ports/repositories/ITiendaRepository';
 import type { IInvitacionRepository } from '@application/ports/repositories/IInvitacionRepository';
 import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
+import type { IAnalyticsRepository } from '@application/ports/repositories/IAnalyticsRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
 import type { IEventPublisher } from '@application/ports/messaging/IEventPublisher';
@@ -106,18 +113,21 @@ export class Container {
   private _tiendaRepository!: ITiendaRepository;
   private _invitacionRepository!: IInvitacionRepository;
   private _permisoRepository!: IPermisoRepository;
+  private _analyticsRepository!: IAnalyticsRepository;
 
   // External Services
   private _passwordHasher!: IPasswordHasher;
   private _tokenService!: ITokenService;
   private _emailService!: IEmailService;
   private _aiService!: IAIService;
+  private _cachedAIService!: CachedAIService;
   private _eventPublisher!: IEventPublisher;
   private _outboxService!: IOutboxService;
   private _outboxWorker!: OutboxWorker;
   private _hashGenerator!: IInvitationHashGenerator;
   private _workerService!: WorkerService;
   private _realTimeGateway!: RealTimeGateway;
+  private _metricsCollector!: MetricsCollector;
 
   // Use Cases
   private _registerUser!: RegisterUser;
@@ -148,6 +158,7 @@ export class Container {
   private _impersonateUser!: ImpersonateUser;
   private _endImpersonation!: EndImpersonation;
   private _bulkCategorizeProducts!: BulkCategorizeProducts;
+  private _getCollaborativeDashboard!: GetCollaborativeDashboard;
 
   // Controllers
   private _authController!: AuthController;
@@ -159,6 +170,7 @@ export class Container {
   private _adminController!: AdminController;
   private _recommendationsController!: RecommendationsController;
   private _aiController!: AIController;
+  private _dashboardController!: DashboardController;
 
   // Middlewares
   private _authMiddleware!: express.RequestHandler;
@@ -260,6 +272,31 @@ export class Container {
       this._tiendaRepository = new InMemoryTiendaRepository();
       this._invitacionRepository = new InMemoryInvitacionRepository();
       this._permisoRepository = new InMemoryPermisoRepository();
+      this._analyticsRepository = {
+        getCollaborativeDashboard: async () => success({
+          summary: {
+            totalLists: 0,
+            activeLists: 0,
+            sharedLists: 0,
+            totalCollaborators: 0,
+            totalProducts: 0,
+            purchasedProducts: 0,
+            pendingProducts: 0,
+            urgentProducts: 0,
+            completionRate: 0,
+            averagePurchaseTimeHours: null
+          },
+          collaboration: {
+            activeCollaborators: 0,
+            leaderboard: [],
+            sharedLists: []
+          },
+          patterns: {
+            topCategories: [],
+            weeklyActivity: []
+          }
+        })
+      } as IAnalyticsRepository;
       return;
     }
 
@@ -270,6 +307,7 @@ export class Container {
     this._tiendaRepository = new PrismaTiendaRepository(this._prisma);
     this._invitacionRepository = new PrismaInvitacionRepository(this._prisma);
     this._permisoRepository = new PrismaPermisoRepository(this._prisma);
+    this._analyticsRepository = new PrismaAnalyticsRepository(this._prisma);
   }
 
   private initializeExternalServices(): void {
@@ -296,7 +334,7 @@ export class Container {
     };
     this._emailService = new NodemailerService(emailConfig);
     
-    // Configurar IA Service (Perplexity)
+    // Configurar IA Service con cache (Perplexity + Redis opcional)
     const aiConfig: PerplexityConfig = {
       provider: 'perplexity',
       apiKey: process.env['PERPLEXITY_API_KEY'] || '',
@@ -313,8 +351,27 @@ export class Container {
         requestsPerMinute: parseInt(process.env['AI_RATE_LIMIT_PER_MINUTE'] || '10')
       }
     };
-    this._aiService = new PerplexityService(aiConfig);
-    
+
+    let redisConfig: RedisConfig | undefined;
+    if (aiConfig.cache?.enabled) {
+      try {
+        redisConfig = getRedisConfig();
+      } catch (error) {
+        console.warn('⚠️ Redis no configurado correctamente, se continuará sin cache IA', error);
+      }
+    }
+
+    const cachedAIDependencies: CachedAIServiceDependencies = { aiConfig };
+    if (redisConfig) {
+      cachedAIDependencies.redisConfig = redisConfig;
+    }
+
+    this._cachedAIService = new CachedAIService(cachedAIDependencies);
+    this._aiService = this._cachedAIService;
+
+    // Collector de métricas compartido para dashboard
+    this._metricsCollector = new MetricsCollector();
+
     // Configurar EventPublisher según variables de entorno
     const rabbitmqEnabled = process.env['RABBITMQ_ENABLED'] === 'true';
     const rabbitmqUrl = process.env['RABBITMQ_URL'] || 'amqp://guest:guest@localhost:5672';
@@ -516,6 +573,10 @@ export class Container {
       this._usuarioRepository,
       this._categoriaRepository
     );
+
+    this._getCollaborativeDashboard = new GetCollaborativeDashboard(
+      this._analyticsRepository
+    );
   }
 
   private initializeRealtime(): void {
@@ -579,6 +640,12 @@ export class Container {
     this._aiController = new AIController(
       undefined, // getCategorySuggestionsUseCase - por implementar
       this._bulkCategorizeProducts
+    );
+
+    this._dashboardController = new DashboardController(
+      this._metricsCollector,
+      this._cachedAIService,
+      this._getCollaborativeDashboard
     );
 
     // Inicializar middleware de autenticación
@@ -779,6 +846,10 @@ export class Container {
 
   public get aiController(): AIController {
     return this._aiController;
+  }
+
+  public get dashboardController(): DashboardController {
+    return this._dashboardController;
   }
 
   public get authMiddleware(): express.RequestHandler {
