@@ -6,6 +6,7 @@
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 import type { IListaRepository } from '@application/ports/repositories/IListaRepository';
+import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
 import type { GetListByIdDto } from '@application/dto/lists/GetListByIdDto';
 import type { GetUserListsResponseDto } from '@application/dto/lists/GetUserListsDto';
 import { ValidationError } from '@application/errors/ValidationError';
@@ -14,7 +15,8 @@ import { UnauthorizedError } from '@application/errors/UnauthorizedError';
 
 export class GetListById {
   constructor(
-    private readonly listaRepository: IListaRepository
+    private readonly listaRepository: IListaRepository,
+    private readonly permisoRepository?: IPermisoRepository
   ) {}
 
   async execute(
@@ -37,7 +39,7 @@ export class GetListById {
       ));
     }
 
-    const listaResult = await this.listaRepository.findByIdAndOwner(dto.id, usuarioId);
+    const listaResult = await this.listaRepository.findById(dto.id);
     if (listaResult.isFailure) {
       return failure(listaResult.error);
     }
@@ -47,7 +49,17 @@ export class GetListById {
       return failure(new NotFoundError('Lista', dto.id));
     }
 
-    if (!lista.esPropietario(usuarioId)) {
+    let tieneAcceso = lista.esPropietario(usuarioId);
+
+    if (!tieneAcceso && this.permisoRepository) {
+      try {
+        tieneAcceso = await this.permisoRepository.hasPermission(usuarioId, lista.id);
+      } catch (error) {
+        return failure(new UnauthorizedError('No tienes permisos para acceder a esta lista'));
+      }
+    }
+
+    if (!tieneAcceso) {
       return failure(new UnauthorizedError('No tienes permisos para acceder a esta lista'));
     }
 
