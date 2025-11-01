@@ -5,6 +5,7 @@
 
 import winston from 'winston';
 import path from 'path';
+import { context, trace } from '@opentelemetry/api';
 
 // Definir niveles de log personalizados
 const logLevels = {
@@ -135,18 +136,51 @@ export class Logger {
     this.context = context;
   }
 
+  private enrichMeta(meta?: any): any {
+    const span = trace.getSpan(context.active());
+
+    if (!span) {
+      return meta;
+    }
+
+    const spanContext = span.spanContext();
+    const traceMeta: Record<string, string> = {};
+
+    if (spanContext?.traceId) {
+      traceMeta['traceId'] = spanContext.traceId;
+    }
+
+    if (spanContext?.spanId) {
+      traceMeta['spanId'] = spanContext.spanId;
+    }
+
+    if (Object.keys(traceMeta).length === 0) {
+      return meta;
+    }
+
+    if (meta === undefined) {
+      return traceMeta;
+    }
+
+    if (typeof meta !== 'object' || Array.isArray(meta)) {
+      return { ...traceMeta, value: meta };
+    }
+
+    return { ...meta, ...traceMeta };
+  }
+
   /**
    * Log de información general
    */
   info(message: string, meta?: any): void {
-    logger.info(`[${this.context}] ${message}`, meta);
+    logger.info(`[${this.context}] ${message}`, this.enrichMeta(meta));
   }
 
   /**
    * Log de advertencias
    */
   warn(message: string, meta?: any): void {
-    logger.warn(`[${this.context}] ${message}`, meta);
+    logger.warn(`[${this.context}] ${message}`, this.enrichMeta(meta));
   }
 
   /**
@@ -154,16 +188,19 @@ export class Logger {
    */
   error(message: string, error?: Error | any, meta?: any): void {
     if (error instanceof Error) {
-      logger.error(`[${this.context}] ${message}`, {
+      logger.error(`[${this.context}] ${message}`, this.enrichMeta({
         error: {
           message: error.message,
           stack: error.stack,
           name: error.name,
         },
-        ...meta,
-      });
+        ...(meta && typeof meta === 'object' ? meta : {}),
+      }));
     } else {
-      logger.error(`[${this.context}] ${message}`, { error, ...meta });
+      logger.error(`[${this.context}] ${message}`, this.enrichMeta({
+        error,
+        ...(meta && typeof meta === 'object' ? meta : {}),
+      }));
     }
   }
 
@@ -171,63 +208,63 @@ export class Logger {
    * Log de depuración
    */
   debug(message: string, meta?: any): void {
-    logger.debug(`[${this.context}] ${message}`, meta);
+    logger.debug(`[${this.context}] ${message}`, this.enrichMeta(meta));
   }
 
   /**
    * Log de requests HTTP
    */
   http(message: string, meta?: any): void {
-    logger.http(`[${this.context}] ${message}`, meta);
+    logger.http(`[${this.context}] ${message}`, this.enrichMeta(meta));
   }
 
   /**
    * Log de inicio de aplicación
    */
   startup(message: string, meta?: any): void {
-    logger.info(`🚀 [${this.context}] ${message}`, meta);
+    logger.info(`🚀 [${this.context}] ${message}`, this.enrichMeta(meta));
   }
 
   /**
    * Log de cierre de aplicación
    */
   shutdown(message: string, meta?: any): void {
-    logger.info(`🔽 [${this.context}] ${message}`, meta);
+    logger.info(`🔽 [${this.context}] ${message}`, this.enrichMeta(meta));
   }
 
   /**
    * Log de seguridad (intentos sospechosos, rate limiting, etc.)
    */
   security(message: string, meta?: any): void {
-    logger.warn(`🔒 [${this.context}] SECURITY: ${message}`, meta);
+    logger.warn(`🔒 [${this.context}] SECURITY: ${message}`, this.enrichMeta(meta));
   }
 
   /**
    * Log de base de datos
    */
   database(message: string, meta?: any): void {
-    logger.info(`💾 [${this.context}] DATABASE: ${message}`, meta);
+    logger.info(`💾 [${this.context}] DATABASE: ${message}`, this.enrichMeta(meta));
   }
 
   /**
    * Log de mensajería (RabbitMQ)
    */
   messaging(message: string, meta?: any): void {
-    logger.info(`📨 [${this.context}] MESSAGING: ${message}`, meta);
+    logger.info(`📨 [${this.context}] MESSAGING: ${message}`, this.enrichMeta(meta));
   }
 
   /**
    * Log de email
    */
   email(message: string, meta?: any): void {
-    logger.info(`📧 [${this.context}] EMAIL: ${message}`, meta);
+    logger.info(`📧 [${this.context}] EMAIL: ${message}`, this.enrichMeta(meta));
   }
 
   /**
    * Log de IA
    */
   ai(message: string, meta?: any): void {
-    logger.info(`🤖 [${this.context}] AI: ${message}`, meta);
+    logger.info(`🤖 [${this.context}] AI: ${message}`, this.enrichMeta(meta));
   }
 }
 

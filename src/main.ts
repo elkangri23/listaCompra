@@ -8,16 +8,19 @@ import dotenv from 'dotenv';
 // Cargar variables de entorno lo antes posible
 dotenv.config();
 
-import { createServer } from './infrastructure/http/server';
-import { Container } from './composition/container';
 import { Logger } from './infrastructure/observability/logger/Logger';
+import { initializeTracing, shutdownTracing } from './infrastructure/observability/tracing/Tracing';
 
 const logger = new Logger('Bootstrap');
 
 async function bootstrap(): Promise<void> {
+  let tracingStarted = false;
+
   try {
     logger.startup('Iniciando Lista de Compra Colaborativa...');
-    
+
+    tracingStarted = await initializeTracing();
+
     // Validar variables de entorno críticas
     const requiredEnvVars = [
       'NODE_ENV', 
@@ -43,6 +46,8 @@ async function bootstrap(): Promise<void> {
       throw new Error(`NODE_ENV debe ser uno de: ${validEnvironments.join(', ')}`);
     }
 
+    const { Container } = await import('./composition/container');
+
     // Inicializar contenedor de dependencias
     const container = Container.getInstance();
     
@@ -57,6 +62,8 @@ async function bootstrap(): Promise<void> {
     if (!isHealthy) {
       throw new Error('Health check de base de datos falló');
     }
+
+    const { createServer } = await import('./infrastructure/http/server');
 
     // Crear y configurar el servidor
     const app = await createServer({
@@ -90,6 +97,10 @@ async function bootstrap(): Promise<void> {
         try {
           await container.close();
           logger.shutdown('Base de datos desconectada');
+          if (tracingStarted) {
+            await shutdownTracing();
+          }
+
           logger.shutdown('Aplicación cerrada exitosamente');
           process.exit(0);
         } catch (error) {
@@ -104,18 +115,21 @@ async function bootstrap(): Promise<void> {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
     // Manejo de errores no capturados
-    process.on('unhandledRejection', (reason, promise) => {
+    process.on('unhandledRejection', async (reason, promise) => {
       logger.error('Unhandled Rejection detectado', new Error(`Promise: ${promise}, Reason: ${reason}`));
+      await shutdownTracing();
       process.exit(1);
     });
 
-    process.on('uncaughtException', (error) => {
+    process.on('uncaughtException', async (error) => {
       logger.error('Uncaught Exception detectada:', error);
+      await shutdownTracing();
       process.exit(1);
     });
 
   } catch (error) {
     logger.error('Error al iniciar aplicación:', error as Error);
+    await shutdownTracing();
     process.exit(1);
   }
 }
