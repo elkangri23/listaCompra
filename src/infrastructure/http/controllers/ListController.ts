@@ -11,7 +11,7 @@ import { GetListById } from '@application/use-cases/lists/GetListById';
 import type { CreateListDto } from '@application/dto/lists/CreateListDto';
 import type { UpdateListDto } from '@application/dto/lists/UpdateListDto';
 import type { DeleteListDto } from '@application/dto/lists/DeleteListDto';
-import type { GetUserListsDto } from '@application/dto/lists/GetUserListsDto';
+import type { GetUserListsDto, ListaSortOption } from '@application/dto/lists/GetUserListsDto';
 import { ValidationError } from '@application/errors/ValidationError';
 import { NotFoundError } from '@application/errors/NotFoundError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
@@ -114,13 +114,58 @@ export class ListController {
         return;
       }
 
-      const activaParam = req.query['activa'] as string;
+      const activaParam = req.query['activa'];
+      const tiendaIdParam = req.query['tiendaId'];
+      const busquedaParam = (req.query['busqueda'] ?? req.query['search'] ?? req.query['q']) as string | undefined;
+      const fechaCreacionDesdeParam = (req.query['fechaCreacionDesde'] ?? req.query['fechaDesde']) as string | undefined;
+      const fechaCreacionHastaParam = (req.query['fechaCreacionHasta'] ?? req.query['fechaHasta']) as string | undefined;
+      const fechaActualizacionDesdeParam = (req.query['fechaActualizacionDesde'] ?? req.query['actualizadaDesde']) as string | undefined;
+      const fechaActualizacionHastaParam = (req.query['fechaActualizacionHasta'] ?? req.query['actualizadaHasta']) as string | undefined;
+      const sortParam = (req.query['sort'] ?? req.query['orden']) as string | string[] | undefined;
+      const sortOptions = this.parseSortParam(sortParam);
+
       const dto: GetUserListsDto = {
-        page: parseInt(req.query['page'] as string) || 1,
-        limit: parseInt(req.query['limit'] as string) || 10,
-        ...(activaParam && { activa: activaParam === 'true' }),
-        ...(req.query['tiendaId'] && { tiendaId: req.query['tiendaId'] as string }),
+        page: parseInt(req.query['page'] as string, 10) || 1,
+        limit: parseInt(req.query['limit'] as string, 10) || 10,
       };
+
+      if (typeof activaParam === 'string') {
+        dto.activa = activaParam === 'true';
+      }
+
+      if (typeof tiendaIdParam === 'string') {
+        const tiendaId = tiendaIdParam.trim();
+        if (tiendaId.length > 0) {
+          dto.tiendaId = tiendaId;
+        }
+      }
+
+      if (busquedaParam) {
+        const busqueda = busquedaParam.trim();
+        if (busqueda.length > 0) {
+          dto.busqueda = busqueda;
+        }
+      }
+
+      if (fechaCreacionDesdeParam) {
+        dto.fechaCreacionDesde = fechaCreacionDesdeParam;
+      }
+
+      if (fechaCreacionHastaParam) {
+        dto.fechaCreacionHasta = fechaCreacionHastaParam;
+      }
+
+      if (fechaActualizacionDesdeParam) {
+        dto.fechaActualizacionDesde = fechaActualizacionDesdeParam;
+      }
+
+      if (fechaActualizacionHastaParam) {
+        dto.fechaActualizacionHasta = fechaActualizacionHastaParam;
+      }
+
+      if (sortOptions) {
+        dto.sort = sortOptions;
+      }
 
       const result = await this.getUserListsUseCase.execute(dto, userId);
       
@@ -405,6 +450,36 @@ export class ListController {
         code: 'INTERNAL_ERROR'
       });
     }
+  }
+
+  private parseSortParam(sortParam: string | string[] | undefined): ListaSortOption[] | undefined {
+    if (!sortParam) {
+      return undefined;
+    }
+
+    const rawValues = Array.isArray(sortParam) ? sortParam : sortParam.split(',');
+    const sortOptions: ListaSortOption[] = [];
+
+    for (const rawValue of rawValues) {
+      const trimmed = rawValue.trim();
+      if (!trimmed) {
+        continue;
+      }
+
+      const [fieldRaw, directionRaw] = trimmed.split(':').map(part => part.trim());
+      if (!fieldRaw) {
+        continue;
+      }
+
+      const directionValue = directionRaw?.toLowerCase() === 'desc' ? 'desc' : 'asc';
+
+      sortOptions.push({
+        field: fieldRaw as ListaSortOption['field'],
+        direction: directionValue,
+      });
+    }
+
+    return sortOptions.length > 0 ? sortOptions : undefined;
   }
 
   /**
