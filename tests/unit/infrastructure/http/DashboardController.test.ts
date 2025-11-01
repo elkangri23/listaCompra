@@ -1,9 +1,12 @@
 import { DashboardController } from '../../../../src/infrastructure/http/controllers/DashboardController';
+import { success, failure } from '../../../../src/shared/result';
+import { ValidationError } from '../../../../src/application/errors/ValidationError';
 
 describe('DashboardController', () => {
   let dashboardController: DashboardController;
   let mockMetricsCollector: any;
   let mockCachedAIService: any;
+  let mockGetCollaborativeDashboard: any;
   let mockRequest: any;
   let mockResponse: any;
 
@@ -21,6 +24,10 @@ describe('DashboardController', () => {
       getCacheAnalytics: jest.fn()
     };
 
+    mockGetCollaborativeDashboard = {
+      execute: jest.fn()
+    };
+
     mockRequest = {};
     mockResponse = {
       json: jest.fn().mockReturnThis(),
@@ -29,7 +36,8 @@ describe('DashboardController', () => {
 
     dashboardController = new DashboardController(
       mockMetricsCollector,
-      mockCachedAIService
+      mockCachedAIService,
+      mockGetCollaborativeDashboard
     );
 
     // Setup default successful responses
@@ -62,6 +70,32 @@ describe('DashboardController', () => {
         'categorization': { hitRatio: 0.9, operations: 50 }
       }
     });
+
+    mockGetCollaborativeDashboard.execute.mockResolvedValue(success({
+      summary: {
+        totalLists: 1,
+        activeLists: 1,
+        sharedLists: 1,
+        totalCollaborators: 2,
+        totalProducts: 3,
+        purchasedProducts: 2,
+        pendingProducts: 1,
+        urgentProducts: 0,
+        completionRate: 66,
+        averagePurchaseTimeHours: 12
+      },
+      collaboration: {
+        activeCollaborators: 2,
+        leaderboard: [],
+        sharedLists: []
+      },
+      patterns: {
+        topCategories: [],
+        weeklyActivity: []
+      },
+      insights: [],
+      generatedAt: new Date().toISOString()
+    }));
   });
 
   describe('getMetrics', () => {
@@ -251,6 +285,73 @@ describe('DashboardController', () => {
         status: 'error',
         message: 'Error al obtener métricas del dashboard',
         error: 'Unexpected error'
+      });
+    });
+  });
+
+  describe('getCollaborativeAnalytics', () => {
+    it('debería exigir autenticación', async () => {
+      await dashboardController.getCollaborativeAnalytics({} as any, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Usuario no autenticado'
+      });
+    });
+
+    it('debería devolver el dashboard colaborativo', async () => {
+      const requestWithUser = {
+        user: { id: 'user-123' },
+        query: {}
+      } as any;
+
+      await dashboardController.getCollaborativeAnalytics(requestWithUser, mockResponse);
+
+      expect(mockGetCollaborativeDashboard.execute).toHaveBeenCalledWith({ userId: 'user-123' });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 'success',
+        data: expect.objectContaining({
+          summary: expect.objectContaining({ totalLists: 1 })
+        }),
+        timestamp: expect.any(String)
+      });
+    });
+
+    it('debería manejar errores de validación', async () => {
+      const validationError = ValidationError.create('Falta userId', 'userId', undefined);
+      mockGetCollaborativeDashboard.execute.mockResolvedValueOnce(failure(validationError));
+
+      const requestWithUser = {
+        user: { id: 'user-123' },
+        query: {}
+      } as any;
+
+      await dashboardController.getCollaborativeAnalytics(requestWithUser, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: validationError.message,
+        error: validationError.toJSON()
+      });
+    });
+
+    it('debería manejar errores inesperados del caso de uso', async () => {
+      mockGetCollaborativeDashboard.execute.mockResolvedValueOnce(failure(new Error('Boom')));
+
+      const requestWithUser = {
+        user: { id: 'user-123' },
+        query: {}
+      } as any;
+
+      await dashboardController.getCollaborativeAnalytics(requestWithUser, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Error al generar dashboard colaborativo',
+        error: 'Boom'
       });
     });
   });

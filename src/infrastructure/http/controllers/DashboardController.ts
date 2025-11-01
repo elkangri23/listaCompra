@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { MetricsCollector } from '../../observability/metrics/MetricsCollector';
 import { CachedAIService } from '../../external-services/ai/CachedAIService';
+import { GetCollaborativeDashboard } from '../../../application/use-cases/analytics/GetCollaborativeDashboard';
+import type { DashboardAnalyticsOptions } from '../../../application/ports/repositories/IAnalyticsRepository';
+import { ValidationError } from '../../../application/errors/ValidationError';
 
 interface AlertInfo {
   type: string;
@@ -14,7 +17,8 @@ interface AlertInfo {
 export class DashboardController {
   constructor(
     private readonly metricsCollector: MetricsCollector,
-    private readonly cachedAIService: CachedAIService
+    private readonly cachedAIService: CachedAIService,
+    private readonly getCollaborativeDashboard: GetCollaborativeDashboard
   ) {}
 
   /**
@@ -197,5 +201,89 @@ export class DashboardController {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
+  }
+
+  /**
+   * GET /dashboard/analytics
+   * Obtiene métricas colaborativas, patrones e insights (CU-31)
+   */
+  async getCollaborativeAnalytics(req: Request, res: Response): Promise<Response> {
+    try {
+      const userId = this.extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Usuario no autenticado'
+        });
+      }
+
+      const timeRange = this.parseTimeRange(req);
+
+      const dashboardResult = await this.getCollaborativeDashboard.execute({
+        userId,
+        ...(timeRange ? { timeRange } : {})
+      });
+
+      if (dashboardResult.isFailure) {
+        const { error } = dashboardResult;
+        if (error instanceof ValidationError) {
+          return res.status(400).json({
+            status: 'error',
+            message: error.message,
+            error: error.toJSON()
+          });
+        }
+
+        return res.status(500).json({
+          status: 'error',
+          message: 'Error al generar dashboard colaborativo',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+
+      return res.json({
+        status: 'success',
+        data: dashboardResult.value,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error al generar dashboard colaborativo',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  private extractUserId(req: Request): string | null {
+    const requestUser = (req as any).user;
+    if (!requestUser) {
+      return null;
+    }
+    return requestUser.id || requestUser.userId || null;
+  }
+
+  private parseTimeRange(req: Request): DashboardAnalyticsOptions['timeRange'] | undefined {
+    const query: Record<string, unknown> = (req as any).query ?? {};
+    const range: DashboardAnalyticsOptions['timeRange'] = {};
+
+    const startDate = typeof query['startDate'] === 'string' ? query['startDate'] as string : undefined;
+    const endDate = typeof query['endDate'] === 'string' ? query['endDate'] as string : undefined;
+
+    if (startDate) {
+      const parsed = new Date(startDate);
+      if (!isNaN(parsed.getTime())) {
+        range.startDate = parsed;
+      }
+    }
+
+    if (endDate) {
+      const parsed = new Date(endDate);
+      if (!isNaN(parsed.getTime())) {
+        range.endDate = parsed;
+      }
+    }
+
+    return Object.keys(range).length > 0 ? range : undefined;
   }
 }
