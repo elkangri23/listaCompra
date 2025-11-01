@@ -11,10 +11,24 @@ export interface PaginationOptions {
   limit?: number;
 }
 
+export type ListaSortField = 'nombre' | 'fechaCreacion' | 'fechaActualizacion' | 'activa';
+
+export type ListaSortDirection = 'asc' | 'desc';
+
+export interface ListaSortOption {
+  field: ListaSortField;
+  direction: ListaSortDirection;
+}
+
 export interface ListaFilters {
   activa?: boolean;
   tiendaId?: string;
   propietarioId?: string;
+  busqueda?: string;
+  fechaCreacionDesde?: Date;
+  fechaCreacionHasta?: Date;
+  fechaActualizacionDesde?: Date;
+  fechaActualizacionHasta?: Date;
 }
 
 export interface PaginatedResult<T> {
@@ -45,9 +59,10 @@ export interface IListaRepository {
    * Busca todas las listas de un usuario con filtros y paginación
    */
   findByOwner(
-    propietarioId: string, 
+    propietarioId: string,
     filters?: ListaFilters,
-    pagination?: PaginationOptions
+    pagination?: PaginationOptions,
+    sort?: ListaSortOption[]
   ): Promise<Result<PaginatedResult<Lista>, Error>>;
 
   /**
