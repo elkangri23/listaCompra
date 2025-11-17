@@ -7,6 +7,7 @@ import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 import type { IProductoRepository } from '@application/ports/repositories/IProductoRepository';
 import type { IListaRepository } from '@application/ports/repositories/IListaRepository';
+import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
 import type { 
   GetProductsDto, 
   GetProductsResponseDto, 
@@ -19,7 +20,8 @@ import { UnauthorizedError } from '@application/errors/UnauthorizedError';
 export class GetProducts {
   constructor(
     private readonly productoRepository: IProductoRepository,
-    private readonly listaRepository: IListaRepository
+    private readonly listaRepository: IListaRepository,
+    private readonly permisoRepository: IPermisoRepository
   ) {}
 
   async execute(
@@ -63,8 +65,8 @@ export class GetProducts {
       ));
     }
 
-    // 3. Verificar que la lista existe y el usuario tiene acceso
-    const listaResult = await this.listaRepository.findByIdAndOwner(dto.listaId, usuarioId);
+    // 3. Verificar que la lista existe
+    const listaResult = await this.listaRepository.findById(dto.listaId);
     if (listaResult.isFailure) {
       return failure(listaResult.error);
     }
@@ -77,8 +79,15 @@ export class GetProducts {
       ));
     }
 
-    // 4. Verificar permisos de acceso
-    if (!lista.esPropietario(usuarioId)) {
+    // 4. Verificar permisos de acceso (propietario o colaborador con permisos)
+    let tieneAcceso = lista.esPropietario(usuarioId);
+
+    // Si no es propietario, verificar si tiene permisos de colaborador
+    if (!tieneAcceso) {
+      tieneAcceso = await this.permisoRepository.hasPermission(usuarioId, dto.listaId);
+    }
+
+    if (!tieneAcceso) {
       return failure(new UnauthorizedError(
         'No tienes permisos para ver los productos de esta lista'
       ));
