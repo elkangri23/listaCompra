@@ -331,20 +331,21 @@ export class Container {
       ? new InMemoryOutboxService()
       : new PrismaOutboxService(this._prisma);
     
-    // Configurar EmailService con valores por defecto (configuración pendiente)
+    // Configurar EmailService usando Resend
     const emailConfig = {
-      service: 'gmail',
+      apiKey: process.env['RESEND_API_KEY'] || '',
       from: {
-        name: 'Lista de Compra',
-        email: process.env['EMAIL_USER'] || 'anthonymoles89@gmail.com'
-      },
-      auth: {
-        user: process.env['EMAIL_USER'] || 'anthonymoles89@gmail.com',
-        pass: process.env['EMAIL_PASS'] || 'snci srqq feok gkpp'
+        name: process.env['EMAIL_FROM_NAME'] || 'Lista de Compra',
+        email: process.env['EMAIL_FROM'] || 'onboarding@resend.dev'
       },
       maxRetries: parseInt(process.env['EMAIL_MAX_RETRIES'] || '3'),
       retryDelay: parseInt(process.env['EMAIL_RETRY_DELAY'] || '1000')
     };
+    
+    if (!emailConfig.apiKey) {
+      console.warn('⚠️  RESEND_API_KEY no está configurada en .env - El servicio de email no funcionará');
+    }
+    
     this._emailService = new NodemailerService(emailConfig);
     
     // Configurar IA Service (Perplexity)

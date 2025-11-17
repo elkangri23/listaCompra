@@ -1,9 +1,9 @@
 /**
- * Implementación de IEmailService usando Nodemailer
- * Soporta Gmail, Outlook, SMTP genérico y otros proveedores
+ * Implementación de IEmailService usando Resend
+ * Servicio moderno de emails transaccionales
  */
 
-import nodemailer, { Transporter, SendMailOptions } from 'nodemailer';
+import { Resend } from 'resend';
 import type { 
   IEmailService, 
   EmailOptions, 
@@ -11,24 +11,13 @@ import type {
 } from '@application/ports/external/IEmailService';
 
 export interface EmailConfig {
-  // Para Gmail/Outlook
-  service?: string; // 'gmail', 'outlook', etc.
+  // API Key de Resend
+  apiKey: string;
   
-  // Para SMTP genérico
-  host?: string;
-  port?: number;
-  secure?: boolean; // true para 465, false para otros puertos
-  
-  // Autenticación
-  auth: {
-    user: string; // email de la cuenta
-    pass: string; // password o app password
-  };
-  
-  // Configuración adicional
+  // Configuración del remitente
   from: {
     name: string; // Nombre del remitente
-    email: string; // Email del remitente
+    email: string; // Email del remitente (debe estar verificado en Resend)
   };
   
   // Opciones de retry
@@ -37,7 +26,7 @@ export interface EmailConfig {
 }
 
 export class NodemailerService implements IEmailService {
-  private transporter!: Transporter; // ! para indicar que se inicializa en constructor
+  private resend: Resend;
   private config: EmailConfig;
   private stats = {
     sent: 0,
@@ -52,36 +41,14 @@ export class NodemailerService implements IEmailService {
       ...config
     };
     
-    this.createTransporter();
-  }
-
-  private createTransporter(): void {
-    const transportOptions: any = {
-      auth: this.config.auth
-    };
-
-    // Configuración para servicios conocidos (Gmail, Outlook)
-    if (this.config.service) {
-      transportOptions.service = this.config.service;
-    } else {
-      // Configuración SMTP genérica
-      transportOptions.host = this.config.host;
-      transportOptions.port = this.config.port || 587;
-      transportOptions.secure = this.config.secure || false;
-    }
-
-    // Configuraciones adicionales para mejor entrega
-    transportOptions.tls = {
-      rejectUnauthorized: false // Para desarrollo, en producción debería ser true
-    };
-
-    this.transporter = nodemailer.createTransport(transportOptions);
+    this.resend = new Resend(this.config.apiKey);
   }
 
   async verifyConnection(): Promise<boolean> {
     try {
-      await this.transporter.verify();
-      return true;
+      // Resend no tiene un método de verificación directo
+      // Simplemente verificamos que tenemos una API key
+      return !!this.config.apiKey && this.config.apiKey.length > 0;
     } catch (error) {
       console.error('Error verificando conexión de email:', error);
       return false;
@@ -92,31 +59,30 @@ export class NodemailerService implements IEmailService {
     this.stats.pending++;
     
     try {
-      const mailOptions: SendMailOptions = {
-        from: `"${this.config.from.name}" <${this.config.from.email}>`,
-        to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
-        cc: Array.isArray(options.cc) ? options.cc.join(', ') : options.cc,
-        bcc: Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc,
+      const emailData = {
+        from: `${this.config.from.name} <${this.config.from.email}>`,
+        to: Array.isArray(options.to) ? options.to : [options.to],
+        cc: options.cc ? (Array.isArray(options.cc) ? options.cc : [options.cc]) : undefined,
+        bcc: options.bcc ? (Array.isArray(options.bcc) ? options.bcc : [options.bcc]) : undefined,
         subject: options.subject,
         text: options.text,
         html: options.html,
-        replyTo: options.replyTo,
-        priority: options.priority || 'normal',
+        reply_to: options.replyTo,
         attachments: options.attachments?.map(att => ({
           filename: att.filename,
-          content: att.content,
-          contentType: att.contentType
+          content: att.content instanceof Buffer ? att.content : Buffer.from(att.content),
+          content_type: att.contentType
         }))
       };
 
-      const result = await this.sendWithRetry(mailOptions);
+      const result = await this.sendWithRetry(emailData);
       
       this.stats.pending--;
       this.stats.sent++;
       
       return {
         success: true,
-        messageId: result.messageId
+        messageId: result.id
       };
     } catch (error) {
       this.stats.pending--;
@@ -131,12 +97,18 @@ export class NodemailerService implements IEmailService {
     }
   }
 
-  private async sendWithRetry(mailOptions: SendMailOptions): Promise<any> {
+  private async sendWithRetry(emailData: any): Promise<any> {
     let lastError: Error | null = null;
     
     for (let attempt = 1; attempt <= this.config.maxRetries!; attempt++) {
       try {
-        return await this.transporter.sendMail(mailOptions);
+        const { data, error } = await this.resend.emails.send(emailData);
+        
+        if (error) {
+          throw new Error(error.message);
+        }
+        
+        return data;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Error desconocido');
         
@@ -163,7 +135,7 @@ export class NodemailerService implements IEmailService {
     invitationHash: string,
     expiresAt: Date
   ): Promise<EmailResult> {
-    const invitationUrl = `${process.env['FRONTEND_URL'] || 'http://localhost:3000'}/invitations/${invitationHash}`;
+    const invitationUrl = `${process.env['FRONTEND_URL'] || 'http://localhost:3333'}/invitations/${invitationHash}`;
     
     const subject = `${inviterName} te ha invitado a colaborar en "${listName}"`;
     
@@ -235,7 +207,7 @@ Ha habido cambios en la lista "${listName}":
 
 ${changeMessages[changeType]}: ${changeDetails}
 
-Ve los cambios en: ${process.env['FRONTEND_URL'] || 'http://localhost:3000'}/lists
+Ve los cambios en: ${process.env['FRONTEND_URL'] || 'http://localhost:3333'}/lists
 
 Saludos,
 El equipo de Lista Compra Colaborativa
@@ -254,7 +226,7 @@ El equipo de Lista Compra Colaborativa
     recipientName: string,
     confirmationToken: string
   ): Promise<EmailResult> {
-    const confirmationUrl = `${process.env['FRONTEND_URL'] || 'http://localhost:3000'}/confirm-email/${confirmationToken}`;
+    const confirmationUrl = `${process.env['FRONTEND_URL'] || 'http://localhost:3333'}/confirm-email/${confirmationToken}`;
     
     const subject = 'Confirma tu cuenta - Lista Compra Colaborativa';
     

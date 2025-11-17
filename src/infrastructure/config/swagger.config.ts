@@ -67,7 +67,7 @@ const swaggerOptions: swaggerJSDoc.Options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000',
+        url: 'http://localhost:3333',
         description: 'Servidor de Desarrollo'
       },
       {
@@ -718,8 +718,8 @@ export function setupSwagger(app: Express): void {
     }
   }));
   
-  console.log('📚 Swagger UI disponible en: http://localhost:3000/api/docs');
-  console.log('📄 OpenAPI spec disponible en: http://localhost:3000/api/docs.json');
+  console.log('📚 Swagger UI disponible en: http://localhost:3333/api/docs');
+  console.log('📄 OpenAPI spec disponible en: http://localhost:3333/api/docs.json');
 }
 
 export default swaggerOptions;

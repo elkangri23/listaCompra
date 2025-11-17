@@ -36,7 +36,7 @@ Esta carpeta contiene colecciones completas para probar todos los endpoints de l
 ```bash
 cd listaCompra
 npm run dev
-# Servidor corriendo en http://localhost:3000
+# Servidor corriendo en http://localhost:3333
 ```
 
 ### 2. **Flujo de Testing Recomendado**
@@ -322,7 +322,7 @@ GET /categories?tiendaId={storeId}&activas=true
 ### Variables de Entorno
 ```json
 {
-  "baseUrl": "http://localhost:3000/api/v1",
+  "baseUrl": "http://localhost:3333/api/v1",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "userId": "user-uuid-here",
   "listId": "list-uuid-here",

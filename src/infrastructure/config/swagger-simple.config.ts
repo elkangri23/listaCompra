@@ -23,7 +23,7 @@ const swaggerOptions: swaggerJSDoc.Options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000',
+        url: 'http://localhost:3333',
         description: 'Servidor de Desarrollo'
       }
     ],
@@ -102,9 +102,10 @@ const swaggerOptions: swaggerJSDoc.Options = {
       { name: 'Invitaciones', description: 'Sistema de colaboración e invitaciones' },
       { name: 'Plantillas', description: 'Gestión de blueprints y plantillas de listas' },
       { name: 'Inteligencia Artificial', description: 'Categorización automática y sugerencias' },
+      { name: 'Recomendaciones', description: 'Recomendaciones contextuales de productos' },
       { name: 'Administración', description: 'Funciones administrativas y auditoría' },
+      { name: 'Auditoría', description: 'Sistema de auditoría y logs de acciones' },
       { name: 'Dashboard', description: 'Métricas y análisis de datos' },
-      { name: 'Cache', description: 'Gestión y análisis de cache' },
       { name: 'Desarrollo', description: 'Herramientas de desarrollo y testing' }
     ]
   },
@@ -117,10 +118,10 @@ const swaggerOptions: swaggerJSDoc.Options = {
     './src/infrastructure/http/routes/invitationRoutes.ts',
     './src/infrastructure/http/routes/blueprintRoutes.ts',
     './src/infrastructure/http/routes/aiRoutes.ts',
+    './src/infrastructure/http/routes/recommendationsRoutes.ts',
     './src/infrastructure/http/routes/adminRoutes.ts',
+    './src/infrastructure/http/routes/audit.routes.ts',
     './src/infrastructure/http/routes/dashboardRoutes.ts',
-    './src/infrastructure/http/routes/cacheAnalyticsRoutes.ts',
-    './src/infrastructure/http/routes/cacheIntegrityRoutes.ts',
     './src/infrastructure/http/routes/devRoutes.ts'
   ]
 };
@@ -151,8 +152,8 @@ export function setupSwagger(app: Express): void {
       }
     }));
     
-    console.log('📚 Swagger UI disponible en: http://localhost:3000/api/docs');
-    console.log('📄 OpenAPI spec disponible en: http://localhost:3000/api/docs.json');
+    console.log('📚 Swagger UI disponible en: http://localhost:3333/api/docs');
+    console.log('📄 OpenAPI spec disponible en: http://localhost:3333/api/docs.json');
   } catch (error) {
     console.warn('⚠️ Error configurando Swagger:', error);
   }
