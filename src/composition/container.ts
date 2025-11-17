@@ -491,7 +491,8 @@ export class Container {
 
     this._getProducts = new GetProducts(
       this._productoRepository,
-      this._listaRepository
+      this._listaRepository,
+      this._permisoRepository
     );
 
     this._getProductRecommendations = new GetProductRecommendations(
