@@ -144,7 +144,7 @@ export const additionalSecurityHeaders = (req: Request, res: Response, next: Nex
   // CORS and Origin validation
   const origin = req.get('Origin');
   const allowedOrigins = [
-    'http://localhost:3000',
+    'http://localhost:3333',
     'https://listacompra.com',
     'https://app.listacompra.com'
   ];
