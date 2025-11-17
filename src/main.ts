@@ -78,7 +78,7 @@ async function bootstrap(): Promise<void> {
       dashboardController: container.dashboardController,
       auditController: container.auditController,
     });
-    const port = process.env['PORT'] || 3000;
+    const port = process.env['PORT'] || 3333;
 
     // Iniciar el servidor
     const server = app.listen(port, () => {
