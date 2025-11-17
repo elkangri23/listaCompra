@@ -27,6 +27,7 @@ const getAllowedOrigins = (): string[] => {
         'https://staging.listacompra.tudominio.com',
         'https://test.listacompra.tudominio.com',
         'http://localhost:3000',
+        'http://localhost:3333',
         'http://localhost:3001',
       ];
       
@@ -35,12 +36,14 @@ const getAllowedOrigins = (): string[] => {
     default:
       // 🟢 En desarrollo: más permisivo pero aún controlado
       return [
-        'http://localhost:3000',
+        'http://localhost:3000',  // React/Next.js dev server
+        'http://localhost:3333',  // Backend API
         'http://localhost:3001',
         'http://localhost:4200',  // Angular dev server
         'http://localhost:5173',  // Vite dev server
         'http://localhost:8080',  // Webpack dev server
         'http://127.0.0.1:3000',
+        'http://127.0.0.1:3333',
         'http://127.0.0.1:3001',
         'http://127.0.0.1:4200',
         'http://127.0.0.1:5173',

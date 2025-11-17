@@ -60,7 +60,7 @@ describe('advancedSecurityHeaders', () => {
   it('añade headers de seguridad adicionales y elimina cabeceras sensibles', () => {
     const req = createRequest({
       path: '/admin/audit',
-      get: () => 'http://localhost:3000'
+      get: () => 'http://localhost:3333'
     });
     const res = new MockResponse() as unknown as Response;
     const next: NextFunction = jest.fn();
