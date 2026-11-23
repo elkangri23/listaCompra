@@ -1,33 +1,118 @@
 /**
- * Implementación del servicio de Outbox usando Prisma
- * Garantiza consistencia eventual y publicación confiable de eventos
+ * Implementación del servicio Outbox usando Prisma
+ * Implementa el patrón Outbox para garantizar consistencia eventual
+ *
+ * Flujo: los use cases guardan eventos aquí (misma "transacción lógica"),
+ * el OutboxWorker consulta los pendientes, los publica a RabbitMQ
+ * mediante IEventPublisher y los marca como procesados.
  */
 
-import { PrismaClient } from '@prisma/client';
-import type { Result } from '@shared/result';
-import { success, failure } from '@shared/result';
-import type { 
-  IOutboxService, 
-  OutboxEvent, 
-  OutboxEventFilters, 
-  PaginationOptions, 
-  PaginatedResult, 
+import type {
+  IOutboxService,
+  OutboxEvent,
+  OutboxEventFilters,
+  PaginationOptions,
+  PaginatedResult,
   OutboxStats
 } from '@application/ports/messaging/IOutboxService';
-import { 
-  OutboxError 
-} from '@application/ports/messaging/IOutboxService';
 import type { DomainEvent } from '@domain/events/DomainEvent';
+import type { Result } from '@shared/result';
+import { success, failure } from '@shared/result';
+import { PrismaClient } from '@prisma/client';
 
 export class PrismaOutboxService implements IOutboxService {
   constructor(private readonly prisma: PrismaClient) {}
+
+  /**
+   * Convierte un registro de BD al modelo OutboxEvent del puerto
+   */
+  private toOutboxEvent(record: {
+    id: string;
+    eventId: string;
+    eventType: string;
+    eventVersion: number;
+    aggregateId: string;
+    aggregateType: string;
+    eventData: unknown;
+    eventContext: unknown;
+    occurredOn: Date;
+    processed: boolean;
+    processedAt: Date | null;
+    attempts: number;
+    lastAttemptAt: Date | null;
+    lastError: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }): OutboxEvent {
+    const result: OutboxEvent = {
+      id: record.id,
+      eventId: record.eventId,
+      eventType: record.eventType,
+      eventVersion: record.eventVersion,
+      aggregateId: record.aggregateId,
+      aggregateType: record.aggregateType,
+      eventData: (record.eventData ?? {}) as Record<string, any>,
+      occurredOn: record.occurredOn,
+      processed: record.processed,
+      ...(record.processedAt ? { processedAt: record.processedAt } : {}),
+      attempts: record.attempts,
+      ...(record.lastAttemptAt ? { lastAttemptAt: record.lastAttemptAt } : {}),
+      ...(record.lastError ? { lastError: record.lastError } : {}),
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt
+    };
+
+    if (record.eventContext) {
+      const ctx = record.eventContext as OutboxEvent['eventContext'];
+      if (ctx) {
+        result.eventContext = ctx;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Construye el where de Prisma a partir de los filtros del puerto
+   */
+  private buildWhere(filters?: OutboxEventFilters): Record<string, unknown> {
+    const where: Record<string, unknown> = {};
+
+    if (!filters) {
+      return where;
+    }
+
+    if (filters.processed !== undefined) {
+      where['processed'] = filters.processed;
+    }
+    if (filters.eventType) {
+      where['eventType'] = filters.eventType;
+    }
+    if (filters.aggregateType) {
+      where['aggregateType'] = filters.aggregateType;
+    }
+    if (filters.aggregateId) {
+      where['aggregateId'] = filters.aggregateId;
+    }
+    if (filters.fromDate || filters.toDate) {
+      where['occurredOn'] = {
+        ...(filters.fromDate ? { gte: filters.fromDate } : {}),
+        ...(filters.toDate ? { lte: filters.toDate } : {})
+      };
+    }
+    if (filters.maxAttempts !== undefined) {
+      where['attempts'] = { lte: filters.maxAttempts };
+    }
+
+    return where;
+  }
 
   /**
    * Guarda un evento de dominio en el outbox
    */
   async saveEvent(event: DomainEvent): Promise<Result<OutboxEvent, Error>> {
     try {
-      const outboxEvent = await this.prisma.outboxEvent.create({
+      const record = await this.prisma.outboxEvent.create({
         data: {
           eventId: event.eventId,
           eventType: event.eventType,
@@ -35,31 +120,25 @@ export class PrismaOutboxService implements IOutboxService {
           aggregateId: event.aggregateId,
           aggregateType: event.aggregateType,
           eventData: event.eventData as any,
-          ...(event.eventContext && { eventContext: event.eventContext }),
-          occurredOn: event.occurredOn,
-          processed: false,
-          attempts: 0
-        },
+          eventContext: (event.eventContext ?? undefined) as any,
+          occurredOn: event.occurredOn
+        }
       });
 
-      return success(this.mapToOutboxEvent(outboxEvent));
+      return success(this.toOutboxEvent(record));
     } catch (error) {
-      const err = error as Error;
-      return failure(new OutboxError(
-        `Error al guardar evento en outbox: ${err.message}`,
-        'SAVE_ERROR',
-        err
-      ));
+      console.error('❌ Error guardando evento en outbox:', error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
     }
   }
 
   /**
-   * Guarda múltiples eventos en una transacción
+   * Guarda múltiples eventos en una sola transacción
    */
   async saveEvents(events: DomainEvent[]): Promise<Result<OutboxEvent[], Error>> {
     try {
-      const outboxEvents = await this.prisma.$transaction(
-        events.map(event => 
+      const records = await this.prisma.$transaction(
+        events.map(event =>
           this.prisma.outboxEvent.create({
             data: {
               eventId: event.eventId,
@@ -68,23 +147,17 @@ export class PrismaOutboxService implements IOutboxService {
               aggregateId: event.aggregateId,
               aggregateType: event.aggregateType,
               eventData: event.eventData as any,
-              ...(event.eventContext && { eventContext: event.eventContext }),
-              occurredOn: event.occurredOn,
-              processed: false,
-              attempts: 0
-            },
+              eventContext: (event.eventContext ?? undefined) as any,
+              occurredOn: event.occurredOn
+            }
           })
         )
       );
 
-      return success(outboxEvents.map(event => this.mapToOutboxEvent(event)));
+      return success(records.map(record => this.toOutboxEvent(record)));
     } catch (error) {
-      const err = error as Error;
-      return failure(new OutboxError(
-        `Error al guardar eventos en outbox: ${err.message}`,
-        'SAVE_EVENTS_ERROR',
-        err
-      ));
+      console.error('❌ Error guardando eventos en outbox (lote):', error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
     }
   }
 
@@ -96,126 +169,130 @@ export class PrismaOutboxService implements IOutboxService {
     pagination?: PaginationOptions
   ): Promise<Result<PaginatedResult<OutboxEvent>, Error>> {
     try {
-      const whereClause = this.buildWhereClause({ ...filters, processed: false });
-      const orderBy = this.buildOrderBy(pagination);
-      const page = pagination?.page || 1;
-      const limit = pagination?.limit || 100;
-      const skip = (page - 1) * limit;
+      const where = {
+        ...this.buildWhere(filters),
+        processed: false
+      };
 
-      const [events, total] = await this.prisma.$transaction([
+      const page = pagination?.page || 1;
+      const limit = pagination?.limit || 10;
+      const orderByField = pagination?.orderBy || 'createdAt';
+      const orderDirection = pagination?.orderDirection || 'asc';
+
+      const [records, total] = await Promise.all([
         this.prisma.outboxEvent.findMany({
-          where: whereClause,
-          orderBy,
-          skip,
-          take: limit,
+          where,
+          orderBy: { [orderByField]: orderDirection },
+          skip: (page - 1) * limit,
+          take: limit
         }),
-        this.prisma.outboxEvent.count({
-          where: whereClause,
-        }),
+        this.prisma.outboxEvent.count({ where })
       ]);
 
-      const totalPages = Math.ceil(total / limit);
-
       return success({
-        items: events.map(event => this.mapToOutboxEvent(event)),
+        items: records.map(record => this.toOutboxEvent(record)),
         total,
         page,
         limit,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrevious: page > 1,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+        hasPrevious: page > 1
       });
     } catch (error) {
-      const err = error as Error;
-      return failure(new Error(`Error al obtener eventos pendientes: ${err.message}`));
+      console.error('❌ Error obteniendo eventos pendientes del outbox:', error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
     }
   }
 
   /**
    * Marca un evento como procesado
    */
-  async markAsProcessed(eventId: string, processedAt?: Date): Promise<Result<void, Error>> {
+  async markAsProcessed(
+    eventId: string,
+    processedAt?: Date
+  ): Promise<Result<void, Error>> {
     try {
-      const result = await this.prisma.outboxEvent.updateMany({
+      await this.prisma.outboxEvent.update({
         where: { eventId },
         data: {
           processed: true,
           processedAt: processedAt ?? new Date(),
-          updatedAt: new Date(),
-        },
+          lastError: null
+        }
       });
-
-      if (result.count === 0) {
-        return failure(new Error(`Evento no encontrado: ${eventId}`));
-      }
 
       return success(undefined);
     } catch (error) {
-      const err = error as Error;
-      return failure(new Error(`Error al marcar evento como procesado: ${err.message}`));
+      console.error(`❌ Error marcando evento ${eventId} como procesado:`, error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
     }
   }
 
   /**
    * Marca múltiples eventos como procesados
    */
-  async markManyAsProcessed(eventIds: string[], processedAt?: Date): Promise<Result<void, Error>> {
+  async markManyAsProcessed(
+    eventIds: string[],
+    processedAt?: Date
+  ): Promise<Result<void, Error>> {
     try {
+      if (eventIds.length === 0) {
+        return success(undefined);
+      }
+
       await this.prisma.outboxEvent.updateMany({
         where: { eventId: { in: eventIds } },
         data: {
           processed: true,
           processedAt: processedAt ?? new Date(),
-          updatedAt: new Date(),
-        },
+          lastError: null
+        }
       });
 
       return success(undefined);
     } catch (error) {
-      const err = error as Error;
-      return failure(new Error(`Error al marcar eventos como procesados: ${err.message}`));
+      console.error('❌ Error marcando eventos como procesados (lote):', error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
     }
   }
 
   /**
    * Incrementa el contador de intentos y registra el error
    */
-  async incrementAttempts(eventId: string, error?: string): Promise<Result<void, Error>> {
+  async incrementAttempts(
+    eventId: string,
+    error?: string
+  ): Promise<Result<void, Error>> {
     try {
-      const result = await this.prisma.outboxEvent.updateMany({
+      await this.prisma.outboxEvent.update({
         where: { eventId },
         data: {
           attempts: { increment: 1 },
           lastAttemptAt: new Date(),
-          lastError: error || null,
-          updatedAt: new Date(),
-        },
+          ...(error ? { lastError: error } : {})
+        }
       });
 
-      if (result.count === 0) {
-        return failure(new Error(`Evento no encontrado: ${eventId}`));
-      }
-
       return success(undefined);
-    } catch (error) {
-      const err = error as Error;
-      return failure(new Error(`Error al incrementar intentos: ${err.message}`));
+    } catch (updateError) {
+      console.error(`❌ Error incrementando intentos para evento ${eventId}:`, updateError);
+      return failure(updateError instanceof Error ? updateError : new Error('Error desconocido'));
     }
   }
 
   /**
-   * Obtiene un evento por su ID
+   * Obtiene un evento específico por su ID
    */
   async getEventById(eventId: string): Promise<Result<OutboxEvent | null, Error>> {
     try {
-      const event = await this.prisma.outboxEvent.findUnique({
-        where: { eventId },
+      const record = await this.prisma.outboxEvent.findUnique({
+        where: { eventId }
       });
 
-      return success(event ? this.mapToOutboxEvent(event) : null);
+      return success(record ? this.toOutboxEvent(record) : null);
     } catch (error) {
-      const err = error as Error;
-      return failure(new Error(`Error al obtener evento: ${err.message}`));
+      console.error(`❌ Error obteniendo evento ${eventId} del outbox:`, error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
     }
   }
 
@@ -223,40 +300,62 @@ export class PrismaOutboxService implements IOutboxService {
    * Obtiene eventos con filtros
    */
   async getEvents(
-    filters?: OutboxEventFilters, 
+    filters?: OutboxEventFilters,
     pagination?: PaginationOptions
   ): Promise<Result<PaginatedResult<OutboxEvent>, Error>> {
     try {
-      const whereClause = this.buildWhereClause(filters);
-      const orderBy = this.buildOrderBy(pagination);
-      const page = pagination?.page || 1;
-      const limit = pagination?.limit || 100;
-      const skip = (page - 1) * limit;
+      const where = this.buildWhere(filters);
 
-      const [events, total] = await this.prisma.$transaction([
+      const page = pagination?.page || 1;
+      const limit = pagination?.limit || 10;
+      const orderByField = pagination?.orderBy || 'createdAt';
+      const orderDirection = pagination?.orderDirection || 'desc';
+
+      const [records, total] = await Promise.all([
         this.prisma.outboxEvent.findMany({
-          where: whereClause,
-          orderBy,
-          skip,
-          take: limit,
+          where,
+          orderBy: { [orderByField]: orderDirection },
+          skip: (page - 1) * limit,
+          take: limit
         }),
-        this.prisma.outboxEvent.count({ where: whereClause }),
+        this.prisma.outboxEvent.count({ where })
       ]);
 
-      const totalPages = Math.ceil(total / limit);
-
       return success({
-        items: events.map(event => this.mapToOutboxEvent(event)),
+        items: records.map(record => this.toOutboxEvent(record)),
         total,
         page,
         limit,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrevious: page > 1,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+        hasPrevious: page > 1
       });
     } catch (error) {
-      const err = error as Error;
-      return failure(new Error(`Error al obtener eventos: ${err.message}`));
+      console.error('❌ Error obteniendo eventos del outbox:', error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
+    }
+  }
+
+  /**
+   * Elimina eventos procesados antiguos
+   */
+  async cleanupProcessedEvents(
+    olderThan: Date,
+    _batchSize?: number
+  ): Promise<Result<number, Error>> {
+    try {
+      const result = await this.prisma.outboxEvent.deleteMany({
+        where: {
+          processed: true,
+          processedAt: { lt: olderThan }
+        }
+      });
+
+      console.log(`🧹 Cleanup de eventos procesados: ${result.count} eliminados (anteriores a ${olderThan.toISOString()})`);
+      return success(result.count);
+    } catch (error) {
+      console.error('❌ Error en cleanup de eventos procesados:', error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
     }
   }
 
@@ -265,94 +364,66 @@ export class PrismaOutboxService implements IOutboxService {
    */
   async getStats(): Promise<Result<OutboxStats, Error>> {
     try {
-      const [
-        totalEvents, 
-        processedEvents, 
-        failedEvents, 
-        oldestPending, 
-        eventTypeDistribution
-      ] = await this.prisma.$transaction([
+      const [totalEvents, processedEvents, failedEvents, distribution] = await Promise.all([
         this.prisma.outboxEvent.count(),
         this.prisma.outboxEvent.count({ where: { processed: true } }),
-        this.prisma.outboxEvent.count({ where: { processed: false, attempts: { gt: 0 } } }),
-        this.prisma.outboxEvent.findFirst({
-          where: { processed: false },
-          orderBy: { createdAt: 'asc' },
-          select: { createdAt: true },
-        }),
+        this.prisma.outboxEvent.count({ where: { processed: false, attempts: { gte: 1 } } }),
         this.prisma.outboxEvent.groupBy({
           by: ['eventType'],
-          _count: { eventType: true },
-          orderBy: { eventType: 'asc' }
-        }),
+          _count: { eventType: true }
+        })
       ]);
 
       const pendingEvents = totalEvents - processedEvents;
-      
-      const eventTypes: Record<string, number> = {};
-      eventTypeDistribution.forEach(item => {
-        if (item._count && typeof item._count === 'object' && 'eventType' in item._count) {
-          eventTypes[item.eventType] = item._count.eventType as number;
-        }
-      });
 
-      const stats: OutboxStats = {
+      const oldestPending = pendingEvents > 0
+        ? await this.prisma.outboxEvent.findFirst({
+            where: { processed: false },
+            orderBy: { createdAt: 'asc' },
+            select: { createdAt: true }
+          })
+        : null;
+
+      const eventTypeDistribution: Record<string, number> = {};
+      for (const entry of distribution) {
+        eventTypeDistribution[entry.eventType] = entry._count.eventType;
+      }
+
+      return success({
         totalEvents,
         processedEvents,
         pendingEvents,
         failedEvents,
-        ...(oldestPending && { oldestPendingEvent: (oldestPending as any).fechaCreacion }),
-        eventTypeDistribution: eventTypes,
-      };
-
-      return success(stats);
-    } catch (error) {
-      const err = error as Error;
-      return failure(new Error(`Error al obtener estadísticas: ${err.message}`));
-    }
-  }
-
-  /**
-   * Elimina eventos procesados antiguos
-   */
-  async cleanupProcessedEvents(olderThan: Date): Promise<Result<number, Error>> {
-    try {
-      const result = await this.prisma.outboxEvent.deleteMany({
-        where: {
-          processed: true,
-          processedAt: { lt: olderThan },
-        },
+        ...(oldestPending ? { oldestPendingEvent: oldestPending.createdAt } : {}),
+        eventTypeDistribution
       });
-
-      return success(result.count);
     } catch (error) {
-      const err = error as Error;
-      return failure(new Error(`Error al limpiar eventos procesados: ${err.message}`));
+      console.error('❌ Error obteniendo estadísticas del outbox:', error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
     }
   }
 
   /**
-   * Resetea eventos fallidos para reintento
+   * Resetea el estado de eventos fallidos para reintentarlos
    */
-  async resetFailedEvents(maxAttempts: number = 3): Promise<Result<number, Error>> {
+  async resetFailedEvents(maxAttempts?: number): Promise<Result<number, Error>> {
     try {
       const result = await this.prisma.outboxEvent.updateMany({
         where: {
           processed: false,
-          attempts: { gte: maxAttempts },
+          attempts: { gte: maxAttempts ?? 3 }
         },
         data: {
           attempts: 0,
-          lastAttemptAt: null,
-          lastError: null,
-          updatedAt: new Date(),
-        },
+          lastError: null
+        }
       });
 
+      console.log(`🔄 Reseteados ${result.count} eventos fallidos para reintento`);
       return success(result.count);
     } catch (error) {
-      const err = error as Error;
-      return failure(new Error(`Error al resetear eventos fallidos: ${err.message}`));
+      console.error('❌ Error reseteando eventos fallidos:', error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
     }
   }
 
@@ -366,109 +437,42 @@ export class PrismaOutboxService implements IOutboxService {
     oldestPending?: Date;
   }, Error>> {
     try {
-      const [pendingCount, oldestPending] = await this.prisma.$transaction([
-        this.prisma.outboxEvent.count({ where: { processed: false } }),
-        this.prisma.outboxEvent.findFirst({
-          where: { processed: false },
-          orderBy: { createdAt: 'asc' },
-          select: { createdAt: true },
-        }),
-      ]);
+      const pendingCount = await this.prisma.outboxEvent.count({
+        where: { processed: false }
+      });
 
-      let status: 'healthy' | 'warning' | 'error' = 'healthy';
-      let message = 'Outbox funcionando correctamente';
+      const oldestPending = pendingCount > 0
+        ? await this.prisma.outboxEvent.findFirst({
+            where: { processed: false },
+            orderBy: { createdAt: 'asc' },
+            select: { createdAt: true }
+          })
+        : null;
 
-      if (pendingCount > 1000) {
-        status = 'error';
-        message = `Demasiados eventos pendientes: ${pendingCount}`;
-      } else if (pendingCount > 100) {
-        status = 'warning';
-        message = `Muchos eventos pendientes: ${pendingCount}`;
-      } else if (oldestPending && 
-        (Date.now() - (oldestPending as any).fechaCreacion.getTime()) > 60000 * 60) { // 1 hour
-        status = 'warning';
-        message = 'Hay eventos pendientes antiguos';
-      }
+      // Salud: sin pendientes = healthy; pendientes recientes = healthy;
+      // pendientes con más de 5 minutos de antigüedad = warning
+      const fiveMinutesMs = 5 * 60 * 1000;
+      const oldestAge = oldestPending ? Date.now() - oldestPending.createdAt.getTime() : 0;
+
+      const status: 'healthy' | 'warning' | 'error' =
+        pendingCount === 0 ? 'healthy'
+        : oldestAge < fiveMinutesMs ? 'healthy'
+        : 'warning';
 
       return success({
         status,
-        message,
+        message:
+          pendingCount === 0
+            ? 'Outbox vacío, sin eventos pendientes'
+            : status === 'healthy'
+              ? `Outbox operativo: ${pendingCount} eventos pendientes de publicación`
+              : `Outbox con retraso: ${pendingCount} eventos pendientes hace más de 5 minutos`,
         pendingCount,
-        ...(oldestPending && { oldestPending: (oldestPending as any).fechaCreacion }),
+        ...(oldestPending ? { oldestPending: oldestPending.createdAt } : {})
       });
     } catch (error) {
-      const err = error as Error;
-      return failure(new Error(`Error en health check: ${err.message}`));
+      console.error('❌ Error en health check del outbox:', error);
+      return failure(error instanceof Error ? error : new Error('Error desconocido'));
     }
-  }
-
-  /**
-   * Métodos de utilidad privados
-   */
-  private buildWhereClause(filters?: OutboxEventFilters): any {
-    const where: any = {};
-
-    if (filters?.processed !== undefined) {
-      where.processed = filters.processed;
-    }
-
-    if (filters?.eventType) {
-      where.eventType = filters.eventType;
-    }
-
-    if (filters?.aggregateType) {
-      where.aggregateType = filters.aggregateType;
-    }
-
-    if (filters?.aggregateId) {
-      where.aggregateId = filters.aggregateId;
-    }
-
-    if (filters?.fromDate || filters?.toDate) {
-      where.occurredOn = {};
-      if (filters.fromDate) {
-        where.occurredOn.gte = filters.fromDate;
-      }
-      if (filters.toDate) {
-        where.occurredOn.lte = filters.toDate;
-      }
-    }
-
-    if (filters?.maxAttempts !== undefined) {
-      where.attempts = { lte: filters.maxAttempts };
-    }
-
-    return where;
-  }
-
-  private buildOrderBy(pagination?: PaginationOptions): any {
-    const orderBy = pagination?.orderBy || 'occurredOn';
-    const direction = pagination?.orderDirection || 'asc';
-    
-    return { [orderBy]: direction };
-  }
-
-  /**
-   * Mapea un evento de Prisma a OutboxEvent
-   */
-  private mapToOutboxEvent(prismaEvent: any): OutboxEvent {
-    return {
-      id: prismaEvent.id,
-      eventId: prismaEvent.eventId,
-      eventType: prismaEvent.eventType,
-      eventVersion: prismaEvent.eventVersion,
-      aggregateId: prismaEvent.aggregateId,
-      aggregateType: prismaEvent.aggregateType,
-      eventData: prismaEvent.eventData as Record<string, any>,
-      eventContext: prismaEvent.eventContext as any,
-      occurredOn: prismaEvent.occurredOn,
-      processed: prismaEvent.processed,
-      ...(prismaEvent.processedAt && { processedAt: prismaEvent.processedAt }),
-      attempts: prismaEvent.attempts,
-      ...(prismaEvent.lastAttemptAt && { lastAttemptAt: prismaEvent.lastAttemptAt }),
-      ...(prismaEvent.lastError && { lastError: prismaEvent.lastError }),
-      createdAt: prismaEvent.createdAt,
-      updatedAt: prismaEvent.updatedAt,
-    };
   }
 }
