@@ -15,7 +15,7 @@ jest.mock('@opentelemetry/api', () => {
     context: { active },
     trace: { getSpan },
   };
-}, { virtual: true });
+});
 
 const mockedApi = jest.requireMock('@opentelemetry/api') as {
   context: { active: jest.Mock }; 

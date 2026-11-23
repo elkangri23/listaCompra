@@ -6,6 +6,7 @@ import express, { type Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { apiRateLimit } from './middlewares/rateLimitMiddleware';
+import { csrfProtection } from './middlewares/csrfProtectionMiddleware';
 import { corsConfig, corsSecurityHeaders } from '../config/cors.config';
 import { errorMiddleware, notFoundMiddleware, requestIdMiddleware, httpLoggerMiddleware } from './middlewares/errorMiddleware';
 import { traceContextMiddleware } from './middlewares/tracingMiddleware';
@@ -119,6 +120,9 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
   
   // 🌐 CORS estricto
   app.use(cors(corsConfig));
+
+  // 🛡️ Protección CSRF (verificación Origin/Referer en mutaciones + double-submit)
+  app.use(csrfProtection);
   
   // Headers adicionales de seguridad
   app.use((_req, res, next) => {
