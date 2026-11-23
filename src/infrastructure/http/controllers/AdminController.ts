@@ -15,6 +15,8 @@ import {
   EndImpersonationDto,
   EndImpersonationResponseDto
 } from '@application/dto/admin/EndImpersonationDto';
+import type { IAuditRepository } from '@application/ports/repositories/IAuditRepository';
+import type { AuditEntry } from '@domain/entities/AuditEntry';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -30,7 +32,8 @@ const logger = new Logger('AdminController');
 export class AdminController {
   constructor(
     private readonly impersonateUserUseCase: ImpersonateUser,
-    private readonly endImpersonationUseCase: EndImpersonation
+    private readonly endImpersonationUseCase: EndImpersonation,
+    private readonly auditRepository?: IAuditRepository
   ) {}
 
   /**
@@ -245,25 +248,76 @@ export class AdminController {
         filters: { startDate, endDate, adminId, targetUserId, limit, offset }
       });
 
-      // Implementación básica que simula datos de auditoría con algunos registros de muestra
-      // En una implementación completa, esto vendría de una base de datos de auditoría
-      const mockAuditLogs = this.generateMockAuditData(
-        adminUserId,
-        { startDate, endDate, adminId, targetUserId },
-        parseInt(limit as string, 10),
-        parseInt(offset as string, 10)
-      );
+      const limitNum = Math.max(1, Math.min(parseInt(limit as string, 10) || 50, 200));
+      const offsetNum = Math.max(0, parseInt(offset as string, 10) || 0);
+
+      // Consulta real a la tabla audit_entries (entradas de tipo IMPERSONACION)
+      if (!this.auditRepository) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de auditoría no disponible',
+          code: 'AUDIT_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const query = {
+        entityType: 'IMPERSONACION' as const,
+        ...(adminId ? { changedByUserId: adminId as string } : {}),
+        ...(targetUserId ? { entityId: targetUserId as string } : {}),
+        ...(startDate ? { startDate: new Date(startDate as string) } : {}),
+        ...(endDate ? { endDate: new Date(endDate as string) } : {}),
+        page: Math.floor(offsetNum / limitNum) + 1,
+        pageSize: limitNum
+      };
+
+      const [entriesResult, countResult] = await Promise.all([
+        this.auditRepository.find(query),
+        this.auditRepository.count(query)
+      ]);
+
+      if (entriesResult.isFailure || countResult.isFailure) {
+        logger.error('Error consultando auditoría de impersonaciones', {
+          entriesError: entriesResult.isFailure ? String(entriesResult.error) : null,
+          countError: countResult.isFailure ? String(countResult.error) : null
+        });
+        res.status(500).json({
+          success: false,
+          error: 'Error interno del servidor al obtener logs de auditoría',
+          code: 'AUDIT_FETCH_ERROR'
+        });
+        return;
+      }
+
+      const entries = entriesResult.value as AuditEntry[];
+      const total = countResult.value as number;
+
+      const records = entries.map((entry: AuditEntry) => ({
+        id: entry.id,
+        type: entry.newValue?.['type'] ?? 'IMPERSONATION_STARTED',
+        timestamp: entry.timestamp.toISOString(),
+        adminId: entry.changedByUserId ?? null,
+        adminEmail: entry.newValue?.['adminEmail'] ?? null,
+        targetUserId: entry.entityId,
+        targetUserEmail: entry.newValue?.['targetUserEmail'] ?? null,
+        reason: entry.newValue?.['reason'] ?? null,
+        ipAddress: entry.newValue?.['ipAddress'] ?? null,
+        userAgent: entry.newValue?.['userAgent'] ?? null,
+        sessionId: entry.newValue?.['sessionId'] ?? null,
+        duration: entry.newValue?.['duration'] ?? null,
+        status: entry.newValue?.['status'] ?? null
+      }));
 
       const response = {
         success: true,
         message: 'Logs de auditoría de impersonaciones obtenidos exitosamente',
         data: {
-          impersonations: mockAuditLogs.records,
+          impersonations: records,
           pagination: {
-            total: mockAuditLogs.total,
-            limit: parseInt(limit as string, 10),
-            offset: parseInt(offset as string, 10),
-            hasMore: mockAuditLogs.total > (parseInt(offset as string, 10) + parseInt(limit as string, 10))
+            total,
+            limit: limitNum,
+            offset: offsetNum,
+            hasMore: total > (offsetNum + limitNum)
           },
           filters: {
             startDate: startDate || null,
@@ -274,8 +328,7 @@ export class AdminController {
           metadata: {
             generatedAt: new Date().toISOString(),
             requestedBy: adminUserId,
-            source: 'admin_audit_endpoint',
-            note: 'Esta es una implementación básica. En producción se conectaría a un sistema de auditoría completo.'
+            source: 'audit_entries'
           }
         }
       };
@@ -295,102 +348,6 @@ export class AdminController {
       });
     }
   };
-
-  /**
-   * Genera datos de auditoría de muestra para demostración
-   * En una implementación real, esto vendría de una base de datos especializada
-   */
-  private generateMockAuditData(
-    requestingAdminId: string,
-    filters: any,
-    limit: number,
-    offset: number
-  ) {
-    const currentTime = new Date();
-    const oneHourAgo = new Date(currentTime.getTime() - 60 * 60 * 1000);
-    const oneWeekAgo = new Date(currentTime.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    // Simulamos algunos registros de auditoría
-    const allRecords = [
-      {
-        id: 'audit_001',
-        type: 'IMPERSONATION_STARTED',
-        timestamp: oneHourAgo.toISOString(),
-        adminId: 'admin_123',
-        adminEmail: 'admin@example.com',
-        targetUserId: 'user_456',
-        targetUserEmail: 'usuario@example.com',
-        reason: 'Soporte técnico - problemas con listas',
-        ipAddress: '192.168.1.100',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        sessionId: 'session_001',
-        duration: '15m',
-        status: 'COMPLETED'
-      },
-      {
-        id: 'audit_002',
-        type: 'IMPERSONATION_ENDED',
-        timestamp: new Date(oneHourAgo.getTime() + 15 * 60 * 1000).toISOString(),
-        adminId: 'admin_123',
-        adminEmail: 'admin@example.com',
-        targetUserId: 'user_456',
-        targetUserEmail: 'usuario@example.com',
-        reason: 'Problema resuelto',
-        ipAddress: '192.168.1.100',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        sessionId: 'session_001',
-        duration: '15m',
-        status: 'COMPLETED'
-      },
-      {
-        id: 'audit_003',
-        type: 'IMPERSONATION_STARTED',
-        timestamp: oneWeekAgo.toISOString(),
-        adminId: requestingAdminId,
-        adminEmail: 'current_admin@example.com',
-        targetUserId: 'user_789',
-        targetUserEmail: 'otro_usuario@example.com',
-        reason: 'Investigación de bug reportado',
-        ipAddress: '10.0.0.50',
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        sessionId: 'session_002',
-        duration: '30m',
-        status: 'COMPLETED'
-      }
-    ];
-
-    // Aplicar filtros básicos
-    let filteredRecords = allRecords;
-
-    if (filters.adminId) {
-      filteredRecords = filteredRecords.filter(r => r.adminId === filters.adminId);
-    }
-
-    if (filters.targetUserId) {
-      filteredRecords = filteredRecords.filter(r => r.targetUserId === filters.targetUserId);
-    }
-
-    if (filters.startDate) {
-      const start = new Date(filters.startDate as string);
-      filteredRecords = filteredRecords.filter(r => new Date(r.timestamp) >= start);
-    }
-
-    if (filters.endDate) {
-      const end = new Date(filters.endDate as string);
-      filteredRecords = filteredRecords.filter(r => new Date(r.timestamp) <= end);
-    }
-
-    // Aplicar paginación
-    const total = filteredRecords.length;
-    const paginatedRecords = filteredRecords
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(offset, offset + limit);
-
-    return {
-      records: paginatedRecords,
-      total
-    };
-  }
 
   /**
    * Mapea tipos de error a códigos de estado HTTP

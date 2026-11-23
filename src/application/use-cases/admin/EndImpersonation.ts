@@ -10,6 +10,8 @@ import type { UUID } from '@shared/types';
 import { Usuario } from '@domain/entities/Usuario';
 import { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import { ITokenService, TokenPayload } from '@application/ports/auth/ITokenService';
+import type { IAuditRepository } from '@application/ports/repositories/IAuditRepository';
+import { AuditEntry } from '@domain/entities/AuditEntry';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 import { ValidationError } from '@application/errors/ValidationError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
@@ -24,7 +26,8 @@ const logger = new Logger('EndImpersonation');
 export class EndImpersonation {
   constructor(
     private readonly usuarioRepository: IUsuarioRepository,
-    private readonly tokenService: ITokenService
+    private readonly tokenService: ITokenService,
+    private readonly auditRepository?: IAuditRepository
   ) {}
 
   async execute(
@@ -122,6 +125,35 @@ export class EndImpersonation {
         },
         adminToken: newAdminToken
       };
+
+      // Auditoría persistente del fin de impersonación (tabla audit_entries)
+      if (this.auditRepository) {
+        try {
+          await this.auditRepository.save(AuditEntry.create({
+            entityType: 'IMPERSONACION',
+            entityId: targetUser.id,
+            changeType: 'UPDATE',
+            changedByUserId: adminUser?.id || 'unknown',
+            newValue: {
+              type: 'IMPERSONATION_ENDED',
+              adminId: adminUser?.id || 'unknown',
+              adminEmail: adminUser?.email.toString() || null,
+              targetUserId: targetUser.id,
+              targetUserEmail: targetUser.email.toString(),
+              reason: dto.reason || 'Sin razón especificada',
+              ipAddress,
+              userAgent,
+              sessionId,
+              duration: durationFormatted,
+              status: 'COMPLETED'
+            }
+          }));
+        } catch (auditError) {
+          logger.error('Error registrando auditoría de fin de impersonación', {
+            error: auditError instanceof Error ? auditError.message : String(auditError)
+          });
+        }
+      }
 
       return success(response);
 

@@ -605,12 +605,14 @@ export class Container {
 
     this._impersonateUser = new ImpersonateUser(
       this._usuarioRepository,
-      this._tokenService
+      this._tokenService,
+      this._auditRepository
     );
 
     this._endImpersonation = new EndImpersonation(
       this._usuarioRepository,
-      this._tokenService
+      this._tokenService,
+      this._auditRepository
     );
 
     this._bulkCategorizeProducts = new BulkCategorizeProducts(
@@ -686,7 +688,8 @@ export class Container {
 
     this._adminController = new AdminController(
       this._impersonateUser,
-      this._endImpersonation
+      this._endImpersonation,
+      this._auditRepository
     );
 
     this._recommendationsController = new RecommendationsController(

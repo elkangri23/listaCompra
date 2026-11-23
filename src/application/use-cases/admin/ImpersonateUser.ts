@@ -11,6 +11,8 @@ import { Usuario, RolUsuario } from '@domain/entities/Usuario';
 import { Email } from '@domain/value-objects/Email';
 import { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import { ITokenService, TokenPayload } from '@application/ports/auth/ITokenService';
+import type { IAuditRepository } from '@application/ports/repositories/IAuditRepository';
+import { AuditEntry } from '@domain/entities/AuditEntry';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 import { ValidationError } from '@application/errors/ValidationError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
@@ -25,8 +27,47 @@ const logger = new Logger('ImpersonateUser');
 export class ImpersonateUser {
   constructor(
     private readonly usuarioRepository: IUsuarioRepository,
-    private readonly tokenService: ITokenService
+    private readonly tokenService: ITokenService,
+    private readonly auditRepository?: IAuditRepository
   ) {}
+
+  /**
+   * Persiste la entrada de auditoría de impersonación (CU-24).
+   * No interrumpe la impersonación si el registro falla.
+   */
+  private async saveImpersonationAudit(props: {
+    adminId: string;
+    adminEmail: string;
+    targetUserId: string;
+    targetUserEmail: string;
+    reason: string;
+    ipAddress: string;
+    userAgent: string;
+    sessionId: string;
+    durationMinutes: number;
+    status: 'ACTIVE' | 'COMPLETED';
+    type: 'IMPERSONATION_STARTED' | 'IMPERSONATION_ENDED';
+  }): Promise<void> {
+    if (!this.auditRepository) {
+      return;
+    }
+
+    try {
+      await this.auditRepository.save(AuditEntry.create({
+        entityType: 'IMPERSONACION',
+        entityId: props.targetUserId,
+        changeType: 'UPDATE',
+        changedByUserId: props.adminId,
+        newValue: { ...props }
+      }));
+    } catch (error) {
+      logger.error('Error registrando auditoría de impersonación', {
+        error: error instanceof Error ? error.message : String(error),
+        adminId: props.adminId,
+        targetUserId: props.targetUserId
+      });
+    }
+  }
 
   async execute(
     adminUserId: UUID,
@@ -232,6 +273,21 @@ export class ImpersonateUser {
         expiresAt,
         startedAt: new Date()
       };
+
+      // 8. Auditoría persistente de impersonación (tabla audit_entries)
+      await this.saveImpersonationAudit({
+        type: 'IMPERSONATION_STARTED',
+        adminId: adminUser.id,
+        adminEmail: adminUser.email.toString(),
+        targetUserId: targetUser.id,
+        targetUserEmail: targetUser.email.toString(),
+        reason: dto.reason || 'Sin razón especificada',
+        ipAddress,
+        userAgent,
+        sessionId: response.impersonationToken ? 'token-session' : 'unknown',
+        durationMinutes,
+        status: 'ACTIVE'
+      });
 
       return success(response);
 
