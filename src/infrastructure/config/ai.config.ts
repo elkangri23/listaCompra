@@ -4,7 +4,7 @@
  */
 
 export interface AIConfig {
-  provider: 'perplexity' | 'openai' | 'claude' | 'azure-openai';
+  provider: AIProviderId;
   apiKey: string;
   apiUrl: string;
   model: string;
@@ -20,10 +20,56 @@ export interface AIConfig {
   };
 }
 
+/**
+ * Configuración efectiva del servicio IA. Permite cualquier modelo OpenAI-compatible;
+ * la validación del modelo se hace en runtime contra el proveedor.
+ */
 export interface PerplexityConfig extends AIConfig {
-  provider: 'perplexity';
-  model: 'llama-3.1-sonar-small-128k-online' | 'llama-3.1-sonar-large-128k-online' | 'llama-3.1-sonar-huge-128k-online';
+  provider: AIProviderId;
+  model: string;
 }
+
+/**
+ * Proveedores LLM soportados (todos OpenAI-compatible: POST {apiUrl}/chat/completions)
+ */
+export const AI_PROVIDERS = [
+  {
+    id: 'perplexity',
+    nombre: 'Perplexity (Sonar online)',
+    apiUrlPorDefecto: 'https://api.perplexity.ai',
+    modelosSugeridos: [
+      'llama-3.1-sonar-small-128k-online',
+      'llama-3.1-sonar-large-128k-online',
+      'llama-3.1-sonar-huge-128k-online',
+    ],
+  },
+  {
+    id: 'openai',
+    nombre: 'OpenAI (GPT)',
+    apiUrlPorDefecto: 'https://api.openai.com/v1',
+    modelosSugeridos: ['gpt-4o-mini', 'gpt-4o'],
+  },
+  {
+    id: 'openrouter',
+    nombre: 'OpenRouter (multi-proveedor)',
+    apiUrlPorDefecto: 'https://openrouter.ai/api/v1',
+    modelosSugeridos: ['openai/gpt-4o-mini', 'meta-llama/llama-3.1-8b-instruct'],
+  },
+  {
+    id: 'claude',
+    nombre: 'Anthropic Claude (compatible OpenAI)',
+    apiUrlPorDefecto: 'https://api.anthropic.com/v1',
+    modelosSugeridos: [],
+  },
+  {
+    id: 'azure-openai',
+    nombre: 'Azure OpenAI',
+    apiUrlPorDefecto: '',
+    modelosSugeridos: [],
+  },
+] as const;
+
+export type AIProviderId = (typeof AI_PROVIDERS)[number]['id'];
 
 /**
  * Configuración por defecto para desarrollo con Perplexity
@@ -62,10 +108,10 @@ const getAIConfig = (): PerplexityConfig => {
     throw new Error('PERPLEXITY_API_KEY no puede ser un valor de ejemplo - configura una API key válida');
   }
 
-  // Validación que tenga formato de API key de Perplexity (comienza con 'pplx-')
-  if (!config.apiKey.startsWith('pplx-')) {
-    throw new Error('PERPLEXITY_API_KEY debe comenzar con "pplx-" para ser válida');
-  }
+  // NOTA: se elimina la exigencia del prefijo 'pplx-' para permitir proveedores
+  // OpenAI-compatibles (OpenAI, OpenRouter, Claude, Azure) configurados desde
+  // la UI de administración. La validez real de la key se verifica en runtime
+  // contra el endpoint del proveedor (POST /admin/ai/config/test).
 
   if (config.temperature < 0 || config.temperature > 1) {
     throw new Error('AI_TEMPERATURE debe estar entre 0.0 y 1.0');

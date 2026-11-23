@@ -81,6 +81,8 @@ import { InvitationController } from '@infrastructure/http/controllers/Invitatio
 import { AdminController } from '@infrastructure/http/controllers/AdminController';
 import { RecommendationsController } from '@infrastructure/http/controllers/RecommendationsController';
 import { AIController } from '@infrastructure/http/controllers/AIController';
+import { AIConfigController } from '@infrastructure/http/controllers/AIConfigController';
+import { AIConfigService } from '@infrastructure/config/AIConfigService';
 import { AuditController } from '@infrastructure/http/controllers/AuditController';
 import { DashboardController } from '@infrastructure/http/controllers/DashboardController';
 import { OccasionListController } from '@infrastructure/http/controllers/OccasionListController';
@@ -191,6 +193,8 @@ export class Container {
   private _adminController!: AdminController;
   private _recommendationsController!: RecommendationsController;
   private _aiController!: AIController;
+  private _aiConfigService!: AIConfigService;
+  private _aiConfigController!: AIConfigController;
   private _auditController!: AuditController;
   private _dashboardController!: DashboardController;
   private _occasionListController!: OccasionListController;
@@ -390,6 +394,11 @@ export class Container {
       }
     };
     this._aiService = new PerplexityService(aiConfig);
+    this._aiConfigService = new AIConfigService(aiConfig);
+    this._aiConfigController = new AIConfigController(
+      this._aiConfigService,
+      this._aiService as PerplexityService
+    );
 
     const redisConfig: RedisConfig = getRedisConfig();
 
@@ -928,6 +937,14 @@ export class Container {
 
   public get aiController(): AIController {
     return this._aiController;
+  }
+
+  public get aiConfigService(): AIConfigService {
+    return this._aiConfigService;
+  }
+
+  public get aiConfigController(): AIConfigController {
+    return this._aiConfigController;
   }
 
   public get auditController(): AuditController {

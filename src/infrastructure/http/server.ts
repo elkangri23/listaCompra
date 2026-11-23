@@ -14,6 +14,7 @@ import type { AuthController } from './controllers/AuthController';
 import type { InvitationController } from './controllers/InvitationController';
 import type { AdminController } from './controllers/AdminController';
 import type { AIController } from './controllers/AIController';
+import type { AIConfigController } from './controllers/AIConfigController';
 import type { ListController } from './controllers/ListController';
 import type { ProductController } from './controllers/ProductController';
 import type { CategoryController } from './controllers/CategoryController';
@@ -47,6 +48,7 @@ export interface ServerDependencies {
   invitationController: InvitationController;
   adminController: AdminController;
   aiController: AIController;
+  aiConfigController?: AIConfigController;
   authMiddleware: express.RequestHandler;
   listController: ListController;
   productController: ProductController;
@@ -171,6 +173,9 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
   ));
   app.use('/api/v1/ai', createAIRoutes({
     aiController: dependencies.aiController,
+    ...(dependencies.aiConfigController
+      ? { aiConfigController: dependencies.aiConfigController }
+      : {}),
     authMiddleware: dependencies.authMiddleware
   }));
   app.use('/api/v1/recommendations', recommendationsRoutes);

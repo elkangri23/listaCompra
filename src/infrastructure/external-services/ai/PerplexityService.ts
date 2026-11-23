@@ -25,21 +25,14 @@ import { AISecurityUtils } from './AISecurityUtils';
 
 export class PerplexityService implements IAIService {
   private readonly logger = new Logger('PerplexityService');
-  private readonly httpClient: any;
+  private httpClient: any; // mutable: updateConfig() recrea el cliente en caliente
   private readonly config: PerplexityConfig;
   private readonly cacheService: CacheService | undefined;
 
   constructor(config: PerplexityConfig, cacheService?: CacheService) {
     this.config = config;
     this.cacheService = cacheService;
-    this.httpClient = axios.create({
-      baseURL: config.apiUrl,
-      timeout: config.timeout,
-      headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    this.httpClient = this.buildHttpClient(config);
 
     // Logging seguro - NUNCA exponer la API key completa
     this.logger.ai('PerplexityService inicializado', {
@@ -48,6 +41,38 @@ export class PerplexityService implements IAIService {
       cacheEnabled: config.cache.enabled,
       apiKeyLength: config.apiKey.length,
       apiKeyPrefix: config.apiKey.substring(0, 8) + '...' // Solo primeros 8 caracteres
+    });
+  }
+
+  private buildHttpClient(config: PerplexityConfig): any {
+    return axios.create({
+      baseURL: config.apiUrl,
+      timeout: config.timeout,
+      headers: {
+        'Authorization': `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  /**
+   * Actualiza la configuración del proveedor en caliente (CU-31).
+   * Recrea el cliente HTTP con la nueva baseUrl/apiKey/modelo.
+   */
+  updateConfig(config: PerplexityConfig): void {
+    this.config.provider = config.provider;
+    this.config.model = config.model;
+    this.config.apiUrl = config.apiUrl;
+    this.config.timeout = config.timeout;
+    this.config.temperature = config.temperature;
+    this.config.maxTokens = config.maxTokens;
+
+    this.httpClient = this.buildHttpClient(config);
+
+    this.logger.ai('Configuración del proveedor IA actualizada en runtime', {
+      provider: config.provider,
+      model: config.model,
+      apiUrl: config.apiUrl,
     });
   }
 

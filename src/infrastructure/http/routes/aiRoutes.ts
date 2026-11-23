@@ -8,7 +8,38 @@ import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { aiStandardAdvancedRateLimit, aiPremiumAdvancedRateLimit } from '../middlewares/advancedRateLimitMiddleware';
 import { requireAdmin } from '../middlewares/roleMiddleware';
 import { AIController } from '../controllers/AIController';
+import { AIConfigController } from '../controllers/AIConfigController';
 import { z } from 'zod';
+
+// Schema de validación para actualizar la configuración IA (admin)
+const adminConfigSchema = z.object({
+  body: z.object({
+    provider: z.enum(['perplexity', 'openai', 'openrouter', 'claude', 'azure-openai'])
+      .optional(),
+    apiUrl: z.string().trim().url('La URL del API debe ser válida')
+      .max(200, 'La URL no puede exceder 200 caracteres')
+      .optional(),
+    model: z.string().trim().min(1, 'El modelo es requerido')
+      .max(100, 'El modelo no puede exceder 100 caracteres')
+      .optional(),
+    apiKey: z.string().trim().min(32, 'La API key debe tener al menos 32 caracteres')
+      .max(500, 'La API key no puede exceder 500 caracteres')
+      .optional(),
+    temperature: z.number().min(0, 'La temperatura debe estar entre 0 y 1')
+      .max(1, 'La temperatura debe estar entre 0 y 1')
+      .optional(),
+    maxTokens: z.number().int().min(1, 'maxTokens debe estar entre 1 y 4000')
+      .max(4000, 'maxTokens debe estar entre 1 y 4000')
+      .optional(),
+  }),
+});
+
+// Schema de validación para probar la configuración IA (admin)
+const testConfigSchema = z.object({
+  body: z.object({
+    apiKey: z.string().trim().min(32).max(500).optional(),
+  }),
+});
 
 // Schema de validación para sugerencias de categorías
 const categorySuggestionsSchema = z.object({
@@ -57,10 +88,11 @@ const bulkCategorizationSchema = z.object({
 // Función factory para crear las rutas con dependencias
 export function createAIRoutes(dependencies: {
   aiController: AIController;
+  aiConfigController?: AIConfigController;
   authMiddleware: RequestHandler;
 }) {
   const router = Router();
-  const { aiController, authMiddleware } = dependencies;
+  const { aiController, aiConfigController, authMiddleware } = dependencies;
 
   /**
    * @swagger
@@ -472,6 +504,32 @@ export function createAIRoutes(dependencies: {
     (req, res, next) => requireAdmin(req as any, res, next), // Solo administradores
     aiController.getUsageInfo.bind(aiController)
   );
+
+  //
+  // Administración de la configuración IA (CU-31: selección de proveedor LLM)
+  // Solo administradores.
+  //
+  if (aiConfigController) {
+    router.get('/admin/config',
+      authMiddleware,
+      (req, res, next) => requireAdmin(req as any, res, next),
+      aiConfigController.getConfig.bind(aiConfigController)
+    );
+
+    router.put('/admin/config',
+      authMiddleware,
+      (req, res, next) => requireAdmin(req as any, res, next),
+      validationMiddleware(adminConfigSchema),
+      aiConfigController.updateConfig.bind(aiConfigController)
+    );
+
+    router.post('/admin/config/test',
+      authMiddleware,
+      (req, res, next) => requireAdmin(req as any, res, next),
+      validationMiddleware(testConfigSchema),
+      aiConfigController.testConfig.bind(aiConfigController)
+    );
+  }
 
   return router;
 }
