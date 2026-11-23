@@ -96,6 +96,10 @@ describe('AddProduct', () => {
       listaRepository: mockListaRepository,
       categoriaRepository: mockCategoriaRepository,
       tiendaRepository: mockTiendaRepository,
+      permisoRepository: {
+      findUniqueByUsuarioAndLista: jest.fn().mockResolvedValue(null),
+      hasPermission: jest.fn().mockResolvedValue(success(true))
+    } as any,
       aiService: mockAIService
     });
   });
@@ -145,7 +149,7 @@ describe('AddProduct', () => {
         cantidad: 1
       };
 
-      mockListaRepository.findByIdAndOwner.mockResolvedValue(success(null));
+      mockListaRepository.findById.mockResolvedValue(success(null));
 
       // Act
       const result = await useCase.execute(dto, usuarioId);
@@ -165,7 +169,7 @@ describe('AddProduct', () => {
         cantidad: 1
       };
 
-      mockListaRepository.findByIdAndOwner.mockResolvedValue(
+      mockListaRepository.findById.mockResolvedValue(
         failure(new Error('Error de base de datos'))
       );
 
@@ -188,7 +192,7 @@ describe('AddProduct', () => {
       };
 
       // Mock lista que no pertenece al usuario - debe retornar null cuando no es propietario
-      mockListaRepository.findByIdAndOwner.mockResolvedValue(success(null));
+      mockListaRepository.findById.mockResolvedValue(success(null));
 
       // Act
       const result = await useCase.execute(dto, usuarioId);
@@ -217,7 +221,7 @@ describe('AddProduct', () => {
         estaActiva: jest.fn().mockReturnValue(true)
       };
 
-      mockListaRepository.findByIdAndOwner.mockResolvedValue(success(mockLista as any));
+      mockListaRepository.findById.mockResolvedValue(success(mockLista as any));
       mockProductoRepository.countByList.mockResolvedValue(success(10)); // Mock count de productos
       mockProductoRepository.save.mockResolvedValue(
         failure(new Error('Error guardando producto'))

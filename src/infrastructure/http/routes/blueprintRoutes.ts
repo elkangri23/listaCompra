@@ -45,7 +45,7 @@ export function createBlueprintRoutes(dependencies: BlueprintRouteDependencies):
 
   /**
    * @swagger
-   * /api/blueprints:
+   * /api/v1/blueprints:
    *   post:
    *     summary: Crear un nuevo blueprint
    *     tags: [Blueprints]
@@ -113,7 +113,7 @@ export function createBlueprintRoutes(dependencies: BlueprintRouteDependencies):
 
   /**
    * @swagger
-   * /api/blueprints:
+   * /api/v1/blueprints:
    *   get:
    *     summary: Obtener blueprints del usuario autenticado
    *     tags: [Blueprints]
@@ -164,7 +164,7 @@ export function createBlueprintRoutes(dependencies: BlueprintRouteDependencies):
 
   /**
    * @swagger
-   * /api/blueprints/publicos:
+   * /api/v1/blueprints/publicos:
    *   get:
    *     summary: Obtener blueprints públicos
    *     tags: [Blueprints]
@@ -211,7 +211,7 @@ export function createBlueprintRoutes(dependencies: BlueprintRouteDependencies):
 
   /**
    * @swagger
-   * /api/blueprints/buscar:
+   * /api/v1/blueprints/buscar:
    *   get:
    *     summary: Buscar blueprints por nombre o descripción
    *     tags: [Blueprints]
@@ -269,7 +269,7 @@ export function createBlueprintRoutes(dependencies: BlueprintRouteDependencies):
 
   /**
    * @swagger
-   * /api/blueprints/{id}:
+   * /api/v1/blueprints/{id}:
    *   get:
    *     summary: Obtener blueprint por ID
    *     tags: [Blueprints]
@@ -299,7 +299,7 @@ export function createBlueprintRoutes(dependencies: BlueprintRouteDependencies):
 
   /**
    * @swagger
-   * /api/blueprints/{id}:
+   * /api/v1/blueprints/{id}:
    *   put:
    *     summary: Actualizar blueprint
    *     tags: [Blueprints]
@@ -372,7 +372,7 @@ export function createBlueprintRoutes(dependencies: BlueprintRouteDependencies):
 
   /**
    * @swagger
-   * /api/blueprints/{id}:
+   * /api/v1/blueprints/{id}:
    *   delete:
    *     summary: Eliminar blueprint
    *     tags: [Blueprints]
@@ -402,7 +402,7 @@ export function createBlueprintRoutes(dependencies: BlueprintRouteDependencies):
 
   /**
    * @swagger
-   * /api/blueprints/{id}/crear-lista:
+   * /api/v1/blueprints/{id}/crear-lista:
    *   post:
    *     summary: Crear lista de compra desde blueprint
    *     tags: [Blueprints]

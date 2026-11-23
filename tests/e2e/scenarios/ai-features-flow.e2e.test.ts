@@ -163,7 +163,15 @@ describe('E2E: AI Features Flow', () => {
       listController: container.listController,
       productController: container.productController,
       categoryController: container.categoryController,
-      auditController: container.auditController
+      auditController: container.auditController,
+      blueprintRepository: container.blueprintRepository,
+      listaRepository: container.listaRepository,
+      productoRepository: container.productoRepository,
+      tokenService: container.tokenService,
+      storeController: container.storeController,
+      occasionListController: container.occasionListController,
+      cacheIntegrityController: container.cacheIntegrityController,
+      cachedAIService: container.cachedAIService,
     };
     app = await createServer(dependencies);
 
@@ -312,12 +320,8 @@ describe('E2E: AI Features Flow', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('VALIDATION_ERROR');
-      const details = Array.isArray(response.body.details) ? response.body.details : [];
-      const hasNombreDetail = details.some((detail: any) =>
-        typeof detail.message === 'string' && detail.message.toLowerCase().includes('nombre')
-      );
-      expect(hasNombreDetail).toBe(true);
+      expect(response.body.error).toContain('requerido');
+      expect(response.body.code).toBe('VALIDATION_ERROR');
     });
 
     it('5. Debe rechazar productos con nombres muy largos', async () => {
@@ -332,12 +336,8 @@ describe('E2E: AI Features Flow', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('VALIDATION_ERROR');
-      const details = Array.isArray(response.body.details) ? response.body.details : [];
-      const hasLengthDetail = details.some((detail: any) =>
-        typeof detail.message === 'string' && detail.message.toLowerCase().includes('exced')
-      );
-      expect(hasLengthDetail).toBe(true);
+      expect(response.body.error).toContain('exced');
+      expect(response.body.code).toBe('VALIDATION_ERROR');
     });
 
     it('6. Debe detectar patrones sospechosos en nombres de productos', async () => {

@@ -47,6 +47,9 @@ describe('advancedRateLimitMiddleware', () => {
   let middlewareModule: typeof import('../../../../../src/infrastructure/http/middlewares/advancedRateLimitMiddleware');
 
   beforeAll(async () => {
+    // El middleware decide si crea el cliente Redis en el momento del import,
+    // por lo que NODE_ENV debe estar en producción ANTES de cargar el módulo
+    process.env['NODE_ENV'] = 'production';
     middlewareModule = await import('../../../../../src/infrastructure/http/middlewares/advancedRateLimitMiddleware');
   });
 

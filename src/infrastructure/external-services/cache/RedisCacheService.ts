@@ -120,6 +120,14 @@ export class RedisCacheService implements CacheService {
   }
 
   /**
+   * Expone el cliente Redis subyacente (o null si no está conectado)
+   * para servicios que necesitan acceso directo (ej. integridad de cache)
+   */
+  getClient(): RedisClientType | null {
+    return this.isConnected ? this.client : null;
+  }
+
+  /**
    * Obtiene un valor del cache
    */
   async get<T>(key: string): Promise<T | null> {

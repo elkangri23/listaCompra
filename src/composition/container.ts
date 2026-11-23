@@ -83,11 +83,18 @@ import { RecommendationsController } from '@infrastructure/http/controllers/Reco
 import { AIController } from '@infrastructure/http/controllers/AIController';
 import { AuditController } from '@infrastructure/http/controllers/AuditController';
 import { DashboardController } from '@infrastructure/http/controllers/DashboardController';
+import { OccasionListController } from '@infrastructure/http/controllers/OccasionListController';
+import { CacheIntegrityController } from '@infrastructure/http/controllers/CacheIntegrityController';
 import { createAuthMiddleware } from '@infrastructure/http/middlewares/authMiddleware';
 import { RealTimeGateway } from '@infrastructure/realtime/RealTimeGateway';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 import { MetricsCollector } from '@infrastructure/observability/metrics/MetricsCollector';
 import { CachedAIService } from '@infrastructure/external-services/ai/CachedAIService';
+import { PrismaBlueprintRepository } from '@infrastructure/persistence/repositories/PrismaBlueprintRepository';
+import type { IBlueprintRepository } from '@application/ports/repositories/IBlueprintRepository';
+import { CreateOccasionListUseCase } from '@application/use-cases/lists/CreateOccasionList';
+import { CacheIntegrityService } from '@infrastructure/cache/CacheIntegrityService';
+import { SecurityAuditService, InMemoryAuditRepository } from '@infrastructure/observability/audit/SecurityAuditService';
 import getRedisConfig, { type RedisConfig } from '@infrastructure/config/redis.config';
 
 // Interfaces
@@ -123,6 +130,7 @@ export class Container {
   private _permisoRepository!: IPermisoRepository;
   private _auditRepository!: IAuditRepository;
   private _analyticsRepository!: IAnalyticsRepository;
+  private _blueprintRepository!: IBlueprintRepository;
 
   // External Services
   private _passwordHasher!: IPasswordHasher;
@@ -185,6 +193,8 @@ export class Container {
   private _aiController!: AIController;
   private _auditController!: AuditController;
   private _dashboardController!: DashboardController;
+  private _occasionListController!: OccasionListController;
+  private _cacheIntegrityController!: CacheIntegrityController;
 
   // Middlewares
   private _authMiddleware!: express.RequestHandler;
@@ -285,6 +295,19 @@ export class Container {
       this._invitacionRepository = new InMemoryInvitacionRepository();
       this._permisoRepository = new InMemoryPermisoRepository();
       this._auditRepository = { save: async () => success({} as any), findById: async () => success(null), find: async () => success([]), count: async () => success(0) };
+      this._blueprintRepository = {
+        save: async (bp: any) => success(bp),
+        findById: async () => success(null),
+        findByUsuarioId: async () => success([]),
+        findActiveByUsuarioId: async () => success([]),
+        findByNombre: async () => success([]),
+        deleteById: async () => success(undefined),
+        existsById: async () => success(false),
+        existsByNombreAndUsuario: async () => success(false),
+        countByUsuarioId: async () => success(0),
+        findAll: async () => success({ items: [], total: 0, page: 1, limit: 10, totalPages: 0, hasNext: false, hasPrevious: false }),
+        deactivateAllByUsuarioId: async () => success(undefined)
+      } as unknown as IBlueprintRepository;
       this._analyticsRepository = {        getCollaborativeDashboard: async () => success({
           summary: {
             totalLists: 0,
@@ -321,6 +344,7 @@ export class Container {
     this._permisoRepository = new PrismaPermisoRepository(this._prisma);
     this._auditRepository = new PrismaAuditRepository(this._prisma);
     this._analyticsRepository = new PrismaAnalyticsRepository(this._prisma);
+    this._blueprintRepository = new PrismaBlueprintRepository(this._prisma);
   }
 
   private initializeExternalServices(): void {
@@ -677,6 +701,31 @@ export class Container {
       this._getCollaborativeDashboard
     );
 
+    // CU-32: Listas inteligentes por ocasión
+    const createOccasionListUseCase = new CreateOccasionListUseCase({
+      aiService: this._cachedAIService,
+      listaRepository: this._listaRepository,
+      productoRepository: this._productoRepository,
+      tiendaRepository: this._tiendaRepository,
+      categoriaRepository: this._categoriaRepository
+    });
+    this._occasionListController = new OccasionListController(createOccasionListUseCase);
+
+    // Integridad de cache (auditoría de seguridad en memoria, independiente de la BD)
+    const integritySecurityAudit = new SecurityAuditService(
+      new InMemoryAuditRepository(),
+      new Logger('CacheIntegrityAudit')
+    );
+    const cacheIntegrityService = new CacheIntegrityService(
+      new Logger('CacheIntegrityService'),
+      integritySecurityAudit
+    );
+    this._cacheIntegrityController = new CacheIntegrityController(
+      cacheIntegrityService,
+      this._cachedAIService.cacheClient,
+      new Logger('CacheIntegrityController')
+    );
+
     // Inicializar middleware de autenticación
     this._authMiddleware = createAuthMiddleware({
       tokenService: this._tokenService
@@ -695,6 +744,10 @@ export class Container {
 
   public get listaRepository(): IListaRepository {
     return this._listaRepository;
+  }
+
+  public get productoRepository(): IProductoRepository {
+    return this._productoRepository;
   }
 
   public get passwordHasher(): IPasswordHasher {
@@ -883,6 +936,22 @@ export class Container {
 
   public get dashboardController(): DashboardController {
     return this._dashboardController;
+  }
+
+  public get blueprintRepository(): IBlueprintRepository {
+    return this._blueprintRepository;
+  }
+
+  public get occasionListController(): OccasionListController {
+    return this._occasionListController;
+  }
+
+  public get cacheIntegrityController(): CacheIntegrityController {
+    return this._cacheIntegrityController;
+  }
+
+  public get cachedAIService(): CachedAIService {
+    return this._cachedAIService;
   }
 
   public get authMiddleware(): express.RequestHandler {

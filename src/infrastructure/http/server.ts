@@ -27,6 +27,20 @@ import { createDashboardRoutes } from './routes/dashboardRoutes';
 import recommendationsRoutes from './routes/recommendationsRoutes';
 import { devRoutes } from './routes/devRoutes';
 import { auditRoutes } from './routes/audit.routes';
+import { createBlueprintRoutes } from './routes/blueprintRoutes';
+import { createStoreRoutes } from './routes/storeRoutes';
+import { setupOccasionListRoutes } from './routes/occasionListRoutes';
+import { createCacheAnalyticsRoutes } from './routes/cacheAnalyticsRoutes';
+import { createCacheIntegrityRoutes } from './routes/cacheIntegrityRoutes';
+import { requireAdmin } from './middlewares/roleMiddleware';
+import type { StoreController } from './controllers/StoreController';
+import type { OccasionListController } from './controllers/OccasionListController';
+import type { CacheIntegrityController } from './controllers/CacheIntegrityController';
+import type { CachedAIService } from '../external-services/ai/CachedAIService';
+import type { IBlueprintRepository } from '../../application/ports/repositories/IBlueprintRepository';
+import type { IListaRepository } from '../../application/ports/repositories/IListaRepository';
+import type { IProductoRepository } from '../../application/ports/repositories/IProductoRepository';
+import type { ITokenService } from '../../application/ports/auth/ITokenService';
 
 export interface ServerDependencies {
   authController: AuthController;
@@ -39,6 +53,16 @@ export interface ServerDependencies {
   categoryController: CategoryController;
   dashboardController?: DashboardController;
   auditController: AuditController;
+
+  // Rutas previamente huérfanas (blueprints, tiendas, occasion lists, cache)
+  blueprintRepository: IBlueprintRepository;
+  listaRepository: IListaRepository;
+  productoRepository: IProductoRepository;
+  tokenService: ITokenService;
+  storeController: StoreController;
+  occasionListController: OccasionListController;
+  cacheIntegrityController: CacheIntegrityController;
+  cachedAIService?: CachedAIService;
 }
 
 export async function createServer(dependencies: ServerDependencies): Promise<Application> {
@@ -170,6 +194,36 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
 
   // Rutas de auditoría
   app.use('/api/v1', auditRoutes);
+
+  // Rutas de blueprints/plantillas (CU-22, CU-23)
+  app.use('/api/v1/blueprints', createBlueprintRoutes({
+    blueprintRepository: dependencies.blueprintRepository,
+    listaRepository: dependencies.listaRepository,
+    productoRepository: dependencies.productoRepository,
+    tokenService: dependencies.tokenService
+  }));
+
+  // Rutas de tiendas (autenticación requerida)
+  app.use('/api/v1/stores', dependencies.authMiddleware, createStoreRoutes(dependencies.storeController));
+
+  // Rutas de listas por ocasión (CU-32): /occasions público, generate/preview con auth
+  app.use('/api/v1/occasion-lists', setupOccasionListRoutes(
+    dependencies.occasionListController,
+    dependencies.authMiddleware
+  ));
+
+  // Analytics de cache Redis (solo admin): /api/v1/analytics/cache/*
+  if (dependencies.cachedAIService) {
+    app.use('/api/v1/analytics/cache', dependencies.authMiddleware, requireAdmin);
+    app.use('/api/v1', createCacheAnalyticsRoutes(dependencies.cachedAIService));
+
+    // Integridad de cache (solo admin): /api/v1/admin/cache/integrity/*
+    app.use('/api/v1/admin/cache/integrity', createCacheIntegrityRoutes(
+      dependencies.cacheIntegrityController,
+      dependencies.authMiddleware,
+      requireAdmin
+    ));
+  }
 
   // Rutas de desarrollo (solo en development)
   app.use('/api/v1/dev', devRoutes);

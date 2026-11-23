@@ -32,7 +32,15 @@ describe('Invitation Endpoints Integration', () => {
       listController: container.listController,
       productController: container.productController,
       categoryController: container.categoryController,
-      auditController: container.auditController
+      auditController: container.auditController,
+      blueprintRepository: container.blueprintRepository,
+      listaRepository: container.listaRepository,
+      productoRepository: container.productoRepository,
+      tokenService: container.tokenService,
+      storeController: container.storeController,
+      occasionListController: container.occasionListController,
+      cacheIntegrityController: container.cacheIntegrityController,
+      cachedAIService: container.cachedAIService,
     });
 
     // Registrar usuario de prueba (si no existe) o usar existente
@@ -218,9 +226,8 @@ describe('Invitation Endpoints Integration', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Invitaciones obtenidas exitosamente');
-      expect(Array.isArray(response.body.data.invitaciones)).toBe(true);
-      // Por ahora el endpoint devuelve array vacío (pendiente implementar caso de uso)
-      expect(response.body.data.invitaciones.length).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should fail for non-existent list', async () => {
@@ -231,7 +238,7 @@ describe('Invitation Endpoints Integration', () => {
 
       // Endpoint actual retorna 200 con array vacío (implementación placeholder)
       expect(response.status).toBe(200);
-      expect(response.body.data.invitaciones.length).toBe(0);
+      expect(response.body.data.length).toBe(0);
     });
 
     it('should fail without authentication', async () => {
@@ -250,7 +257,7 @@ describe('Invitation Endpoints Integration', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Permisos obtenidos exitosamente');
-      expect(Array.isArray(response.body.data.permisos)).toBe(true);
+      expect(Array.isArray(response.body.data)).toBe(true);
     });
 
     it('should fail without authentication', async () => {

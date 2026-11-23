@@ -3,20 +3,23 @@
  * Implementa CU-32: Listas Inteligentes por Ocasión
  */
 
-import { Router } from 'express';
+import { Router, type RequestHandler } from 'express';
 import { OccasionListController, OccasionListSchemas } from '../controllers/OccasionListController';
 
 /**
  * Configura las rutas para listas por ocasión
+ * @param controller Controlador de listas por ocasión
+ * @param authMiddleware Middleware de autenticación JWT (protege generate/preview; /occasions es público)
  */
 export function setupOccasionListRoutes(
-  controller: OccasionListController
+  controller: OccasionListController,
+  authMiddleware?: RequestHandler
 ): Router {
   const router = Router();
 
   /**
    * @swagger
-   * /api/occasion-lists/occasions:
+   * /api/v1/occasion-lists/occasions:
    *   get:
    *     summary: Obtener ocasiones predefinidas
    *     description: Obtiene la lista de ocasiones predefinidas disponibles para generar listas automáticamente
@@ -45,7 +48,7 @@ export function setupOccasionListRoutes(
 
   /**
    * @swagger
-   * /api/occasion-lists/generate:
+   * /api/v1/occasion-lists/generate:
    *   post:
    *     summary: Generar lista inteligente por ocasión
    *     description: Utiliza IA para generar una lista de compras completa basada en una ocasión específica (CU-32)
@@ -123,11 +126,10 @@ export function setupOccasionListRoutes(
    *       500:
    *         description: Error interno del servidor
    */
-  router.post('/generate', controller.generateOccasionList);
-
+  router.post('/generate', authMiddleware ?? ((_req, _res, next) => next()), controller.generateOccasionList);
   /**
    * @swagger
-   * /api/occasion-lists/preview:
+   * /api/v1/occasion-lists/preview:
    *   post:
    *     summary: Vista previa de lista por ocasión
    *     description: Genera una vista previa de productos sin crear la lista real (funcionalidad en desarrollo)
@@ -155,7 +157,7 @@ export function setupOccasionListRoutes(
    *       500:
    *         description: Error interno del servidor
    */
-  router.post('/preview', controller.previewOccasionList);
+  router.post('/preview', authMiddleware ?? ((_req, _res, next) => next()), controller.previewOccasionList);
 
   return router;
 }

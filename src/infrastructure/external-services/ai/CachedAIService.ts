@@ -8,6 +8,7 @@ import { RedisCacheService } from '../cache/RedisCacheService';
 import { RedisCacheAnalytics } from '../cache/RedisCacheAnalytics';
 import { PerplexityConfig } from '../../config/ai.config';
 import { RedisConfig } from '../../config/redis.config';
+import type { RedisClientType } from 'redis';
 import { Logger } from '../../observability/logger/Logger';
 import {
   IAIService,
@@ -201,6 +202,14 @@ export class CachedAIService implements IAIService {
     }
 
     return result;
+  }
+
+  /**
+   * Cliente Redis subyacente (o null si el cache no está disponible/disabled)
+   * Expuesto para servicios de administración (ej. integridad de cache)
+   */
+  get cacheClient(): RedisClientType | null {
+    return this.cacheService?.getClient() ?? null;
   }
 
   /**

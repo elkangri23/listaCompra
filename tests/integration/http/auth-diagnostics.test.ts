@@ -24,7 +24,15 @@ describe('Auth Diagnostics', () => {
       listController: container.listController,
       productController: container.productController,
       categoryController: container.categoryController,
-      auditController: container.auditController
+      auditController: container.auditController,
+      blueprintRepository: container.blueprintRepository,
+      listaRepository: container.listaRepository,
+      productoRepository: container.productoRepository,
+      tokenService: container.tokenService,
+      storeController: container.storeController,
+      occasionListController: container.occasionListController,
+      cacheIntegrityController: container.cacheIntegrityController,
+      cachedAIService: container.cachedAIService,
     });
   });
 

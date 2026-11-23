@@ -3,13 +3,13 @@ import { Container } from '../../../composition/container';
 import { requireRole } from '../middlewares/roleMiddleware';
 import { RolUsuario } from '@domain/entities/Usuario';
 
-export const auditRoutes = (router: Router): void => {
-  const container = Container.getInstance();
-  const auditController = container.auditController;
-  const authMiddleware = container.authMiddleware;
+const router = Router();
+const container = Container.getInstance();
+const auditController = container.auditController;
+const authMiddleware = container.authMiddleware;
 
-  const listAuditHandler = auditController.getListAuditHistory.bind(auditController);
-  const productAuditHandler = auditController.getProductAuditHistory.bind(auditController);
+const listAuditHandler = auditController.getListAuditHistory.bind(auditController);
+const productAuditHandler = auditController.getProductAuditHistory.bind(auditController);
   const globalAuditHandler = auditController.getGlobalAuditHistoryRoute.bind(auditController);
 
   /**
@@ -239,4 +239,5 @@ export const auditRoutes = (router: Router): void => {
     requireRole([RolUsuario.ADMIN]),
     globalAuditHandler
   );
-};
+
+export const auditRoutes: Router = router;

@@ -158,7 +158,8 @@ export const requireRole = (allowedRoles: RolUsuario[]): RequestHandler => {
 /**
  * Middleware específico para validar rol de administrador con verificaciones adicionales
  */
-export const requireAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  const authReq = req as AuthenticatedRequest;
   try {
     // Todas las validaciones del requireRole más validaciones específicas de admin
     const roleCheck = requireRole([RolUsuario.ADMIN]);
@@ -170,7 +171,7 @@ export const requireAdmin = (req: AuthenticatedRequest, res: Response, next: Nex
       }
       
       // Validaciones específicas de administrador
-      if (!req.user) {
+      if (!authReq.user) {
         logger.security('Error crítico: usuario undefined después de validación de rol', {
           path: req.path,
           method: req.method,
@@ -185,11 +186,11 @@ export const requireAdmin = (req: AuthenticatedRequest, res: Response, next: Nex
       }
 
       // DOBLE VERIFICACIÓN: Confirmar que es REALMENTE administrador
-      if (req.user.rol !== RolUsuario.ADMIN) {
+      if (authReq.user.rol !== RolUsuario.ADMIN) {
         logger.security('CRÍTICO: Bypass de validación de rol admin detectado', {
-          userId: req.user.id,
-          userEmail: req.user.email,
-          userRole: req.user.rol,
+          userId: authReq.user.id,
+          userEmail: authReq.user.email,
+          userRole: authReq.user.rol,
           path: req.path,
           method: req.method,
           ip: req.ip,
@@ -205,10 +206,10 @@ export const requireAdmin = (req: AuthenticatedRequest, res: Response, next: Nex
       }
 
       // Verificación adicional: Email verificado para operaciones críticas
-      if (req.user.emailVerificado === false) {
+      if (authReq.user.emailVerificado === false) {
         logger.security('Administrador con email no verificado intentando acceso', {
-          userId: req.user.id,
-          userEmail: req.user.email,
+          userId: authReq.user.id,
+          userEmail: authReq.user.email,
           path: req.path,
           method: req.method,
           ip: req.ip
@@ -223,8 +224,8 @@ export const requireAdmin = (req: AuthenticatedRequest, res: Response, next: Nex
 
       // Log específico de acceso administrativo
       logger.security('Acceso administrativo autorizado', {
-        adminId: req.user.id,
-        adminEmail: req.user.email,
+        adminId: authReq.user.id,
+        adminEmail: authReq.user.email,
         path: req.path,
         method: req.method,
         ip: req.ip,
@@ -240,7 +241,7 @@ export const requireAdmin = (req: AuthenticatedRequest, res: Response, next: Nex
       stack: error instanceof Error ? error.stack : undefined,
       path: req.path,
       method: req.method,
-      userId: req.user?.id,
+      userId: authReq.user?.id,
       ip: req.ip,
       timestamp: new Date().toISOString()
     });

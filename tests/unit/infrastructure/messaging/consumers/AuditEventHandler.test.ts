@@ -5,7 +5,7 @@ import { ListaUpdatedEvent } from '@domain/events/ListaUpdatedEvent';
 import { ProductoDeletedEvent } from '@domain/events/ProductoDeletedEvent';
 import { AuditEntry } from '@domain/entities/AuditEntry';
 import { success } from '@shared/result';
-import { DomainEvent } from '@domain/events/DomainEvent';
+import { BaseDomainEvent } from '@domain/events/DomainEvent';
 
 describe('AuditEventHandler', () => {
   let auditRepository: IAuditRepository;
@@ -66,8 +66,8 @@ describe('AuditEventHandler', () => {
   });
 
   it('should not do anything for unhandled events', async () => {
-    class UnhandledEvent extends DomainEvent {
-      constructor() { super('unhandled.event', {}); }
+    class UnhandledEvent extends BaseDomainEvent {
+      constructor() { super('agg-unhandled', 'unhandled', {}); }
     }
     const unhandledEvent = new UnhandledEvent();
 
@@ -92,7 +92,9 @@ describe('AuditEventHandler', () => {
     await handler.handle(event);
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to save audit entry'),
+      expect.stringContaining('Failed to save audit entry')
+    );
+    expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('DB Error')
     );
   });

@@ -10,28 +10,28 @@ export const createStoreRoutes = (storeController: StoreController): Router => {
   const router = Router();
 
   /**
-   * POST /api/stores
+   * POST /api/v1/stores
    * Crear una nueva tienda
    * Body: { nombre, direccion?, telefono?, sitioWeb? }
    */
   router.post('/', storeController.create.bind(storeController));
 
   /**
-   * GET /api/stores
+   * GET /api/v1/stores
    * Obtener todas las tiendas con filtros opcionales
    * Query: ?page=number&limit=number&tipo=string&activas=boolean&search=string
    */
   router.get('/', storeController.getAll.bind(storeController));
 
   /**
-   * GET /api/stores/:id
+   * GET /api/v1/stores/:id
    * Obtener una tienda por ID
    * Params: { id }
    */
   router.get('/:id', storeController.getById.bind(storeController));
 
   /**
-   * PUT /api/stores/:id
+   * PUT /api/v1/stores/:id
    * Actualizar una tienda existente
    * Params: { id }
    * Body: { nombre?, direccion?, telefono?, sitioWeb?, activa? }
@@ -39,14 +39,14 @@ export const createStoreRoutes = (storeController: StoreController): Router => {
   router.put('/:id', storeController.update.bind(storeController));
 
   /**
-   * DELETE /api/stores/:id
+   * DELETE /api/v1/stores/:id
    * Eliminar una tienda
    * Params: { id }
    */
   router.delete('/:id', storeController.delete.bind(storeController));
 
   /**
-   * PATCH /api/stores/:id/toggle-status
+   * PATCH /api/v1/stores/:id/toggle-status
    * Cambiar el estado activo/inactivo de una tienda
    * Params: { id }
    * Body: { activa: boolean }
@@ -54,7 +54,7 @@ export const createStoreRoutes = (storeController: StoreController): Router => {
   router.patch('/:id/toggle-status', storeController.toggleStatus.bind(storeController));
 
   /**
-   * GET /api/stores/:id/categories
+   * GET /api/v1/stores/:id/categories
    * Obtener categorías de una tienda específica
    * Params: { id }
    * Redirige a: GET /api/categories?tiendaId=:id

@@ -41,7 +41,15 @@ describe('E2E: Shopping List Management Flow', () => {
       listController: container.listController,
       productController: container.productController,
       categoryController: container.categoryController,
-      auditController: container.auditController
+      auditController: container.auditController,
+      blueprintRepository: container.blueprintRepository,
+      listaRepository: container.listaRepository,
+      productoRepository: container.productoRepository,
+      tokenService: container.tokenService,
+      storeController: container.storeController,
+      occasionListController: container.occasionListController,
+      cacheIntegrityController: container.cacheIntegrityController,
+      cachedAIService: container.cachedAIService,
     };
     app = await createServer(dependencies);
 
@@ -148,10 +156,10 @@ describe('E2E: Shopping List Management Flow', () => {
         .send({
           nombre: 'Intento de hackeo'
         })
-        .expect(403);
+        .expect(404); // 404 intencional: no revela existencia de listas ajenas (anti-enumeración)
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('permiso');
+      expect(response.body.error).toContain('no encontrada');
     });
   });
 
@@ -210,22 +218,20 @@ describe('E2E: Shopping List Management Flow', () => {
 
     it('3. Debe marcar producto como comprado', async () => {
       const response = await request(app)
-        .put(`/api/v1/products/${productoId}/purchased`)
+        .patch(`/api/v1/lists/${listaId}/products/${productoId}/purchased`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          comprado: true,
-          precioFinal: 1.45
+          comprado: true
         })
         .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.comprado).toBe(true);
-      expect(response.body.data.precio).toBe(1.45);
     });
 
     it('4. Debe marcar producto como urgente', async () => {
       const response = await request(app)
-        .put(`/api/v1/products/${productoId}/urgent`)
+        .put(`/api/v1/lists/${listaId}/products/${productoId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           urgente: true
@@ -238,7 +244,7 @@ describe('E2E: Shopping List Management Flow', () => {
 
     it('5. Debe eliminar producto de la lista', async () => {
       const response = await request(app)
-        .delete(`/api/v1/products/${productoId}`)
+        .delete(`/api/v1/lists/${listaId}/products/${productoId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 

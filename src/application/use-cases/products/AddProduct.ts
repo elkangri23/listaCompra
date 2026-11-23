@@ -57,8 +57,8 @@ export class AddProduct {
       ));
     }
 
-    // 2. Verificar que la lista existe y el usuario tiene permisos
-    const listaResult = await this.deps.listaRepository.findByIdAndOwner(dto.listaId, usuarioId);
+    // 2. Verificar que la lista existe
+    const listaResult = await this.deps.listaRepository.findById(dto.listaId);
     if (listaResult.isFailure) {
       return failure(listaResult.error);
     }
@@ -71,11 +71,17 @@ export class AddProduct {
       ));
     }
 
-    // 3. Verificar que el usuario es propietario de la lista
+    // 3. Verificar acceso: propietario o invitado con permiso de escritura (CU-09)
     if (!lista.esPropietario(usuarioId)) {
-      return failure(new UnauthorizedError(
-        'No tienes permisos para añadir productos a esta lista'
-      ));
+      const permiso = await this.deps.permisoRepository.findUniqueByUsuarioAndLista(
+        usuarioId,
+        dto.listaId
+      );
+      if (!permiso || !permiso.tipoPermiso.canWrite()) {
+        return failure(new UnauthorizedError(
+          'No tienes permisos para añadir productos a esta lista'
+        ));
+      }
     }
 
     // 4. Verificar que la lista está activa

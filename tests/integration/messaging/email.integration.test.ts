@@ -18,18 +18,12 @@ describeSkippable('NodemailerService Integration Tests', () => {
   const testEmail = 'email-privado-eliminado@example.invalid'; // Email del desarrollador para tests
 
   beforeAll(() => {
-    // Configuración real de Gmail para tests
+    // Configuración de Resend (API key desde entorno, nunca hardcodeada)
     const config: EmailConfig = {
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      apiKey: process.env['RESEND_API_KEY'] || '',
       from: {
         name: 'Lista de Compra',
-        email: process.env['EMAIL_USER'] || 'email-privado-eliminado@example.invalid'
-      },
-      auth: {
-        user: process.env['EMAIL_USER'] || 'email-privado-eliminado@example.invalid',
-        pass: process.env['EMAIL_PASS'] || '***PASSWORD-ELIMINADA***'
+        email: process.env['EMAIL_FROM'] || 'onboarding@resend.dev'
       },
       maxRetries: 2,
       retryDelay: 1000
@@ -173,44 +167,35 @@ describeSkippable('NodemailerService Integration Tests', () => {
 // Test suite para verificar la integración con variables de entorno
 describeSkippable('Email Service Environment Configuration', () => {
   test('debe leer correctamente las variables de entorno', () => {
-    expect(process.env['EMAIL_USER']).toBeDefined();
-    expect(process.env['EMAIL_PASS']).toBeDefined();
-    expect(process.env['EMAIL_PROVIDER']).toBeDefined();
+    expect(process.env['RESEND_API_KEY']).toBeDefined();
     expect(process.env['EMAIL_FROM']).toBeDefined();
     
     console.log('📧 Variables de entorno:', {
-      EMAIL_USER: process.env['EMAIL_USER'],
-      EMAIL_PROVIDER: process.env['EMAIL_PROVIDER'],
       EMAIL_FROM: process.env['EMAIL_FROM'],
       EMAIL_ENABLED: process.env['EMAIL_ENABLED']
     });
   });
 
   test('debe usar configuración por defecto cuando faltan variables', () => {
-    const originalUser = process.env['EMAIL_USER'];
-    delete process.env['EMAIL_USER'];
+    const originalApiKey = process.env['RESEND_API_KEY'];
+    delete process.env['RESEND_API_KEY'];
 
     const config: EmailConfig = {
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      apiKey: process.env['RESEND_API_KEY'] || '',
       from: {
         name: 'Test',
         email: 'test@example.com'
-      },
-      auth: {
-        user: process.env['EMAIL_USER'] || 'default@gmail.com',
-        pass: process.env['EMAIL_PASS'] || 'default_pass'
       },
       maxRetries: 3,
       retryDelay: 1000
     };
 
-    expect(config.auth.user).toBe('default@gmail.com');
+    expect(config.apiKey).toBe('');
+    expect(config.from.email).toBe('test@example.com');
 
     // Restaurar variable
-    if (originalUser) {
-      process.env['EMAIL_USER'] = originalUser;
+    if (originalApiKey) {
+      process.env['RESEND_API_KEY'] = originalApiKey;
     }
   });
 });
