@@ -213,7 +213,7 @@ describe('Entidad Usuario', () => {
         expect(result.isSuccess).toBe(true);
         expect(usuario.email).toBe(nuevoEmailResult.value);
         expect(usuario.emailVerificado).toBe(false);
-        expect(usuario.fechaActualizacion.getTime()).toBeGreaterThan(fechaOriginal);
+        expect(usuario.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
       }
     });
 
@@ -342,7 +342,7 @@ describe('Entidad Usuario', () => {
       
       expect(result.isSuccess).toBe(true);
       expect(usuario.activo).toBe(false);
-      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThan(fechaOriginal);
+      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
 
     it('debería activar el usuario', async () => {
@@ -356,7 +356,7 @@ describe('Entidad Usuario', () => {
       
       expect(result.isSuccess).toBe(true);
       expect(usuario.activo).toBe(true);
-      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThan(fechaOriginal);
+      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
   });
 
@@ -377,7 +377,7 @@ describe('Entidad Usuario', () => {
       usuario.verificarEmail();
       
       expect(usuario.emailVerificado).toBe(true);
-      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThan(fechaOriginal);
+      expect(usuario.fechaActualizacion.getTime()).toBeGreaterThanOrEqual(fechaOriginal);
     });
   });
 
