@@ -7,6 +7,13 @@ import { Response } from 'express';
 import { AuthenticatedRequest } from '../types/express';
 import { GetCategorySuggestionsUseCase } from '../../../application/use-cases/ai/GetCategorySuggestions';
 import { BulkCategorizeProducts } from '../../../application/use-cases/ai/BulkCategorizeProducts';
+import {
+  AnalyzePurchaseHabitsUseCase
+} from '../../../application/use-cases/ai/AnalyzePurchaseHabits';
+import {
+  validateAnalyzePurchaseHabitsDto,
+  TIME_RANGE_PRESETS
+} from '../../../application/dto/ai/AnalyzePurchaseHabitsDto';
 import { GetCategorySuggestionsDto } from '../../../application/dto/ai/AIDto';
 import { 
   BulkCategorizeProductsDtoFactory 
@@ -19,8 +26,95 @@ export class AIController {
 
   constructor(
     private readonly getCategorySuggestionsUseCase?: GetCategorySuggestionsUseCase,
-    private readonly bulkCategorizeProductsUseCase?: BulkCategorizeProducts
+    private readonly bulkCategorizeProductsUseCase?: BulkCategorizeProducts,
+    private readonly analyzePurchaseHabitsUseCase?: AnalyzePurchaseHabitsUseCase
   ) {}
+
+  /**
+   * GET /api/v1/ai/purchase-habits/:userId (CU-30)
+   * Analiza los hábitos de compra del usuario autenticado.
+   * Query: ?timeRange=30d|90d|365d|all
+   */
+  async analyzePurchaseHabits(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const requesterId = req.user?.userId ?? req.user?.id ?? '';
+      const requesterRol = req.user?.rol ?? req.user?.role;
+
+      this.logger.http('Solicitud de análisis de hábitos de compra', {
+        requesterId,
+        targetUserId: req.params['userId'],
+        timeRange: req.query['timeRange']
+      });
+
+      if (!requesterId) {
+        res.status(401).json({ success: false, error: 'Usuario no autenticado' });
+        return;
+      }
+
+      if (!this.analyzePurchaseHabitsUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de análisis de hábitos no disponible',
+          code: 'HABITS_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      // Validación de entrada (userId UUID + preset de rango temporal)
+      let dto;
+      try {
+        dto = validateAnalyzePurchaseHabitsDto({
+          userId: req.params['userId'],
+          timeRange: req.query['timeRange'] ?? '90d'
+        });
+      } catch (validationError) {
+        res.status(400).json({
+          success: false,
+          error: validationError instanceof Error ? validationError.message : 'Parámetros inválidos',
+          code: 'VALIDATION_ERROR',
+          allowedTimeRanges: TIME_RANGE_PRESETS
+        });
+        return;
+      }
+
+      const result = await this.analyzePurchaseHabitsUseCase.execute(dto, requesterId, requesterRol);
+
+      if (result.isFailure) {
+        const error = result.error;
+        const status = error.constructor.name === 'NotFoundError' ? 404
+          : error.constructor.name === 'UnauthorizedError' ? 403
+          : error.constructor.name === 'ValidationError' ? 400
+          : 500;
+        this.logger.error('Error en análisis de hábitos', {
+          requesterId,
+          targetUserId: dto.userId,
+          error: error.message
+        });
+        res.status(status).json({
+          success: false,
+          error: error.message,
+          code: 'HABITS_ANALYSIS_ERROR'
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: result.value,
+        message: 'Análisis de hábitos generado exitosamente'
+      });
+
+    } catch (error) {
+      this.logger.error('Error inesperado en análisis de hábitos', error as Error, {
+        userId: req.user?.userId
+      });
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  }
 
   /**
    * Endpoint para obtener sugerencias de categorías para un producto

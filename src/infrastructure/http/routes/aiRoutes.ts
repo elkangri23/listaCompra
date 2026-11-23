@@ -225,6 +225,93 @@ export function createAIRoutes(dependencies: {
 
   /**
    * @swagger
+   * /api/v1/ai/purchase-habits/{userId}:
+   *   get:
+   *     tags: [Inteligencia Artificial]
+   *     summary: Análisis de hábitos de compra (CU-30)
+   *     description: |
+   *       Analiza el historial de compras del usuario (productos comprados en sus
+   *       listas) y devuelve insights de IA: frecuencia, estacionalidad,
+   *       preferencias y optimización.
+   *       Cada usuario solo puede analizar sus propios hábitos (los admins pueden analizar a cualquiera).
+   *     operationId: aiPurchaseHabits
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: userId
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: ID del usuario a analizar (debe ser el propio usuario)
+   *       - in: query
+   *         name: timeRange
+   *         required: false
+   *         schema:
+   *           type: string
+   *           enum: [30d, 90d, 365d, all]
+   *           default: 90d
+   *         description: Rango temporal del análisis
+   *     responses:
+   *       200:
+   *         description: Análisis generado exitosamente
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     insights:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           type:
+   *                             type: string
+   *                             enum: [frequency, seasonal, preference, optimization]
+   *                           title:
+   *                             type: string
+   *                           description:
+   *                             type: string
+   *                           confidence:
+   *                             type: number
+   *                             minimum: 0
+   *                             maximum: 1
+   *                     metadata:
+   *                       type: object
+   *                       properties:
+   *                         period:
+   *                           type: object
+   *                         productsAnalyzed:
+   *                           type: number
+   *                         listsAnalyzed:
+   *                           type: number
+   *                         generatedAt:
+   *                           type: string
+   *                           format: date-time
+   *       400:
+   *         description: Parámetros inválidos (userId no UUID, timeRange no soportado)
+   *       403:
+   *         description: Intento de analizar los hábitos de otro usuario
+   *       404:
+   *         description: Usuario no encontrado
+   *       503:
+   *         description: Servicio de análisis no disponible
+   */
+  router.get('/purchase-habits/:userId',
+    aiStandardAdvancedRateLimit, // Rate limiting por usuario IA estándar
+    authMiddleware,
+    aiController.analyzePurchaseHabits.bind(aiController)
+  );
+
+  /**
+   * @swagger
    * /api/v1/ai/health:
    *   get:
    *     tags: [Inteligencia Artificial]

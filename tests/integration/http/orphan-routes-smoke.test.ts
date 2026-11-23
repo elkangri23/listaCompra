@@ -82,6 +82,11 @@ describe('Smoke: rutas previamente huérfanas montadas', () => {
     expect(res.status).toBe(401);
   });
 
+  test('GET /api/v1/ai/purchase-habits/:userId exige auth (401 sin token) - CU-30', async () => {
+    const res = await request(app).get(`/api/v1/ai/purchase-habits/${'11111111-1111-4111-8111-111111111111'}`);
+    expect(res.status).toBe(401);
+  });
+
   test('GET /health sigue respondiendo tras los montajes', async () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);

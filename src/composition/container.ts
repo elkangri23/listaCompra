@@ -41,6 +41,7 @@ import { GetAuditHistoryForProduct } from '@application/use-cases/audit/GetAudit
 import { GetGlobalAuditHistory } from '@application/use-cases/audit/GetGlobalAuditHistory';
 import { GetCollaborativeDashboard } from '@application/use-cases/analytics/GetCollaborativeDashboard';
 import { GetCategorySuggestionsUseCase } from '@application/use-cases/ai/GetCategorySuggestions';
+import { AnalyzePurchaseHabitsUseCase } from '@application/use-cases/ai/AnalyzePurchaseHabits';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
@@ -699,7 +700,15 @@ export class Container {
 
     this._aiController = new AIController(
       this._getCategorySuggestions,
-      this._bulkCategorizeProducts
+      this._bulkCategorizeProducts,
+      new AnalyzePurchaseHabitsUseCase(
+        this._usuarioRepository,
+        this._listaRepository,
+        this._productoRepository,
+        this._categoriaRepository,
+        this._tiendaRepository,
+        this._cachedAIService
+      )
     );
 
     this._auditController = new AuditController(
