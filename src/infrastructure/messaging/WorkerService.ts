@@ -9,6 +9,7 @@ import { AuditEventHandler } from './consumers/AuditEventHandler';
 import type { IEmailService } from '../../application/ports/external/IEmailService';
 import type { IUsuarioRepository } from '../../application/ports/repositories/IUsuarioRepository';
 import type { IListaRepository } from '../../application/ports/repositories/IListaRepository';
+import type { IPermisoRepository } from '../../application/ports/repositories/IPermisoRepository';
 import type { IAuditRepository } from '../../application/ports/repositories/IAuditRepository';
 import type { Logger } from '../observability/logger/Logger';
 
@@ -18,6 +19,7 @@ export interface WorkerServiceConfig {
   emailService: IEmailService;
   usuarioRepository: IUsuarioRepository;
   listaRepository: IListaRepository;
+  permisoRepository: IPermisoRepository;
   auditRepository: IAuditRepository;
   logger: Logger;
 }
@@ -89,7 +91,8 @@ export class WorkerService {
     const notificationHandler = new NotificationConsumer(
       this.config.emailService,
       this.config.usuarioRepository,
-      this.config.listaRepository
+      this.config.listaRepository,
+      this.config.permisoRepository
     );
 
     const consumerOptions: ConsumerOptions = {

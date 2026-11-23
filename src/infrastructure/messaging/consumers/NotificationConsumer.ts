@@ -7,6 +7,7 @@ import { MessageHandler } from '../rabbitmq/RabbitMQConsumer';
 import type { IEmailService } from '../../../application/ports/external/IEmailService';
 import type { IUsuarioRepository } from '../../../application/ports/repositories/IUsuarioRepository';
 import type { IListaRepository } from '../../../application/ports/repositories/IListaRepository';
+import type { IPermisoRepository } from '../../../application/ports/repositories/IPermisoRepository';
 import amqp from 'amqplib';
 
 // Tipos de eventos que maneja este consumer
@@ -71,7 +72,8 @@ export class NotificationConsumer implements MessageHandler<NotificationEvent> {
   constructor(
     private emailService: IEmailService,
     private usuarioRepository: IUsuarioRepository,
-    private listaRepository: IListaRepository
+    private listaRepository: IListaRepository,
+    private permisoRepository: IPermisoRepository
   ) {}
 
   async handle(event: NotificationEvent, _message: amqp.ConsumeMessage): Promise<void> {
@@ -269,10 +271,28 @@ export class NotificationConsumer implements MessageHandler<NotificationEvent> {
 
   private async getListCollaborators(listaId: string, excludeUserId: string): Promise<Array<{email: string, nombre: string}>> {
     try {
-      // TODO: Implementar método en repositorio para obtener colaboradores
-      // Por ahora retornamos array vacío como placeholder
-      console.log(`Obteniendo colaboradores de lista ${listaId}, excluyendo usuario ${excludeUserId}`);
-      return [];
+      // Colaboradores = usuarios con permiso en la lista (tabla permisos),
+      // excluyendo al usuario que realizó el cambio y a usuarios inactivos
+      const permisos = await this.permisoRepository.findByListaId(listaId);
+      const userIds = permisos
+        .map(permiso => permiso.usuarioId)
+        .filter(userId => userId !== excludeUserId);
+
+      const colaboradores: Array<{email: string, nombre: string}> = [];
+      for (const userId of userIds) {
+        try {
+          const usuarioResult = await this.usuarioRepository.findById(userId);
+          const usuario = usuarioResult.isSuccess ? usuarioResult.value : null;
+          if (usuario && usuario.activo) {
+            colaboradores.push({ email: usuario.email.toString(), nombre: usuario.nombre });
+          }
+        } catch (error) {
+          console.error(`Error obteniendo colaborador ${userId}:`, error);
+        }
+      }
+
+      console.log(`Colaboradores de lista ${listaId}: ${colaboradores.length} (excluyendo ${excludeUserId})`);
+      return colaboradores;
     } catch (error) {
       console.error('Error obteniendo colaboradores:', error);
       return [];

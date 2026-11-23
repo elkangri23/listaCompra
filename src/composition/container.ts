@@ -442,6 +442,7 @@ export class Container {
         emailService: this._emailService,
         usuarioRepository: this._usuarioRepository,
         listaRepository: this._listaRepository,
+        permisoRepository: this._permisoRepository,
         auditRepository: this._auditRepository,
         logger: new Logger('WorkerService'),
       });
