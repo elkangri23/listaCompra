@@ -381,7 +381,7 @@ export class Container {
       provider: 'perplexity',
       apiKey: process.env['PERPLEXITY_API_KEY'] || '',
       apiUrl: process.env['PERPLEXITY_API_URL'] || 'https://api.perplexity.ai',
-      model: (process.env['PERPLEXITY_MODEL'] as any) || 'llama-3.1-sonar-small-128k-online',
+      model: (process.env['PERPLEXITY_MODEL'] as any) || 'sonar',
       temperature: parseFloat(process.env['AI_TEMPERATURE'] || '0.1'),
       maxTokens: parseInt(process.env['AI_MAX_TOKENS'] || '1000'),
       timeout: parseInt(process.env['AI_TIMEOUT'] || '30000'),

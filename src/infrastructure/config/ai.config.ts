@@ -38,9 +38,10 @@ export const AI_PROVIDERS = [
     nombre: 'Perplexity (Sonar online)',
     apiUrlPorDefecto: 'https://api.perplexity.ai',
     modelosSugeridos: [
-      'llama-3.1-sonar-small-128k-online',
-      'llama-3.1-sonar-large-128k-online',
-      'llama-3.1-sonar-huge-128k-online',
+      'sonar',
+      'sonar-pro',
+      'sonar-reasoning-pro',
+      'sonar-deep-research',
     ],
   },
   {
@@ -79,7 +80,7 @@ const getAIConfig = (): PerplexityConfig => {
     provider: 'perplexity',
     apiKey: process.env['PERPLEXITY_API_KEY'] || '',
     apiUrl: process.env['PERPLEXITY_API_URL'] || 'https://api.perplexity.ai',
-    model: (process.env['PERPLEXITY_MODEL'] as PerplexityConfig['model']) || 'llama-3.1-sonar-small-128k-online',
+    model: (process.env['PERPLEXITY_MODEL'] as PerplexityConfig['model']) || 'sonar',
     temperature: parseFloat(process.env['AI_TEMPERATURE'] || '0.7'),
     maxTokens: parseInt(process.env['AI_MAX_TOKENS'] || '1000'),
     timeout: parseInt(process.env['AI_TIMEOUT'] || '30000'),

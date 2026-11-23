@@ -47,7 +47,7 @@ export class AIConfigService {
       apiKey: process.env['PERPLEXITY_API_KEY'] || '',
       apiUrl: process.env['PERPLEXITY_API_URL'] || 'https://api.perplexity.ai',
       model:
-        process.env['PERPLEXITY_MODEL'] || 'llama-3.1-sonar-small-128k-online',
+        process.env['PERPLEXITY_MODEL'] || 'sonar',
       temperature: parseFloat(process.env['AI_TEMPERATURE'] || '0.7'),
       maxTokens: parseInt(process.env['AI_MAX_TOKENS'] || '1000'),
       timeout: parseInt(process.env['AI_TIMEOUT'] || '30000'),
