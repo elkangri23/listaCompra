@@ -1,8 +1,10 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import { persistEnvVars, resolveEnvFilePath } from '../../../../src/infrastructure/config/EnvFileWriter';
 
 describe('EnvFileWriter (persistencia de config IA en .env, Opción B)', () => {
-  const tmp = 'C:/Users/amoles/AppData/Local/Temp';
+  // Directorio temporal del sistema: la ruta fija de Windows no existe en el runner Linux de CI
+  const tmp = os.tmpdir();
   let envPath: string;
 
   beforeEach(() => {

@@ -111,7 +111,9 @@ describe('AIConfigService (CU-31)', () => {
 
 describe('AIConfigService — persistencia en .env (Opción B)', () => {
   const fs = require('fs');
-  const tmp = 'C:/Users/amoles/AppData/Local/Temp';
+  const os = require('os');
+  // Directorio temporal del sistema: la ruta fija de Windows no existe en el runner Linux de CI
+  const tmp = os.tmpdir();
   let envPath: string;
   let prevNodeEnv: string | undefined;
   let prevEnvFilePath: string | undefined;
