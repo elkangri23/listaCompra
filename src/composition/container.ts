@@ -13,6 +13,8 @@ import { UpdateProfile } from '@application/use-cases/auth/UpdateProfile';
 import { ChangePassword } from '@application/use-cases/auth/ChangePassword';
 import { AuthenticateUser } from '@application/use-cases/auth/AuthenticateUser';
 import { RefreshTokens } from '@application/use-cases/auth/RefreshTokens';
+import { RequestEmailVerificationCode } from '@application/use-cases/auth/RequestEmailVerificationCode';
+import { VerifyEmailCode } from '@application/use-cases/auth/VerifyEmailCode';
 import { CreateList } from '@application/use-cases/lists/CreateList';
 import { GetUserLists } from '@application/use-cases/lists/GetUserLists';
 import { UpdateList } from '@application/use-cases/lists/UpdateList';
@@ -126,8 +128,10 @@ import type { IOutboxService } from '@application/ports/messaging/IOutboxService
 import type { IInvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import type { IEmailService } from '@application/ports/external/IEmailService';
 import type { IMfaRepository } from '@application/ports/repositories/IMfaRepository';
+import type { IEmailVerificationCodeRepository } from '@application/ports/repositories/IEmailVerificationCodeRepository';
 import type { IPasskeyRepository } from '@application/ports/repositories/IPasskeyRepository';
 import { PrismaMfaRepository } from '@infrastructure/persistence/repositories/PrismaMfaRepository';
+import { PrismaEmailVerificationCodeRepository } from '@infrastructure/persistence/repositories/PrismaEmailVerificationCodeRepository';
 import { PrismaPasskeyRepository } from '@infrastructure/persistence/repositories/PrismaPasskeyRepository';
 import { GetMfaStatus } from '@application/use-cases/auth/GetMfaStatus';
 import { SetupTotp } from '@application/use-cases/auth/SetupTotp';
@@ -183,7 +187,10 @@ export class Container {
   private _changePassword!: ChangePassword;
   private _requestAccountDeletion!: RequestAccountDeletion;
   private _exportMyData!: ExportMyData;
+  private _requestEmailVerificationCode!: RequestEmailVerificationCode;
+  private _verifyEmailCode!: VerifyEmailCode;
   private _mfaRepository!: IMfaRepository;
+  private _emailVerificationCodeRepository!: IEmailVerificationCodeRepository;
   private _passkeyRepository!: IPasskeyRepository;
   private _stepUpPasswordVerifier!: StepUpPasswordVerifier;
   private _registerPasskeyOptions!: RegisterPasskeyOptions;
@@ -391,6 +398,7 @@ export class Container {
 
     this._usuarioRepository = new PrismaUsuarioRepository(this._prisma);
     this._mfaRepository = new PrismaMfaRepository(this._prisma);
+    this._emailVerificationCodeRepository = new PrismaEmailVerificationCodeRepository(this._prisma);
     this._passkeyRepository = new PrismaPasskeyRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
     this._productoRepository = new PrismaProductoRepository(this._prisma);
@@ -505,10 +513,22 @@ export class Container {
   }
 
   private initializeUseCases(): void {
+    // Verificación de email por código (item 3)
+    this._requestEmailVerificationCode = new RequestEmailVerificationCode(
+      this._usuarioRepository,
+      this._emailVerificationCodeRepository,
+      this._emailService
+    );
+    this._verifyEmailCode = new VerifyEmailCode(
+      this._usuarioRepository,
+      this._emailVerificationCodeRepository
+    );
+
     this._registerUser = new RegisterUser(
       this._usuarioRepository,
       this._passwordHasher,
-      this._turnstileVerifier
+      this._turnstileVerifier,
+      this._requestEmailVerificationCode
     );
 
     this._authenticateUser = new AuthenticateUser(
@@ -769,6 +789,8 @@ export class Container {
       changePassword: this._changePassword,
       requestAccountDeletion: this._requestAccountDeletion,
       exportMyData: this._exportMyData,
+      requestEmailVerificationCode: this._requestEmailVerificationCode,
+      verifyEmailCode: this._verifyEmailCode,
       usuarioRepository: this._usuarioRepository,
     });
 

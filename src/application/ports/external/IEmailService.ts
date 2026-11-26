@@ -67,6 +67,15 @@ export interface IEmailService {
   ): Promise<EmailResult>;
 
   /**
+   * Envía el código de verificación de email (6 dígitos, item 3)
+   */
+  sendVerificationCodeEmail(
+    recipientEmail: string,
+    recipientName: string,
+    codigo: string
+  ): Promise<EmailResult>;
+
+  /**
    * Verifica conectividad del servicio de email
    */
   verifyConnection(): Promise<boolean>;

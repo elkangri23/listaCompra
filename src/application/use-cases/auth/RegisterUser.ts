@@ -8,6 +8,7 @@ import { success, failure } from '@shared/result';
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITurnstileVerifier } from '@application/ports/auth/ITurnstileVerifier';
+import type { RequestEmailVerificationCode } from '@application/use-cases/auth/RequestEmailVerificationCode';
 import type { RegisterUserDto, RegisterUserResponseDto } from '@application/dto/auth/RegisterUserDto';
 import { Email } from '@domain/value-objects/Email';
 import { Password } from '@domain/value-objects/Password';
@@ -18,7 +19,8 @@ export class RegisterUser {
   constructor(
     private readonly usuarioRepository: IUsuarioRepository,
     private readonly passwordHasher: IPasswordHasher,
-    private readonly turnstileVerifier?: ITurnstileVerifier
+    private readonly turnstileVerifier?: ITurnstileVerifier,
+    private readonly requestVerificationCode?: RequestEmailVerificationCode
   ) {}
 
   async execute(dto: RegisterUserDto): Promise<Result<RegisterUserResponseDto, ValidationError | Error>> {
@@ -118,6 +120,17 @@ export class RegisterUser {
     }
     const usuarioGuardado = saveResult.value;
 
+    // 6b. Enviar el código de verificación de email (item 3). Si el envío
+    // falla, la cuenta queda creada sin verificar y el código se puede
+    // reenviar desde la pantalla de verificación.
+    let verificationEmailSent = false;
+    if (this.requestVerificationCode) {
+      const codeResult = await this.requestVerificationCode.execute({
+        email: usuarioGuardado.email.value,
+      });
+      verificationEmailSent = codeResult.isSuccess && codeResult.value.emailSent;
+    }
+
     // 7. Retornar respuesta
     const response: RegisterUserResponseDto = {
       id: usuarioGuardado.id,
@@ -130,6 +143,7 @@ export class RegisterUser {
       emailVerificado: usuarioGuardado.emailVerificado,
       fechaCreacion: usuarioGuardado.fechaCreacion.toISOString(),
       ...(usuarioGuardado.terminosAceptadosEn && { terminosAceptadosEn: usuarioGuardado.terminosAceptadosEn.toISOString() }),
+      verificationEmailSent,
     };
 
     return success(response);

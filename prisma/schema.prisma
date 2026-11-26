@@ -38,6 +38,7 @@ model Usuario {
   backupCodes   MfaBackupCode[]
   mfaChallenges MfaChallenge[]
   passkeys      PasskeyCredential[]
+  emailVerificationCodes EmailVerificationCode[]
 
   @@map("usuarios")
 }
@@ -234,6 +235,24 @@ model MfaChallenge {
   @@index([tipo])
   @@index([expiraAt])
   @@map("mfa_challenges")
+}
+
+// Código de verificación de email (item 3): 6 dígitos, solo se guarda el
+// HMAC del código, nunca el código en claro. Un solo uso, 15 min de vida.
+model EmailVerificationCode {
+  id        String   @id @default(uuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  codeHash  String
+  intentos  Int      @default(0)
+  expiraAt  DateTime
+  usado     Boolean  @default(false)
+  usadoAt   DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([usuarioId])
+  @@index([expiraAt])
+  @@map("email_verification_codes")
 }
 
 enum TipoPermiso {

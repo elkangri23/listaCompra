@@ -22,4 +22,6 @@ export interface RegisterUserResponseDto {
   emailVerificado: boolean;
   fechaCreacion: string;
   terminosAceptadosEn?: string;
+  /** true si el correo con el código de verificación se envió (item 3) */
+  verificationEmailSent?: boolean;
 }

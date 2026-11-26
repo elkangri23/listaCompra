@@ -3,6 +3,7 @@ import type { AddressInfo } from 'net';
 import request from 'supertest';
 import type { Application } from 'express';
 import { Container } from '../../../src/composition/container';
+import { markTestUserEmailVerified } from '../../helpers/verify-test-user';
 import { createServer } from '../../../src/infrastructure/http/server';
 
 describe('List realtime streaming (SSE)', () => {
@@ -55,6 +56,9 @@ describe('List realtime streaming (SSE)', () => {
         aceptoTerminos: true
       })
       .expect(201);
+
+    // Verificar el correo (item 3): sin verificar, el login no entrega tokens
+    await markTestUserEmailVerified(container, credentials.email);
 
     const loginResponse = await request(app)
       .post('/api/v1/auth/login')

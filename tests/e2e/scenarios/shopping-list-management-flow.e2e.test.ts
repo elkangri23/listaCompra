@@ -6,6 +6,7 @@
 import request from 'supertest';
 import type { Application } from 'express';
 import { createServer } from '../../../src/infrastructure/http/server';
+import { markTestUserEmailVerified } from '../../helpers/verify-test-user';
 import { Container } from '../../../src/composition/container';
 
 describe('E2E: Shopping List Management Flow', () => {
@@ -63,6 +64,10 @@ describe('E2E: Shopping List Management Flow', () => {
     await request(app)
       .post('/api/v1/auth/register')
       .send(secondUser);
+
+    // Verificar los correos (item 3): sin verificar, el login no entrega tokens
+    await markTestUserEmailVerified(container, testUser.email);
+    await markTestUserEmailVerified(container, secondUser.email);
 
     // Autenticar usuarios
     const authResponse = await request(app)

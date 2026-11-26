@@ -13,6 +13,7 @@ import {
   renderInvitationEmail,
   renderConfirmationEmail,
   renderNotificationEmail,
+  renderVerificationCodeEmail,
 } from './templates/email-templates';
 
 export interface EmailConfig {
@@ -272,6 +273,39 @@ El equipo de Lista Compra Colaborativa
     });
   }
 
+  async sendVerificationCodeEmail(
+    recipientEmail: string,
+    recipientName: string,
+    codigo: string
+  ): Promise<EmailResult> {
+    const subject = 'Tu código de verificación - Lista de Compra';
+
+    const html = this.generateVerificationCodeHtml({
+      recipientName,
+      codigo,
+    });
+
+    const text = `
+Hola ${recipientName},
+
+Tu código de verificación para Lista de Compra es: ${codigo}
+
+El código caduca en 15 minutos y solo sirve una vez.
+
+Si no creaste esta cuenta, puedes ignorar este correo.
+
+Saludos,
+El equipo de Lista de Compra
+    `.trim();
+
+    return this.sendEmail({
+      to: recipientEmail,
+      subject,
+      text,
+      html
+    });
+  }
+
   async getStats(): Promise<{ sent: number; failed: number; pending: number; }> {
     return { ...this.stats };
   }
@@ -303,6 +337,13 @@ El equipo de Lista Compra Colaborativa
     confirmationUrl: string;
   }): string {
     return renderConfirmationEmail(data);
+  }
+
+  private generateVerificationCodeHtml(data: {
+    recipientName: string;
+    codigo: string;
+  }): string {
+    return renderVerificationCodeEmail(data);
   }
 
 }

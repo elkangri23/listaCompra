@@ -200,6 +200,33 @@ describe('AuthController', () => {
       );
     });
 
+    it('debería devolver emailNotVerified en 200 cuando la cuenta no está verificada', async () => {
+      // Arrange
+      req.body = {
+        email: 'juan@example.com',
+        password: 'miPassword123',
+      };
+
+      authenticateUser.execute.mockResolvedValue(
+        failure(new UnauthorizedError('Email no verificado'))
+      );
+
+      // Act
+      await authController.login(req as Request, res as Response, next);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({
+            emailNotVerified: true,
+            email: 'juan@example.com',
+          }),
+        })
+      );
+    });
+
     it('debería manejar datos de entrada inválidos', async () => {
       // Arrange
       req.body = {
@@ -241,6 +268,8 @@ describe('AuthController (GDPR, item 15)', () => {
   let authController: AuthController;
   let requestAccountDeletion: any;
   let exportMyData: any;
+  let verifyEmailCode: any;
+  let requestEmailVerificationCode: any;
   let req: Partial<Request>;
   let res: Partial<Response>;
   let next: jest.MockedFunction<NextFunction>;
@@ -248,12 +277,16 @@ describe('AuthController (GDPR, item 15)', () => {
   beforeEach(() => {
     requestAccountDeletion = { execute: jest.fn() };
     exportMyData = { execute: jest.fn() };
+    verifyEmailCode = { execute: jest.fn() };
+    requestEmailVerificationCode = { execute: jest.fn() };
 
     authController = new AuthController({
       registerUser: {} as any,
       authenticateUser: {} as any,
       requestAccountDeletion,
       exportMyData,
+      verifyEmailCode,
+      requestEmailVerificationCode,
     });
 
     req = {
@@ -341,6 +374,86 @@ describe('AuthController (GDPR, item 15)', () => {
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(exportMyData.execute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('verifica el correo y devuelve 200', async () => {
+      req.body = { email: 'juan@example.com', codigo: '482913' };
+      verifyEmailCode.execute.mockResolvedValue(
+        success({
+          emailVerificado: true,
+          mensaje: 'Tu correo ha sido verificado. Ya puedes entrar.',
+        })
+      );
+
+      await authController.verifyEmail(req as Request, res as Response, next);
+
+      expect(verifyEmailCode.execute).toHaveBeenCalledWith({
+        email: 'juan@example.com',
+        codigo: '482913',
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({ emailVerificado: true }),
+        })
+      );
+    });
+
+    it('devuelve 400 sin email o sin código', async () => {
+      req.body = { email: 'juan@example.com' };
+
+      await authController.verifyEmail(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(verifyEmailCode.execute).not.toHaveBeenCalled();
+    });
+
+    it('devuelve 401 con un código incorrecto', async () => {
+      req.body = { email: 'juan@example.com', codigo: '111111' };
+      verifyEmailCode.execute.mockResolvedValue(
+        failure(new UnauthorizedError('El código no es válido o ha caducado.'))
+      );
+
+      await authController.verifyEmail(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+    });
+  });
+
+  describe('resendVerificationCode', () => {
+    it('reenvía el código y devuelve 200', async () => {
+      req.body = { email: 'juan@example.com' };
+      requestEmailVerificationCode.execute.mockResolvedValue(
+        success({
+          emailSent: true,
+          mensaje: 'Te hemos enviado un código de 6 dígitos a tu correo.',
+        })
+      );
+
+      await authController.resendVerificationCode(req as Request, res as Response, next);
+
+      expect(requestEmailVerificationCode.execute).toHaveBeenCalledWith({
+        email: 'juan@example.com',
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({ emailSent: true }),
+        })
+      );
+    });
+
+    it('devuelve 400 sin email', async () => {
+      req.body = {};
+
+      await authController.resendVerificationCode(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(requestEmailVerificationCode.execute).not.toHaveBeenCalled();
     });
   });
 });

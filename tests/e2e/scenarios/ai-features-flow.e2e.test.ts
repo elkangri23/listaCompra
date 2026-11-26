@@ -6,6 +6,7 @@
 import request from 'supertest';
 import type { Application } from 'express';
 import { createServer } from '../../../src/infrastructure/http/server';
+import { markTestUserEmailVerified } from '../../helpers/verify-test-user';
 import { Container } from '../../../src/composition/container';
 import { AIController } from '../../../src/infrastructure/http/controllers/AIController';
 import { GetCategorySuggestionsUseCase } from '../../../src/application/use-cases/ai/GetCategorySuggestions';
@@ -213,6 +214,10 @@ describe('E2E: AI Features Flow', () => {
     if (updateResult.isFailure) {
       throw new Error('No se pudo actualizar el usuario admin promovido');
     }
+
+    // Verificar los correos (item 3): sin verificar, el login no entrega tokens
+    await markTestUserEmailVerified(container, testUser.email);
+    await markTestUserEmailVerified(container, adminUser.email);
 
     // Autenticar usuarios
     const authResponse = await request(app)

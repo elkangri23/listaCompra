@@ -6,6 +6,7 @@
 import request from 'supertest';
 import { Application } from 'express';
 import { Container } from '../../../src/composition/container';
+import { markTestUserEmailVerified } from '../../helpers/verify-test-user';
 import { createServer } from '../../../src/infrastructure/http/server';
 
 describe('Invitation Endpoints Integration', () => {
@@ -59,6 +60,9 @@ describe('Invitation Endpoints Integration', () => {
     if (registerResponse.status !== 201 && registerResponse.status !== 400) {
       throw new Error(`Registration failed: ${JSON.stringify(registerResponse.body)}`);
     }
+
+    // Verificar el correo (item 3): sin verificar, el login no entrega tokens
+    await markTestUserEmailVerified(container, userCredentials.email);
 
     // Intentar login inmediatamente después del registro
     const loginResponse = await request(app)

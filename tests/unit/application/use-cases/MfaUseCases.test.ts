@@ -46,6 +46,8 @@ function makeUsuario(email: string, opts: { totpSecret?: string | null; totpEnab
     email: emailRes.value,
     password: 'hashed-password-very-long',
     nombre: 'Ana',
+    // Usuarios ya registrados: el login exige el correo verificado (item 3)
+    emailVerificado: true,
   });
   if (uRes.isFailure) throw uRes.error;
   const u = uRes.value;

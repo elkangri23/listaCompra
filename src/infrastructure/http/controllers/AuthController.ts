@@ -11,6 +11,8 @@ import type { UpdateProfile } from '@application/use-cases/auth/UpdateProfile';
 import type { ChangePassword } from '@application/use-cases/auth/ChangePassword';
 import type { RequestAccountDeletion } from '@application/use-cases/gdpr/RequestAccountDeletion';
 import type { ExportMyData } from '@application/use-cases/gdpr/ExportMyData';
+import type { RequestEmailVerificationCode } from '@application/use-cases/auth/RequestEmailVerificationCode';
+import type { VerifyEmailCode } from '@application/use-cases/auth/VerifyEmailCode';
 import type { RegisterUserDto } from '@application/dto/auth/RegisterUserDto';
 import type { LoginDto } from '@application/dto/auth/LoginDto';
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
@@ -26,6 +28,8 @@ export interface AuthControllerDependencies {
   changePassword?: ChangePassword;
   requestAccountDeletion?: RequestAccountDeletion;
   exportMyData?: ExportMyData;
+  requestEmailVerificationCode?: RequestEmailVerificationCode;
+  verifyEmailCode?: VerifyEmailCode;
   usuarioRepository?: IUsuarioRepository;
 }
 
@@ -85,6 +89,7 @@ export class AuthController {
             rol: result.value.rol,
             activo: result.value.activo,
             emailVerificado: result.value.emailVerificado,
+            verificationEmailSent: result.value.verificationEmailSent,
             fechaCreacion: result.value.fechaCreacion,
             terminosAceptadosEn: result.value.terminosAceptadosEn,
           },
@@ -120,6 +125,18 @@ export class AuthController {
 
       if (result.isFailure) {
         if (result.error instanceof UnauthorizedError) {
+          // Cuenta sin verificar (item 3): no es un fallo de credenciales;
+          // se devuelve 200 con el estado para que el frontend lleve a
+          // /verify-email (mismo patrón que el paso MFA).
+          if (result.error.message === 'Email no verificado') {
+            res.status(200).json({
+              success: true,
+              data: { emailNotVerified: true, email: dto.email },
+              message: 'Debes verificar tu correo electrónico antes de entrar',
+              timestamp: new Date().toISOString(),
+            });
+            return;
+          }
           res.status(401).json({
             success: false,
             error: 'UNAUTHORIZED',
@@ -485,6 +502,89 @@ export class AuthController {
         .set('Content-Type', 'application/json')
         .set('Content-Disposition', `attachment; filename="mis-datos-lista-compra-${fecha}.json"`)
         .json(result.value);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /auth/verify-email
+   * Verifica el correo con el código de 6 dígitos (item 3).
+   */
+  verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.dependencies.verifyEmailCode) {
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      const { email, codigo } = req.body as { email?: string; codigo?: string };
+      if (!email || !codigo) {
+        res.status(400).json({
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: 'Email y código son requeridos',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      const result = await this.dependencies.verifyEmailCode.execute({ email, codigo });
+      if (result.isFailure) {
+        this.handleUseCaseError(result.error, res);
+        return;
+      }
+      res.status(200).json({
+        success: true,
+        data: result.value,
+        message: result.value.mensaje,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /auth/resend-verification-code
+   * Reenvía el código de verificación (item 3). Respuesta genérica
+   * para no revelar si el correo existe.
+   */
+  resendVerificationCode = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.dependencies.requestEmailVerificationCode) {
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      const { email } = req.body as { email?: string };
+      if (!email) {
+        res.status(400).json({
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: 'Email es requerido',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      const result = await this.dependencies.requestEmailVerificationCode.execute({ email });
+      if (result.isFailure) {
+        this.handleUseCaseError(result.error, res);
+        return;
+      }
+      res.status(200).json({
+        success: true,
+        data: result.value,
+        message: result.value.mensaje,
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
       next(error);
     }

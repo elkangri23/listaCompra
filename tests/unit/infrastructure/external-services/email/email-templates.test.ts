@@ -10,6 +10,7 @@ import {
   renderInvitationEmail,
   renderConfirmationEmail,
   renderNotificationEmail,
+  renderVerificationCodeEmail,
 } from '../../../../../src/infrastructure/external-services/email/templates/email-templates';
 
 describe('email-templates', () => {
@@ -145,6 +146,29 @@ describe('email-templates', () => {
       });
       expect(html).not.toContain('<img src=x');
       expect(html).toContain('&lt;img src=x');
+    });
+  });
+
+  describe('renderVerificationCodeEmail', () => {
+    const html = renderVerificationCodeEmail({
+      recipientName: 'Lucía',
+      codigo: '482913',
+    });
+
+    it('muestra el código grande y la caducidad de 15 minutos', () => {
+      expect(html).toContain('482913');
+      expect(html).toContain('15 minutos');
+      expect(html).toContain('¡Hola Lucía!');
+      expect(html).not.toContain('<style>');
+    });
+
+    it('escapa el nombre del destinatario', () => {
+      const html = renderVerificationCodeEmail({
+        recipientName: '<script>alert(1)</script>',
+        codigo: '482913',
+      });
+      expect(html).not.toContain('<script>alert(1)</script>');
+      expect(html).toContain('&lt;script&gt;');
     });
   });
 });

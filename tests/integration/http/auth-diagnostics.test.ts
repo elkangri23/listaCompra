@@ -5,6 +5,7 @@
 import request from 'supertest';
 import { Application } from 'express';
 import { Container } from '../../../src/composition/container';
+import { markTestUserEmailVerified } from '../../helpers/verify-test-user';
 import { createServer } from '../../../src/infrastructure/http/server';
 
 describe('Auth Diagnostics', () => {
@@ -109,6 +110,9 @@ describe('Auth Diagnostics', () => {
       if (registerResponse.status !== 201) {
         console.log('Setup register error:', registerResponse.body);
       }
+
+      // Verificar el correo (item 3): sin verificar, el login no entrega tokens
+      await markTestUserEmailVerified(container, testUser.email);
     });
 
     it('should login with correct credentials', async () => {
@@ -176,6 +180,9 @@ describe('Auth Diagnostics', () => {
       await request(app)
         .post('/api/v1/auth/register')
         .send(protectedTestUser);
+
+      // Verificar el correo (item 3): sin verificar, el login no entrega tokens
+      await markTestUserEmailVerified(container, protectedTestUser.email);
 
       const loginResponse = await request(app)
         .post('/api/v1/auth/login')

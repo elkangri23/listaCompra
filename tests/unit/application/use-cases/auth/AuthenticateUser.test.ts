@@ -202,5 +202,33 @@ describe('AuthenticateUser', () => {
       // Assert
       expect(result.isSuccess).toBe(false);
     });
+
+    it('debería rechazar el login si el email no está verificado (item 3)', async () => {
+      // Arrange
+      const emailResult = Email.create('juan.perez@example.com');
+      if (!emailResult.isSuccess) throw new Error('Failed to create test data');
+      const unverifiedResult = Usuario.create({
+        id: 'user-id',
+        nombre: 'Juan',
+        apellidos: 'Pérez',
+        email: emailResult.value,
+        password: 'hashed-password',
+        activo: true,
+        emailVerificado: false,
+      });
+      if (!unverifiedResult.isSuccess) throw new Error('Failed to create test user');
+
+      usuarioRepository.findByEmail.mockResolvedValue(success(unverifiedResult.value));
+      passwordHasher.verify.mockResolvedValue(success(true));
+
+      // Act
+      const result = await authenticateUser.execute(validInput);
+
+      // Assert
+      expect(result.isFailure).toBe(true);
+      if (!result.isFailure) return;
+      expect(result.error.message).toBe('Email no verificado');
+      expect(tokenService.generateTokenPair).not.toHaveBeenCalled();
+    });
   });
 });

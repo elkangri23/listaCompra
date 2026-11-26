@@ -7,9 +7,12 @@ import request from 'supertest';
 import type { Application } from 'express';
 import { createServer } from '../../../src/infrastructure/http/server';
 import { Container } from '../../../src/composition/container';
+import { Email } from '../../../src/domain/value-objects/Email';
+import { hmacVerificationCode } from '../../../src/infrastructure/security/email-verification-crypto';
 
 describe('E2E: User Registration Flow', () => {
   let app: Application;
+  let container: Container;
   const testUser = {
     email: `test-${Date.now()}@example.com`,
     password: 'TestPassword123!',
@@ -20,7 +23,7 @@ describe('E2E: User Registration Flow', () => {
 
   beforeAll(async () => {
     // Crear servidor con dependencias reales
-    const container = Container.getInstance();
+    container = Container.getInstance();
     const dependencies = {
       authController: container.authController,
       invitationController: container.invitationController,
@@ -92,7 +95,75 @@ describe('E2E: User Registration Flow', () => {
       expect(response.body.message).toContain('Ya existe un usuario registrado');
     });
 
-    it('3. Debe hacer login exitosamente con credenciales correctas', async () => {
+    it('3. El login sin verificar devuelve emailNotVerified sin tokens (item 3)', async () => {
+      const response = await request(app)
+        .post('/api/v1/auth/login')
+        .send({
+          email: testUser.email,
+          password: testUser.password
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.emailNotVerified).toBe(true);
+      expect(response.body.data.email).toBe(testUser.email);
+      expect(response.body.data.tokens).toBeUndefined();
+    });
+
+    it('3a. Verificar con un código incorrecto devuelve 401', async () => {
+      const response = await request(app)
+        .post('/api/v1/auth/verify-email')
+        .send({
+          email: testUser.email,
+          codigo: '111111'
+        })
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+    });
+
+    it('3b. Verificar con el código correcto activa la cuenta', async () => {
+      // El código real se envió por correo (o quedó guardado si el envío
+      // falló en CI): se fija un código conocido en la fila pendiente para
+      // ejercer el endpoint real con el HMAC real.
+      const emailResult = Email.create(testUser.email);
+      if (!emailResult.isSuccess) throw new Error('Email inválido');
+      const userResult = await container.usuarioRepository.findByEmail(emailResult.value);
+      if (userResult.isFailure || !userResult.value) throw new Error('Usuario no encontrado');
+      const codigo = await container.prisma.emailVerificationCode.findFirst({
+        where: { usuarioId: userResult.value.id, usado: false },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (!codigo) throw new Error('No hay código pendiente tras el registro');
+      await container.prisma.emailVerificationCode.update({
+        where: { id: codigo.id },
+        data: { codeHash: hmacVerificationCode('482913') },
+      });
+
+      const response = await request(app)
+        .post('/api/v1/auth/verify-email')
+        .send({
+          email: testUser.email,
+          codigo: '482913'
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.emailVerificado).toBe(true);
+    });
+
+    it('3c. Reenviar el código con la cuenta ya verificada no envía nada', async () => {
+      const response = await request(app)
+        .post('/api/v1/auth/resend-verification-code')
+        .send({ email: testUser.email })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.emailSent).toBe(false);
+      expect(response.body.data.mensaje).toContain('ya está verificado');
+    });
+
+    it('3d. Debe hacer login exitosamente con credenciales correctas', async () => {
       const response = await request(app)
         .post('/api/v1/auth/login')
         .send({

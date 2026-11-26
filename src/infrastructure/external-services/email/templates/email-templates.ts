@@ -184,6 +184,30 @@ export function renderConfirmationEmail(data: ConfirmationEmailData): string {
   });
 }
 
+export interface VerificationCodeEmailData {
+  recipientName: string;
+  codigo: string;
+}
+
+export function renderVerificationCodeEmail(data: VerificationCodeEmailData): string {
+  return renderEmailLayout({
+    preheader: `Tu código de verificación es ${data.codigo}`,
+    title: 'Verifica tu correo',
+    heading: `¡Hola ${data.recipientName}!`,
+    bodyHtml: [
+      paragraph(
+        'Para activar tu cuenta en Lista de Compra, introduce este código de verificación:',
+      ),
+      `<p style="margin:0 0 16px 0;text-align:center;"><span style="display:inline-block;font-size:32px;font-weight:700;letter-spacing:8px;color:#111418;background-color:#f0f2f5;border:1px solid #dbdfe6;border-radius:8px;padding:12px 20px;">${escapeHtml(data.codigo)}</span></p>`,
+      paragraph('El código caduca en 15 minutos y solo sirve una vez.'),
+      renderEmailCallout(
+        '<strong>&#128274; Seguridad:</strong> Si no creaste esta cuenta, puedes ignorar este correo.',
+        '#4387f4',
+      ),
+    ].join('\n'),
+  });
+}
+
 export type ListChangeType = 'item_added' | 'item_removed' | 'item_updated' | 'list_updated';
 
 const CHANGE_META: Record<ListChangeType, { icon: string; label: string; color: string }> = {

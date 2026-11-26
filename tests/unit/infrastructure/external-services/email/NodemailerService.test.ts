@@ -128,6 +128,20 @@ describe('NodemailerService', () => {
       expect(payload.subject).toContain('Confirma');
       expect(payload.html).toContain('/confirm-email/tok-1');
     });
+
+    it('sendVerificationCodeEmail genera asunto y html con el código', async () => {
+      sendMock.mockResolvedValue({ data: { id: 'ver-1' }, error: null });
+
+      const result = await service.sendVerificationCodeEmail('v@test.local', 'Lucía', '482913');
+
+      expect(result.success).toBe(true);
+      const payload = sendMock.mock.calls[0]?.[0];
+      expect(payload.to).toEqual(['v@test.local']);
+      expect(payload.subject).toContain('código de verificación');
+      expect(payload.html).toContain('482913');
+      expect(payload.html).toContain('15 minutos');
+      expect(payload.text).toContain('482913');
+    });
   });
 
   describe('getStats', () => {

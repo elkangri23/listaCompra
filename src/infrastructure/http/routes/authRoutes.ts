@@ -193,6 +193,109 @@ export function createAuthRoutes(authController: AuthController, authMiddleware?
 
   /**
    * @swagger
+   * /api/v1/auth/verify-email:
+   *   post:
+   *     tags: [Autenticación]
+   *     summary: Verificar el correo con el código
+   *     description: Verifica el correo del usuario con el código de 6 dígitos enviado al registrarse (item 3). 5 intentos por código, 15 minutos de vida.
+   *     operationId: verifyEmail
+   *     security: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *               - codigo
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: juan@ejemplo.com
+   *               codigo:
+   *                 type: string
+   *                 description: Código de 6 dígitos
+   *                 example: '482913'
+   *     responses:
+   *       200:
+   *         description: Correo verificado
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 emailVerificado:
+   *                   type: boolean
+   *                   example: true
+   *                 mensaje:
+   *                   type: string
+   *                   example: Tu correo ha sido verificado. Ya puedes entrar.
+   *       400:
+   *         $ref: '#/components/responses/ValidationError'
+   *       401:
+   *         description: Código no válido o caducado
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *             example:
+   *               error: El código no es válido o ha caducado.
+   *       429:
+   *         $ref: '#/components/responses/RateLimitError'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
+  router.post('/verify-email', authRateLimit, authController.verifyEmail);
+
+  /**
+   * @swagger
+   * /api/v1/auth/resend-verification-code:
+   *   post:
+   *     tags: [Autenticación]
+   *     summary: Reenviar el código de verificación
+   *     description: Genera un código nuevo (invalida el anterior) y lo envía por correo. Respuesta genérica para no revelar si el correo existe. Enfriamiento de 60 s entre reenvíos.
+   *     operationId: resendVerificationCode
+   *     security: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: juan@ejemplo.com
+   *     responses:
+   *       200:
+   *         description: Solicitud procesada
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 emailSent:
+   *                   type: boolean
+   *                   example: true
+   *                 mensaje:
+   *                   type: string
+   *                   example: Te hemos enviado un código de 6 dígitos a tu correo.
+   *       400:
+   *         $ref: '#/components/responses/ValidationError'
+   *       429:
+   *         $ref: '#/components/responses/RateLimitError'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
+  router.post('/resend-verification-code', authRateLimit, authController.resendVerificationCode);
+
+  /**
+   * @swagger
    * /api/v1/auth/refresh:
    *   post:
    *     tags: [Autenticación]

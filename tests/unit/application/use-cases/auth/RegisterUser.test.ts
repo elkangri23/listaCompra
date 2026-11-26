@@ -230,5 +230,80 @@ describe('RegisterUser', () => {
       // Assert
       expect(result.isSuccess).toBe(false);
     });
+
+    it('debería enviar el código de verificación tras registrar', async () => {
+      // Arrange
+      usuarioRepository.existsByEmail.mockResolvedValue(success(false));
+      passwordHasher.hash.mockResolvedValue(success('hashed-password'));
+
+      const emailResult = Email.create('juan.perez@example.com');
+      if (!emailResult.isSuccess) throw new Error('Failed to create email');
+      const userResult = Usuario.create({
+        id: 'new-id',
+        email: emailResult.value,
+        password: 'hashed-password',
+        nombre: 'Juan',
+        apellidos: 'Pérez García',
+      });
+      if (!userResult.isSuccess) throw new Error('Failed to create user');
+      usuarioRepository.save.mockResolvedValue(success(userResult.value));
+
+      const requestVerificationCode = {
+        execute: jest.fn().mockResolvedValue(success({ emailSent: true, mensaje: 'ok' })),
+      } as any;
+      const registerWithCode = new RegisterUser(
+        usuarioRepository,
+        passwordHasher,
+        turnstileVerifier,
+        requestVerificationCode
+      );
+
+      // Act
+      const result = await registerWithCode.execute(validInput);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      if (!result.isSuccess) return;
+      expect(result.value.verificationEmailSent).toBe(true);
+      expect(requestVerificationCode.execute).toHaveBeenCalledWith({
+        email: 'juan.perez@example.com',
+      });
+    });
+
+    it('debería registrar aunque el envío del código falle', async () => {
+      // Arrange
+      usuarioRepository.existsByEmail.mockResolvedValue(success(false));
+      passwordHasher.hash.mockResolvedValue(success('hashed-password'));
+
+      const emailResult = Email.create('juan.perez@example.com');
+      if (!emailResult.isSuccess) throw new Error('Failed to create email');
+      const userResult = Usuario.create({
+        id: 'new-id',
+        email: emailResult.value,
+        password: 'hashed-password',
+        nombre: 'Juan',
+        apellidos: 'Pérez García',
+      });
+      if (!userResult.isSuccess) throw new Error('Failed to create user');
+      usuarioRepository.save.mockResolvedValue(success(userResult.value));
+
+      const requestVerificationCode = {
+        execute: jest.fn().mockResolvedValue(success({ emailSent: false, mensaje: 'sin correo' })),
+      } as any;
+      const registerWithCode = new RegisterUser(
+        usuarioRepository,
+        passwordHasher,
+        turnstileVerifier,
+        requestVerificationCode
+      );
+
+      // Act
+      const result = await registerWithCode.execute(validInput);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      if (!result.isSuccess) return;
+      expect(result.value.verificationEmailSent).toBe(false);
+    });
   });
 });

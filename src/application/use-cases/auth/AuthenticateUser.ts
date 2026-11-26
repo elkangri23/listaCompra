@@ -74,13 +74,12 @@ export class AuthenticateUser {
       return failure(UnauthorizedError.invalidCredentials());
     }
 
-    // 6. Verificar que el email esté verificado (opcional según reglas de negocio)
-    // NOTA: Comentado temporalmente para desarrollo - habilitar en producción
-    /*
+    // 6. Verificar que el email esté verificado (item 3): sin verificar no
+    // se entra; el controlador devuelve el estado emailNotVerified para
+    // que el frontend lleve a /verify-email.
     if (!usuario.emailVerificado) {
       return failure(UnauthorizedError.emailNotVerified());
     }
-    */
 
     // 7. Rama MFA: usuario con TOTP activo NO recibe tokens todavía —
     // el login continúa en POST /auth/login/mfa con el código de 6 dígitos.
