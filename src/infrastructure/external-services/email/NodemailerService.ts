@@ -26,7 +26,7 @@ export interface EmailConfig {
 }
 
 export class NodemailerService implements IEmailService {
-  private resend: Resend;
+  private resend: Resend | null;
   private config: EmailConfig;
   private stats = {
     sent: 0,
@@ -41,7 +41,11 @@ export class NodemailerService implements IEmailService {
       ...config
     };
     
-    this.resend = new Resend(this.config.apiKey);
+    // Resend lanza si la API key está vacía, así que solo se crea el cliente
+    // cuando hay clave. Sin clave el servicio queda deshabilitado y sendEmail
+    // devuelve un resultado de fallo en lugar de romper la construcción
+    // (antes, importar el servidor sin RESEND_API_KEY tumbaba el proceso).
+    this.resend = this.config.apiKey ? new Resend(this.config.apiKey) : null;
   }
 
   async verifyConnection(): Promise<boolean> {
@@ -98,6 +102,12 @@ export class NodemailerService implements IEmailService {
   }
 
   private async sendWithRetry(emailData: any): Promise<any> {
+    // Sin cliente Resend (sin API key) no se puede enviar: fallar aquí hace
+    // que sendEmail devuelva { success: false, error } en lugar de romper.
+    if (!this.resend) {
+      throw new Error('Email service not configured: missing RESEND_API_KEY');
+    }
+
     let lastError: Error | null = null;
     
     for (let attempt = 1; attempt <= this.config.maxRetries!; attempt++) {
