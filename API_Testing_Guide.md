@@ -724,6 +724,60 @@ Ejecuta una suite completa de tests de seguridad automáticos para validar la po
 
 ---
 
+## 🧠 Nuevo: Análisis de Hábitos de Compra (CU-30)
+
+### GET `/{{baseUrl}}/ai/purchase-habits/{{userId}}?timeRange=90d`
+
+Devuelve insights generados con IA sobre los hábitos de compra del usuario: frecuencia de compra, patrones estacionales, categorías preferidas y oportunidades de optimización del gasto.
+
+| Parámetro | Valor | Descripción |
+|---|---|---|
+| `userId` | path, requerido | ID del usuario a analizar (**solo el propio usuario o ADMIN**) |
+| `timeRange` | query, opcional | `30d` (default), `90d`, `180d`, `365d` |
+
+```json
+// Ejemplo de respuesta
+{
+  "success": true,
+  "data": {
+    "userId": "...",
+    "timeRange": "90d",
+    "totalPurchases": 42,
+    "insights": { "frequency": { ... }, "seasonality": { ... }, "preferences": { ... }, "optimization": [ ... ] },
+    "confidence": 0.82
+  }
+}
+```
+
+**Códigos**: `200` OK · `401` sin token · `403` sin permisos (no eres el usuario ni ADMIN) · `404` usuario inexistente · `500` error del proveedor IA.
+
+**Tips**: requiere historial suficiente; con pocos datos la IA baja la `confidence`. Cache Redis aplicado.
+
+---
+
+## 🔧 Nuevo: Admin Config de Proveedor LLM (CU-31)
+
+Gestión en caliente del proveedor LLM (FreeLLMAPI por defecto, OpenAI, OpenAI-compatible, Anthropic, Google, Perplexity, OpenRouter, Azure). No hace falta reiniciar el servidor.
+
+### GET `/{{baseUrl}}/ai/admin/config` (ADMIN)
+Config efectiva: `{ provider, model, apiUrl, apiStyle, apiKeyMasked }`. La API key se devuelve enmascarada (`sk-***f4a2`).
+
+### PUT `/{{baseUrl}}/ai/admin/config` (ADMIN)
+```json
+{ "provider": "freellmapi", "model": "gpt-4o-mini" }
+```
+Puedes cambiar también `apiKey` directamente (vacía = conserva la actual). Si se cambia de proveedor (p. ej. de `freellmapi` a `anthropic`), se cambia de estilo de API automáticamente.
+
+### POST `/{{baseUrl}}/ai/admin/config/test` (ADMIN)
+```json
+{ "provider": "anthropic", "apiKey": "sk-ant-...", "model": "claude-3-5-haiku-20241022" }
+```
+Prueba la conectividad sin aplicar la config. Útil antes de usar PUT.
+
+**Códigos**: `200` OK · `400` provider/valores inválidos · `401` sin token · `403` no ADMIN · `502` test fallido (conectividad).
+
+---
+
 ## 🤝 Contribución
 
 Si encuentras algún endpoint que falta o algún error en la colección:

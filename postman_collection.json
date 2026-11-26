@@ -1171,7 +1171,7 @@
               "raw": "{\n  \"nuevoTipoPermiso\": \"ESCRITURA\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/invitations/{{listId}}/permissions/{{targetUserId}}",
+              "raw": "{{baseUrl}}/invitations/{{listId}}/permissions/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1179,7 +1179,7 @@
                 "invitations",
                 "{{listId}}",
                 "permissions",
-                "{{targetUserId}}"
+                "{{userId}}"
               ]
             },
             "description": "Actualiza el tipo de permiso asignado a un colaborador específico."
@@ -1246,7 +1246,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/invitations/{{listId}}/permissions/{{targetUserId}}",
+              "raw": "{{baseUrl}}/invitations/{{listId}}/permissions/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1254,7 +1254,7 @@
                 "invitations",
                 "{{listId}}",
                 "permissions",
-                "{{targetUserId}}"
+                "{{userId}}"
               ]
             },
             "description": "Revoca el acceso de un colaborador específico a la lista."
@@ -1397,6 +1397,159 @@
               ]
             },
             "description": "Obtiene métricas agregadas de uso de IA (requiere rol admin)."
+          },
+          "response": []
+        },
+        {
+          "name": "Análisis de Hábitos de Compra (CU-30)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/purchase-habits/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "purchase-habits",
+                "{{userId}}"
+              ]
+            },
+            "description": "Devuelve insights de IA (frecuencia, estacionalidad, preferencias, optimización) sobre el historial de compras del usuario indicado. Solo el propio usuario o un ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Uso de la API IA",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/usage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "usage"
+              ]
+            },
+            "description": "Información de uso estimada del proveedor IA configurado (tokens, rate limit)."
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Configuración IA (CU-31, ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/admin/config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "admin",
+                "config"
+              ]
+            },
+            "description": "Configuración efectiva del proveedor LLM (api_key enmascarada, modelo, apiUrl, estilo de API). Requiere ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Configuración IA (CU-31, ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/admin/config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "admin",
+                "config"
+              ]
+            },
+            "description": "Cambio en caliente de proveedor/modelo/apiUrl/apiKey sin reiniciar el servidor. La apiKey vacía conserva la actual. Requiere ADMIN.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"freellmapi\",\n  \"model\": \"gpt-4o-mini\",\n  \"apiUrl\": \"https://api.electronhub.ai/v1\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Probar Configuración IA (CU-31, ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/admin/config/test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ai",
+                "admin",
+                "config",
+                "test"
+              ]
+            },
+            "description": "Verifica la conectividad con el proveedor LLM con la configuración indicada antes de aplicarla. Requiere ADMIN.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"anthropic\",\n  \"apiKey\": \"sk-ant-...\",\n  \"model\": \"claude-3-5-haiku-20241022\",\n  \"apiUrl\": \"https://api.anthropic.com\"\n}"
+            }
           },
           "response": []
         }
