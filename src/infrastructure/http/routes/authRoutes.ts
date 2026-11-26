@@ -3,11 +3,11 @@
  * Define los endpoints HTTP para autenticación de usuarios
  */
 
-import { Router } from 'express';
+import { Router, type RequestHandler } from 'express';
 import type { AuthController } from '@infrastructure/http/controllers/AuthController';
 import { authRateLimit, apiRateLimit } from '../middlewares/rateLimitMiddleware';
 
-export function createAuthRoutes(authController: AuthController): Router {
+export function createAuthRoutes(authController: AuthController, authMiddleware?: RequestHandler): Router {
   const router = Router();
 
   /**
@@ -297,7 +297,17 @@ export function createAuthRoutes(authController: AuthController): Router {
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  router.get('/me', authController.me);
+  // GET /me, PATCH /me y PATCH /me/password requieren autenticación (13A).
+  // Antes /me no tenía middleware: req.user nunca se rellenaba y siempre daba 401.
+  if (authMiddleware) {
+    router.get('/me', authMiddleware, authController.me);
+    router.patch('/me', authMiddleware, authController.updateMe);
+    router.patch('/me/password', authMiddleware, authController.changeMyPassword);
+  } else {
+    router.get('/me', authController.me);
+    router.patch('/me', authController.updateMe);
+    router.patch('/me/password', authController.changeMyPassword);
+  }
 
   return router;
 }

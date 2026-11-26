@@ -29,6 +29,13 @@ export class InMemoryInvitacionRepository implements IInvitacionRepository {
     return Array.from(this.invitaciones.values()).filter(invitacion => invitacion.listaId === listaId && invitacion.esValida());
   }
 
+  async findPendingByEmail(email: string): Promise<Invitacion[]> {
+    const normalizado = email.trim().toLowerCase();
+    return Array.from(this.invitaciones.values())
+      .filter(invitacion => (invitacion.emailInvitado ?? '').toLowerCase() === normalizado && invitacion.esValida())
+      .sort((a, b) => b.creadaEn.getTime() - a.creadaEn.getTime());
+  }
+
   async getAllActiveHashes(): Promise<string[]> {
     return Array.from(this.invitaciones.values())
       .filter(invitacion => invitacion.esValida())

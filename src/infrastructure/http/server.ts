@@ -24,7 +24,7 @@ import type { AuditController } from './controllers/AuditController';
 import { createAuthRoutes } from './routes/authRoutes';
 import type { MfaController } from './controllers/MfaController';
 import { createMfaRoutes, createMfaDevRoutes } from './routes/mfaRoutes';
-import { createInvitationRoutes } from './routes/invitationRoutes';
+import { createInvitationRoutes, createCollaboratorRoutes } from './routes/invitationRoutes';
 import { createAdminRoutes } from './routes/adminRoutes';
 import { createAIRoutes } from './routes/aiRoutes';
 import { createDashboardRoutes } from './routes/dashboardRoutes';
@@ -168,7 +168,7 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
 
 
   // Rutas de la aplicación
-  app.use('/api/v1/auth', createAuthRoutes(dependencies.authController));
+  app.use('/api/v1/auth', createAuthRoutes(dependencies.authController, dependencies.authMiddleware));
   // Rutas MFA (TOTP) — gated por flag FF_MFA_ENABLED (default: activado en dev)
   if (dependencies.mfaController && process.env['FF_MFA_ENABLED'] !== 'false') {
     app.use('/api/v1/auth', createMfaRoutes(dependencies.mfaController, dependencies.authMiddleware));
@@ -203,6 +203,10 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
 
   app.use('/api/v1/lists', createListRoutes(listController, authMiddleware));
   app.use('/api/v1/lists', createProductRoutes(productController, authMiddleware));
+  app.use('/api/v1/lists', createCollaboratorRoutes({
+    invitationController: dependencies.invitationController,
+    authMiddleware: dependencies.authMiddleware
+  }));
   app.use('/api/v1/categories', createCategoryRoutes(categoryController));
 
   if (dependencies.dashboardController) {

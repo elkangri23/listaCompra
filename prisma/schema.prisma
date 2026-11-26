@@ -113,6 +113,7 @@ model Tienda {
 model Invitacion {
   id              String      @id @default(uuid())
   hash            String      @unique
+  emailInvitado   String?
   fechaCreacion   DateTime    @default(now())
   fechaExpiracion DateTime
   listaId         String

@@ -24,6 +24,8 @@ export interface ShareListDto {
   usuarioComparteId: string; // Usuario que comparte
   tipoPermiso: string; // 'LECTURA', 'ESCRITURA', 'ADMIN'
   diasExpiracion?: number; // Opcional, por defecto 7 días
+  /** Email de la persona invitada (opcional): alimenta la bandeja de pendientes (13A) */
+  emailInvitado?: string;
 }
 
 export interface ShareListResponseDto {
@@ -118,7 +120,8 @@ export class ShareList {
       tipoPermisoResult.value,
       new Date(),
       expiraEn,
-      true
+      true,
+      dto.emailInvitado?.trim().toLowerCase() || null
     );
 
     if (invitacionResult.isFailure) {
@@ -181,6 +184,12 @@ export class ShareList {
     if (dto.diasExpiracion !== undefined) {
       if (dto.diasExpiracion < 1 || dto.diasExpiracion > 365) {
         return failure(new ValidationError('Días de expiración debe estar entre 1 y 365', 'diasExpiracion', dto.diasExpiracion));
+      }
+    }
+
+    if (dto.emailInvitado !== undefined && dto.emailInvitado !== null && dto.emailInvitado.trim().length > 0) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dto.emailInvitado.trim())) {
+        return failure(new ValidationError('Email del invitado no válido', 'emailInvitado', dto.emailInvitado));
       }
     }
 

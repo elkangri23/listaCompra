@@ -27,6 +27,7 @@ export class PrismaInvitacionRepository implements IInvitacionRepository {
         fechaExpiracion: data.expiraEn,
         listaId: data.listaId,
         activa: data.activa,
+        emailInvitado: data.emailInvitado,
         tipoPermiso: data.tipoPermiso as any // Cast al enum de Prisma
       }
     });
@@ -69,6 +70,21 @@ export class PrismaInvitacionRepository implements IInvitacionRepository {
       }
     });
     
+    return invitaciones.map(inv => this.toDomain(inv)).filter(inv => inv !== null) as Invitacion[];
+  }
+
+  async findPendingByEmail(email: string): Promise<Invitacion[]> {
+    const invitaciones = await this.prisma.invitacion.findMany({
+      where: {
+        emailInvitado: email,
+        activa: true,
+        fechaExpiracion: {
+          gt: new Date() // Solo invitaciones no expiradas
+        }
+      },
+      orderBy: { fechaCreacion: 'desc' }
+    });
+
     return invitaciones.map(inv => this.toDomain(inv)).filter(inv => inv !== null) as Invitacion[];
   }
 
@@ -160,7 +176,8 @@ export class PrismaInvitacionRepository implements IInvitacionRepository {
         tipoPermisoResult.value,
         prismaInvitacion.fechaCreacion,
         prismaInvitacion.fechaExpiracion,
-        prismaInvitacion.activa
+        prismaInvitacion.activa,
+        prismaInvitacion.emailInvitado ?? null
       );
 
       if (invitacionResult.isFailure) {

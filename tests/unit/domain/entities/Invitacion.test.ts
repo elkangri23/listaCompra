@@ -51,6 +51,40 @@ describe('Entidad Invitacion', () => {
       }
     });
 
+    it('debería guardar el email del invitado cuando se proporciona (13A)', () => {
+      const result = Invitacion.create(
+        uuidv4(),
+        uuidv4(),
+        validHash,
+        validPermissionType,
+        new Date(),
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        true,
+        'ana@example.com'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      if (result.isSuccess) {
+        expect(result.value.emailInvitado).toBe('ana@example.com');
+        const persistido = result.value.toPersistence();
+        expect(persistido.emailInvitado).toBe('ana@example.com');
+      }
+    });
+
+    it('debería tener emailInvitado null cuando no se proporciona', () => {
+      const result = Invitacion.create(
+        uuidv4(),
+        uuidv4(),
+        validHash,
+        validPermissionType
+      );
+
+      expect(result.isSuccess).toBe(true);
+      if (result.isSuccess) {
+        expect(result.value.emailInvitado).toBeNull();
+      }
+    });
+
     it('debería crear una invitación con fecha de expiración personalizada', () => {
       const id = uuidv4();
       const listaId = uuidv4();

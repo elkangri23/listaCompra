@@ -16,6 +16,8 @@ export interface InvitacionProps {
   creadaEn: Date;
   expiraEn: Date;
   activa: boolean;
+  /** Email de la persona invitada (opcional: los enlaces antiguos no lo tienen) */
+  emailInvitado?: string | null;
 }
 
 export class Invitacion {
@@ -28,7 +30,8 @@ export class Invitacion {
     tipoPermiso: PermissionType,
     creadaEn: Date = new Date(),
     expiraEn?: Date,
-    activa: boolean = true
+    activa: boolean = true,
+    emailInvitado?: string | null
   ): Result<Invitacion, DomainError> {
     // Validar ID
     if (!id || id.trim().length === 0) {
@@ -67,7 +70,8 @@ export class Invitacion {
       tipoPermiso,
       creadaEn,
       expiraEn: fechaExpiracion,
-      activa
+      activa,
+      emailInvitado: emailInvitado ?? null
     }));
   }
 
@@ -98,6 +102,10 @@ export class Invitacion {
 
   get activa(): boolean {
     return this.props.activa;
+  }
+
+  get emailInvitado(): string | null {
+    return this.props.emailInvitado ?? null;
   }
 
   // Métodos de negocio
@@ -229,6 +237,7 @@ export class Invitacion {
     creadaEn: Date;
     expiraEn: Date;
     activa: boolean;
+    emailInvitado: string | null;
   } {
     return {
       id: this.props.id,
@@ -237,6 +246,7 @@ export class Invitacion {
       tipoPermiso: this.props.tipoPermiso.value,
       creadaEn: this.props.creadaEn,
       expiraEn: this.props.expiraEn,
+      emailInvitado: this.props.emailInvitado ?? null,
       activa: this.props.activa
     };
   }
@@ -252,6 +262,7 @@ export class Invitacion {
     creadaEn: Date;
     expiraEn: Date;
     activa: boolean;
+    emailInvitado?: string | null;
   }): Result<Invitacion, DomainError> {
     const hashResult = Hash.create(data.hash);
     if (hashResult.isFailure) {
@@ -270,7 +281,8 @@ export class Invitacion {
       tipoPermisoResult.value,
       data.creadaEn,
       data.expiraEn,
-      data.activa
+      data.activa,
+      data.emailInvitado ?? null
     );
   }
 }

@@ -8,7 +8,8 @@ import { InvitationController } from '../controllers/InvitationController';
 const shareListSchema = z.object({
   body: z.object({
     tipoPermiso: z.enum(['LECTURA', 'ESCRITURA']),
-    duracionHoras: z.number().int().min(1).max(168).optional() // máximo 1 semana
+    duracionHoras: z.number().int().min(1).max(168).optional(), // máximo 1 semana
+    email: z.string().email('Email del invitado no válido').optional()
   }),
   params: z.object({
     listaId: z.string().uuid('ID de lista debe ser un UUID válido')
@@ -187,6 +188,21 @@ export function createInvitationRoutes(dependencies: InvitationRoutesDependencie
    *       404:
    *         description: Invitación no encontrada o expirada
    */
+  // GET /pending - Invitaciones pendientes del usuario actual (13A).
+  // Va ANTES de /:hash/access para que 'pending' no se interprete como un hash.
+  router.get(
+    '/pending',
+    invitationController.getPendingInvitations.bind(invitationController)
+  );
+
+  // POST /:invitacionId/decline - Rechazar una invitación pendiente (13A).
+  // Sin invitationParamsSchema: los IDs reales son 'inv_...' (no UUID) y ese
+  // esquema los rechazaría con 400 (mismo problema latente que en DELETE /:invitacionId).
+  router.post(
+    '/:invitacionId/decline',
+    invitationController.declineInvitation.bind(invitationController)
+  );
+
   // GET /:hash/access - Acceder a lista compartida con hash
   router.get(
     '/:hash/access',
@@ -434,6 +450,36 @@ export function createInvitationRoutes(dependencies: InvitationRoutesDependencie
     '/:listaId/permissions',
     validationMiddleware(listParamsSchema),
     invitationController.getListPermissions.bind(invitationController)
+  );
+
+  return router;
+}
+
+/**
+ * Rutas de colaboradores de una lista (13A).
+ * Se montan en /api/v1/lists porque el frontend las espera ahí:
+ * GET /:listaId/collaborators, PATCH /:listaId/collaborators/:userId,
+ * DELETE /:listaId/collaborators/:userId.
+ */
+export function createCollaboratorRoutes(dependencies: InvitationRoutesDependencies): Router {
+  const { invitationController, authMiddleware } = dependencies;
+  const router = Router();
+
+  router.use(authMiddleware);
+
+  router.get(
+    '/:listaId/collaborators',
+    invitationController.getCollaborators.bind(invitationController)
+  );
+
+  router.patch(
+    '/:listaId/collaborators/:userId',
+    invitationController.updateCollaboratorRole.bind(invitationController)
+  );
+
+  router.delete(
+    '/:listaId/collaborators/:userId',
+    invitationController.removeCollaborator.bind(invitationController)
   );
 
   return router;

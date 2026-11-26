@@ -9,6 +9,8 @@ import { success } from '@shared/result';
 
 // Application Use Cases
 import { RegisterUser } from '@application/use-cases/auth/RegisterUser';
+import { UpdateProfile } from '@application/use-cases/auth/UpdateProfile';
+import { ChangePassword } from '@application/use-cases/auth/ChangePassword';
 import { AuthenticateUser } from '@application/use-cases/auth/AuthenticateUser';
 import { CreateList } from '@application/use-cases/lists/CreateList';
 import { GetUserLists } from '@application/use-cases/lists/GetUserLists';
@@ -33,6 +35,7 @@ import { ShareList } from '@application/use-cases/invitations/ShareList';
 import { AccessSharedList } from '@application/use-cases/invitations/AccessSharedList';
 import { ManagePermissions } from '@application/use-cases/invitations/ManagePermissions';
 import { CancelInvitation } from '@application/use-cases/invitations/CancelInvitation';
+import { DeclineInvitation } from '@application/use-cases/invitations/DeclineInvitation';
 import { ImpersonateUser } from '@application/use-cases/admin/ImpersonateUser';
 import { EndImpersonation } from '@application/use-cases/admin/EndImpersonation';
 import { BulkCategorizeProducts } from '@application/use-cases/ai/BulkCategorizeProducts';
@@ -160,6 +163,8 @@ export class Container {
   // Use Cases
   private _registerUser!: RegisterUser;
   private _authenticateUser!: AuthenticateUser;
+  private _updateProfile!: UpdateProfile;
+  private _changePassword!: ChangePassword;
   private _mfaRepository!: IMfaRepository;
   private _getMfaStatus!: GetMfaStatus;
   private _setupTotp!: SetupTotp;
@@ -190,6 +195,7 @@ export class Container {
   private _accessSharedList!: AccessSharedList;
   private _managePermissions!: ManagePermissions;
   private _cancelInvitation!: CancelInvitation;
+  private _declineInvitation!: DeclineInvitation;
   private _impersonateUser!: ImpersonateUser;
   private _endImpersonation!: EndImpersonation;
   private _bulkCategorizeProducts!: BulkCategorizeProducts;
@@ -481,6 +487,10 @@ export class Container {
       this._mfaRepository
     );
 
+    // Perfil del usuario (13A)
+    this._updateProfile = new UpdateProfile(this._usuarioRepository);
+    this._changePassword = new ChangePassword(this._usuarioRepository, this._passwordHasher);
+
     // MFA (TOTP) use cases
     this._getMfaStatus = new GetMfaStatus(this._usuarioRepository, this._mfaRepository);
     this._setupTotp = new SetupTotp(this._usuarioRepository, this._passwordHasher);
@@ -627,6 +637,11 @@ export class Container {
       this._permisoRepository
     );
 
+    this._declineInvitation = new DeclineInvitation(
+      this._usuarioRepository,
+      this._invitacionRepository
+    );
+
     this._impersonateUser = new ImpersonateUser(
       this._usuarioRepository,
       this._tokenService,
@@ -667,6 +682,9 @@ export class Container {
     this._authController = new AuthController({
       registerUser: this._registerUser,
       authenticateUser: this._authenticateUser,
+      updateProfile: this._updateProfile,
+      changePassword: this._changePassword,
+      usuarioRepository: this._usuarioRepository,
     });
 
     this._mfaController = new MfaController({
@@ -715,7 +733,10 @@ export class Container {
       this._managePermissions,
       this._cancelInvitation,
       this._invitacionRepository,
-      this._permisoRepository
+      this._permisoRepository,
+      this._declineInvitation,
+      this._usuarioRepository,
+      this._listaRepository
     );
 
     this._adminController = new AdminController(

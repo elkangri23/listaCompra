@@ -6,14 +6,21 @@
 import { Request, Response, NextFunction } from 'express';
 import type { RegisterUser } from '@application/use-cases/auth/RegisterUser';
 import type { AuthenticateUser } from '@application/use-cases/auth/AuthenticateUser';
+import type { UpdateProfile } from '@application/use-cases/auth/UpdateProfile';
+import type { ChangePassword } from '@application/use-cases/auth/ChangePassword';
 import type { RegisterUserDto } from '@application/dto/auth/RegisterUserDto';
 import type { LoginDto } from '@application/dto/auth/LoginDto';
+import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import { ValidationError } from '@application/errors/ValidationError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import { NotFoundError } from '@application/errors/NotFoundError';
 
 export interface AuthControllerDependencies {
   registerUser: RegisterUser;
   authenticateUser: AuthenticateUser;
+  updateProfile?: UpdateProfile;
+  changePassword?: ChangePassword;
+  usuarioRepository?: IUsuarioRepository;
 }
 
 export class AuthController {
@@ -211,7 +218,9 @@ export class AuthController {
 
   /**
    * GET /auth/me
-   * Obtiene la información del usuario autenticado
+   * Obtiene la información del usuario autenticado (13A).
+   * Responde el usuario directamente (sin envoltorio), como espera el frontend
+   * (AuthUser: {id, name, email, roles, image}).
    */
   me = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -228,19 +237,163 @@ export class AuthController {
         return;
       }
 
+      const usuarioRepository = this.dependencies.usuarioRepository;
+      if (!usuarioRepository) {
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const usuarioResult = await usuarioRepository.findById(user.userId);
+      if (usuarioResult.isFailure || !usuarioResult.value) {
+        res.status(404).json({
+          success: false,
+          error: 'NOT_FOUND',
+          message: 'Usuario no encontrado',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      const usuario = usuarioResult.value;
+
       res.status(200).json({
-        success: true,
-        data: {
-          user: {
-            id: user.userId,
-            email: user.email,
-            rol: user.role,
-          },
-        },
-        timestamp: new Date().toISOString(),
+        id: usuario.id,
+        name: usuario.nombreCompleto,
+        email: usuario.email.value,
+        roles: [usuario.rol],
+        image: null,
       });
     } catch (error) {
       next(error);
     }
   };
+
+  /**
+   * PATCH /auth/me
+   * Actualiza el perfil del usuario autenticado (13A).
+   * Acepta {name?, email?}; `bio` se ignora (el backend no tiene ese campo).
+   */
+  updateMe = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        res.status(401).json({
+          success: false,
+          error: 'UNAUTHORIZED',
+          message: 'Token de acceso requerido',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      if (!this.dependencies.updateProfile) {
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { name, email } = req.body as { name?: string; email?: string };
+      const result = await this.dependencies.updateProfile.execute({
+        usuarioId: user.userId,
+        ...(typeof name === 'string' ? { nombre: name } : {}),
+        ...(typeof email === 'string' ? { email } : {}),
+      });
+
+      if (result.isFailure) {
+        this.handleUseCaseError(result.error, res);
+        return;
+      }
+
+      res.status(200).json(result.value);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * PATCH /auth/me/password
+   * Cambia la contraseña del usuario autenticado (13A).
+   */
+  changeMyPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        res.status(401).json({
+          success: false,
+          error: 'UNAUTHORIZED',
+          message: 'Token de acceso requerido',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      if (!this.dependencies.changePassword) {
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { currentPassword, newPassword } = req.body as { currentPassword?: string; newPassword?: string };
+      const result = await this.dependencies.changePassword.execute({
+        usuarioId: user.userId,
+        currentPassword: currentPassword ?? '',
+        newPassword: newPassword ?? '',
+      });
+
+      if (result.isFailure) {
+        this.handleUseCaseError(result.error, res);
+        return;
+      }
+
+      res.status(200).json(result.value);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  private handleUseCaseError(error: Error, res: Response): void {
+    if (error instanceof ValidationError) {
+      res.status(400).json({
+        success: false,
+        error: error.message,
+        code: error.code ?? 'VALIDATION_ERROR',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    if (error instanceof NotFoundError) {
+      res.status(404).json({
+        success: false,
+        error: error.message,
+        code: error.code ?? 'NOT_FOUND',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    if (error instanceof UnauthorizedError) {
+      res.status(401).json({
+        success: false,
+        error: error.message,
+        code: error.code ?? 'UNAUTHORIZED',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_ERROR',
+      timestamp: new Date().toISOString(),
+    });
+  }
 }

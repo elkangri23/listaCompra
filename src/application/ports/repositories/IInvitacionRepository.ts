@@ -32,6 +32,12 @@ export interface IInvitacionRepository {
   findActiveByListaId(listaId: string): Promise<Invitacion[]>;
 
   /**
+   * Busca invitaciones pendientes (activas y sin caducar) dirigidas a un email.
+   * Es la base de la bandeja de invitaciones pendientes del usuario (13A).
+   */
+  findPendingByEmail(email: string): Promise<Invitacion[]>;
+
+  /**
    * Obtiene todos los hashes activos (para verificar unicidad)
    */
   getAllActiveHashes(): Promise<string[]>;

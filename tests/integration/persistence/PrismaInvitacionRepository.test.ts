@@ -241,6 +241,62 @@ describe('PrismaInvitacionRepository Integration Tests', () => {
     });
   });
 
+  describe('findPendingByEmail', () => {
+    it('debería encontrar solo las invitaciones pendientes de ese email (13A)', async () => {
+      const { listaId } = await createTestData();
+
+      const hash1Result = Hash.create('qrst7890uvwx1234yzab5678cdef9012');
+      const hash2Result = Hash.create('uvwx1234yzab5678cdef9012ghij3456');
+      expect(hash1Result.isSuccess && hash2Result.isSuccess).toBe(true);
+
+      if (hash1Result.isSuccess && hash2Result.isSuccess) {
+        const paraAna = Invitacion.create(
+          uuidv4(), listaId, hash1Result.value, validPermissionType,
+          new Date(), new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), true, 'ana@example.com'
+        );
+        const paraOtro = Invitacion.create(
+          uuidv4(), listaId, hash2Result.value, validPermissionType,
+          new Date(), new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), true, 'otro@example.com'
+        );
+        expect(paraAna.isSuccess && paraOtro.isSuccess).toBe(true);
+
+        if (paraAna.isSuccess && paraOtro.isSuccess) {
+          await repository.save(paraAna.value);
+          await repository.save(paraOtro.value);
+
+          const pendientes = await repository.findPendingByEmail('ana@example.com');
+          expect(pendientes).toHaveLength(1);
+          expect(pendientes[0]?.emailInvitado).toBe('ana@example.com');
+
+          const ninguna = await repository.findPendingByEmail('nadie@example.com');
+          expect(ninguna).toHaveLength(0);
+        }
+      }
+    });
+
+    it('debería excluir las invitaciones expiradas o desactivadas', async () => {
+      const { listaId } = await createTestData();
+
+      const hashResult = Hash.create('abcd1234efgh5678ijkl9012mnop3456');
+      expect(hashResult.isSuccess).toBe(true);
+      if (hashResult.isSuccess) {
+        // Expirada: creada hace 8 días, expiraba hace 1 día
+        const expirada = Invitacion.create(
+          uuidv4(), listaId, hashResult.value, validPermissionType,
+          new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+          new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+          true, 'ana@example.com'
+        );
+        expect(expirada.isSuccess).toBe(true);
+        if (expirada.isSuccess) {
+          await repository.save(expirada.value);
+          const pendientes = await repository.findPendingByEmail('ana@example.com');
+          expect(pendientes).toHaveLength(0);
+        }
+      }
+    });
+  });
+
   describe('delete', () => {
     it('debería eliminar una invitación correctamente', async () => {
       const { listaId } = await createTestData();
