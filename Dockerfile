@@ -28,13 +28,18 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# node_modules ya compilado/instalado en el builder (incluye @prisma/client
-# generado y bcrypt compilado para esta misma imagen base)
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./package.json
+# Prisma 5 necesita el binario openssl para detectar la versión de libssl;
+# sin él solo avisa, pero mejor instalarlo. wget lo usa el healthcheck.
+RUN apk add --no-cache openssl wget
+
+# Los archivos vienen del builder como root: hay que darlos al usuario node,
+# si no `npx prisma migrate deploy` no puede escribir en
+# node_modules/@prisma/engines y el contenedor entra en bucle de reinicios.
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/dist ./dist
+COPY --chown=node:node --from=builder /app/package.json ./package.json
 # Esquema + migraciones: el arranque aplica `prisma migrate deploy`
-COPY --from=builder /app/prisma ./prisma
+COPY --chown=node:node --from=builder /app/prisma ./prisma
 
 USER node
 EXPOSE 3333
