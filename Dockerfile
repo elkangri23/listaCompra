@@ -41,6 +41,11 @@ COPY --chown=node:node --from=builder /app/package.json ./package.json
 # Esquema + migraciones: el arranque aplica `prisma migrate deploy`
 COPY --chown=node:node --from=builder /app/prisma ./prisma
 
+# El logger (winston) crea ./logs al arrancar: /app es de root en la imagen,
+# así que el directorio debe existir y ser del usuario node, si no el
+# proceso muere con EACCES mkdir '/app/logs' y el contenedor reinicia.
+RUN mkdir -p /app/logs && chown node:node /app/logs
+
 USER node
 EXPOSE 3333
 
