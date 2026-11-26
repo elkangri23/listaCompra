@@ -71,6 +71,8 @@ async function bootstrap(): Promise<void> {
       invitationController: container.invitationController,
       adminController: container.adminController,
       aiController: container.aiController,
+      ...(container.aiConfigController ? { aiConfigController: container.aiConfigController } : {}),
+      ...(container.mfaController ? { mfaController: container.mfaController } : {}),
       authMiddleware: container.authMiddleware,
       listController: container.listController,
       productController: container.productController,

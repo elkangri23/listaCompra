@@ -24,6 +24,7 @@ interface ErrorResponse {
     details?: any;
     timestamp: string;
     requestId?: string;
+    code?: string; // código de error específico (MfaError.errorCode, ver MfaController)
   };
 }
 
@@ -176,6 +177,9 @@ export const errorMiddleware = (
   }
 
   // Construir respuesta de error estandarizada
+  const mfaErrorCode = (error as { errorCode?: string }).errorCode; // MfaError.errorCode
+  const genericCode = (error as { code?: string }).code; // DomainError.code
+  const errorCode = mfaErrorCode ?? genericCode;
   const errorResponse: ErrorResponse = {
     success: false,
     error: {
@@ -183,6 +187,7 @@ export const errorMiddleware = (
       message,
       timestamp: new Date().toISOString(),
       requestId,
+      ...(errorCode && typeof errorCode === 'string' && errorCode !== errorType && { code: errorCode }),
     }
   };
 

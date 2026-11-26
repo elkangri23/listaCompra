@@ -15,6 +15,9 @@ interface PersistenceUsuario {
   rol: string;
   activo: boolean;
   emailVerificado?: boolean;
+  totpSecret?: string | null;
+  totpEnabled?: boolean;
+  totpPendIntentos?: number;
   fechaCreacion?: Date;
   fechaActualizacion?: Date;
 }
@@ -37,6 +40,9 @@ export class UsuarioMapper {
       rol: raw.rol as any, // Convertir el enum
       activo: raw.activo,
       emailVerificado: raw.emailVerificado,
+      totpSecret: raw.totpSecret ?? null,
+      totpEnabled: raw.totpEnabled ?? false,
+      totpPendIntentos: raw.totpPendIntentos ?? 0,
     });
 
     if (usuario.isFailure) {
@@ -65,6 +71,9 @@ export class UsuarioMapper {
       rol: usuario.rol,
       activo: usuario.activo,
       emailVerificado: usuario.emailVerificado,
+      totpSecret: usuario.totpSecret,
+      totpEnabled: usuario.totpEnabled,
+      totpPendIntentos: usuario.totpPendIntentos,
     };
   }
 

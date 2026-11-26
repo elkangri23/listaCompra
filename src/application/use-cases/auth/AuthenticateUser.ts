@@ -8,7 +8,9 @@ import { success, failure } from '@shared/result';
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
+import type { IMfaRepository } from '@application/ports/repositories/IMfaRepository';
 import type { LoginDto, LoginResponseDto } from '@application/dto/auth/LoginDto';
+import type { LoginMfaRequiredDto } from '@application/dto/auth/LoginDto';
 import { Email } from '@domain/value-objects/Email';
 import { Password } from '@domain/value-objects/Password';
 import { ValidationError } from '@application/errors/ValidationError';
@@ -19,10 +21,11 @@ export class AuthenticateUser {
   constructor(
     private readonly usuarioRepository: IUsuarioRepository,
     private readonly passwordHasher: IPasswordHasher,
-    private readonly tokenService: ITokenService
+    private readonly tokenService: ITokenService,
+    private readonly mfaRepository?: IMfaRepository
   ) {}
 
-  async execute(dto: LoginDto): Promise<Result<LoginResponseDto, ValidationError | UnauthorizedError | NotFoundError | Error>> {
+  async execute(dto: LoginDto): Promise<Result<LoginResponseDto | LoginMfaRequiredDto, ValidationError | UnauthorizedError | NotFoundError | Error>> {
     // 1. Validar y crear email
     const emailResult = Email.create(dto.email);
     if (emailResult.isFailure) {
@@ -79,7 +82,21 @@ export class AuthenticateUser {
     }
     */
 
-    // 7. Generar tokens
+    // 7. Rama MFA: usuario con TOTP activo NO recibe tokens todavía —
+    // el login continúa en POST /auth/login/mfa con el código de 6 dígitos.
+    // Compatibilidad hacia atrás: sin TOTP, la respuesta es idéntica a la anterior.
+    if (usuario.totpEnabled && this.mfaRepository) {
+      const challengeResult = await this.mfaRepository.createTotpChallenge(usuario.id, 5 * 60);
+      if (challengeResult.isFailure) {
+        return failure(challengeResult.error);
+      }
+      return success({
+        mfaRequired: true,
+        mfa: { challengeId: challengeResult.value.id },
+      });
+    }
+
+    // 8. Generar tokens
     const tokenPayload = {
       userId: usuario.id,
       email: usuario.email.value,
@@ -92,14 +109,14 @@ export class AuthenticateUser {
     }
     const tokens = tokensResult.value;
 
-    // 8. Verificar si la contraseña necesita rehash (opcional)
+    // 9. Verificar si la contraseña necesita rehash (opcional)
     const needsRehashResult = await this.passwordHasher.needsRehash(usuario.password);
     if (needsRehashResult.isSuccess && needsRehashResult.value) {
       // TODO: Programar rehash de contraseña en background
       // Esto podría ser un evento o un job asíncrono
     }
 
-    // 9. Retornar respuesta
+    // 10. Retornar respuesta
     const response: LoginResponseDto = {
       user: {
         id: usuario.id,

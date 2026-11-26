@@ -97,6 +97,42 @@ export const apiRateLimit = rateLimit({
  * Rate limiter muy estricto para operaciones sensibles
  * Compartir listas, cambiar permisos, etc.
  */
+/**
+ * Rate limiter para endpoints MFA (login/mfa, totp/verify-enable, totp/disable).
+ * Misma lib en memoria que authRateLimit (sin Redis), algo más permisivo:
+ * 10 intentos / 15 min por IP+User-Agent.
+ */
+export const mfaRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    error: 'RATE_LIMIT_EXCEEDED',
+    message: 'Demasiados intentos de verificación. Intenta de nuevo en 15 minutos.',
+    retryAfter: '15 minutos'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: Request): string => {
+    const userAgent = req.get('User-Agent') || 'unknown';
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    return `${ip}-${userAgent.substring(0, 50)}`;
+  },
+  handler: (req: Request, res: Response) => {
+    console.warn(`⚠️ Rate limit MFA - IP: ${req.ip}, Endpoint: ${req.path}`);
+    res.status(429).json({
+      success: false,
+      error: 'RATE_LIMIT_EXCEEDED',
+      message: 'Demasiados intentos de verificación. Intenta de nuevo en 15 minutos.',
+      timestamp: new Date().toISOString(),
+      retryAfter: 900
+    });
+  },
+  skip: (_req: Request) => {
+    return process.env['NODE_ENV'] === 'test';
+  }
+});
+
 export const sensitiveRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
   max: 10, // máximo 10 operaciones sensibles por IP por hora

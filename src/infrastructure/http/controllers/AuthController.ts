@@ -136,19 +136,21 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        data: {
-          user: {
-            id: result.value.user.id,
-            email: result.value.user.email,
-            nombre: result.value.user.nombre,
-            apellidos: result.value.user.apellidos,
-            nombreCompleto: result.value.user.nombreCompleto,
-            rol: result.value.user.rol,
-            activo: result.value.user.activo,
-            emailVerificado: result.value.user.emailVerificado,
-          },
-          tokens: result.value.tokens,
-        },
+        data: 'mfaRequired' in result.value
+          ? { mfaRequired: true, mfa: result.value.mfa }
+          : {
+              user: {
+                id: result.value.user.id,
+                email: result.value.user.email,
+                nombre: result.value.user.nombre,
+                apellidos: result.value.user.apellidos,
+                nombreCompleto: result.value.user.nombreCompleto,
+                rol: result.value.user.rol,
+                activo: result.value.user.activo,
+                emailVerificado: result.value.user.emailVerificado,
+              },
+              tokens: result.value.tokens,
+            },
         message: 'Autenticación exitosa',
         timestamp: new Date().toISOString(),
       });

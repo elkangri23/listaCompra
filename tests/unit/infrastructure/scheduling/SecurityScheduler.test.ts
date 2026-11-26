@@ -52,9 +52,9 @@ describe('SecurityScheduler', () => {
 
     scheduler.initializeSecurityJobs();
 
-    expect(cron.schedule).toHaveBeenCalledTimes(2);
+    expect(cron.schedule).toHaveBeenCalledTimes(3); // invitaciones + outbox + mfa challenge cleanup
     const expressions = cron.schedule.mock.calls.map((call: any[]) => call[0]);
-    expect(expressions).toEqual(expect.arrayContaining(['0 * * * *', '0 2 * * *']));
+    expect(expressions).toEqual(expect.arrayContaining(['0 * * * *', '0 2 * * *', '30 3 * * *']));
   });
 
   it('arranca y detiene todos los jobs correctamente', () => {

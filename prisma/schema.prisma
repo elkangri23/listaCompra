@@ -28,6 +28,14 @@ model Usuario {
   permisos           Permiso[]
   productos          Producto[]
 
+  // MFA (TOTP) — feature CU-MFA fase 1
+  totpSecret       String?
+  totpEnabled      Boolean   @default(false)
+  totpPendIntentos Int       @default(0)
+
+  backupCodes   MfaBackupCode[]
+  mfaChallenges MfaChallenge[]
+
   @@map("usuarios")
 }
 
@@ -187,6 +195,41 @@ model AuditEntry {
 enum RolUsuario {
   USUARIO
   ADMIN
+}
+
+// =================================
+// MFA (TOTP) — fase 1
+// =================================
+
+/// Código de respaldo de un solo uso (hash HMAC-SHA256, nunca en claro tras la emisión)
+model MfaBackupCode {
+  id        String    @id @default(uuid())
+  usuarioId String
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  codeHash  String
+  usado     Boolean   @default(false)
+  usadoAt   DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([usuarioId])
+  @@map("mfa_backup_codes")
+}
+
+/// Challenge de login MFA de un solo uso (una fila por intento)
+model MfaChallenge {
+  id        String   @id @default(uuid())
+  usuarioId String?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tipo      String   // 'TOTP' | 'PASSKEY_REG' | 'PASSKEY_LOGIN'
+  challenge String?  // challenge WebAuthn (base64url) — fase 2
+  intentos  Int      @default(0)
+  createdAt DateTime @default(now())
+  expiraAt  DateTime
+
+  @@index([usuarioId])
+  @@index([tipo])
+  @@index([expiraAt])
+  @@map("mfa_challenges")
 }
 
 enum TipoPermiso {

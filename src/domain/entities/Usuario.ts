@@ -24,6 +24,10 @@ export interface UsuarioProps {
   rol?: RolUsuario;
   activo?: boolean;
   emailVerificado?: boolean;
+  // MFA (TOTP) — opcional en create (defaults); reconstruct los recibe del mapper
+  totpSecret?: string | null;
+  totpEnabled?: boolean;
+  totpPendIntentos?: number;
   fechaCreacion?: Date;
   fechaActualizacion?: Date;
 }
@@ -38,6 +42,9 @@ export class Usuario {
     private _rol: RolUsuario,
     private _activo: boolean,
     private _emailVerificado: boolean,
+    private _totpSecret: string | null, // AEAD AES-256-GCM (mfa-crypto), formato "v1:..."
+    private _totpEnabled: boolean,
+    private _totpPendIntentos: number, // cap de fallos de verify-enable sobre el secret pendiente
     private readonly _fechaCreacion: Date,
     private _fechaActualizacion: Date
   ) {}
@@ -86,23 +93,31 @@ export class Usuario {
       props.rol || RolUsuario.USUARIO,
       props.activo ?? true,
       props.emailVerificado ?? false,
+      props.totpSecret ?? null,
+      props.totpEnabled ?? false,
+      props.totpPendIntentos ?? 0,
       props.fechaCreacion || now,
       props.fechaActualizacion || now
     ));
   }
 
-  static reconstruct(props: Required<UsuarioProps>): Usuario {
+  static reconstruct(
+    props: UsuarioProps & { id: UUID; email: Email; password: string; nombre: string }
+  ): Usuario {
     return new Usuario(
       props.id,
       props.email,
       props.password,
       props.nombre,
       props.apellidos || null,
-      props.rol,
-      props.activo,
-      props.emailVerificado,
-      props.fechaCreacion,
-      props.fechaActualizacion
+      props.rol ?? RolUsuario.USUARIO,
+      props.activo ?? true,
+      props.emailVerificado ?? false,
+      props.totpSecret ?? null,
+      props.totpEnabled ?? false,
+      props.totpPendIntentos ?? 0,
+      props.fechaCreacion ?? new Date(),
+      props.fechaActualizacion ?? new Date()
     );
   }
 
@@ -138,6 +153,59 @@ export class Usuario {
   get activo(): boolean {
     return this._activo;
   }
+
+  // ===== MFA (TOTP) =====
+  get totpSecret(): string | null {
+    return this._totpSecret;
+  }
+
+  get totpEnabled(): boolean {
+    return this._totpEnabled;
+  }
+
+  get totpPendIntentos(): number {
+    return this._totpPendIntentos;
+  }
+
+  /** true si hay secret pendiente de confirmar (no activo aún) */
+  get totpPendiente(): boolean {
+    return this._totpSecret !== null && !this._totpEnabled;
+  }
+
+  /** Guarda un secret cifrado nuevo (estado pendiente de confirmar) */
+  setTotpPending(encryptedSecret: string): void {
+    this._totpSecret = encryptedSecret;
+    this._totpEnabled = false;
+    this._totpPendIntentos = 0;
+    this._touch();
+  }
+
+  /** Confirma el TOTP: se activa el pendiente */
+  enableTotp(): void {
+    this._totpEnabled = true;
+    this._totpPendIntentos = 0;
+    this._touch();
+  }
+
+  /** Desactiva y borra el secret (estado "sin TOTP") */
+  disableTotp(): void {
+    this._totpSecret = null;
+    this._totpEnabled = false;
+    this._totpPendIntentos = 0;
+    this._touch();
+  }
+
+  /** Registra un fallo de verify-enable; devuelve el total acumulado */
+  recordTotpPendingFailure(): number {
+    this._totpPendIntentos += 1;
+    this._touch();
+    return this._totpPendIntentos;
+  }
+
+  private _touch(): void {
+    this._fechaActualizacion = new Date();
+  }
+  // ===== fin MFA =====
 
   get emailVerificado(): boolean {
     return this._emailVerificado;

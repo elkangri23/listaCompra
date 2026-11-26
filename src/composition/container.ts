@@ -116,6 +116,14 @@ import type { IEventPublisher } from '@application/ports/messaging/IEventPublish
 import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
 import type { IInvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import type { IEmailService } from '@application/ports/external/IEmailService';
+import type { IMfaRepository } from '@application/ports/repositories/IMfaRepository';
+import { PrismaMfaRepository } from '@infrastructure/persistence/repositories/PrismaMfaRepository';
+import { GetMfaStatus } from '@application/use-cases/auth/GetMfaStatus';
+import { SetupTotp } from '@application/use-cases/auth/SetupTotp';
+import { VerifyEnableTotp } from '@application/use-cases/auth/VerifyEnableTotp';
+import { DisableTotp } from '@application/use-cases/auth/DisableTotp';
+import { MfaLogin } from '@application/use-cases/auth/MfaLogin';
+import { MfaController } from '@infrastructure/http/controllers/MfaController';
 import type { IAIService } from '@application/ports/external/IAIService';
 
 export class Container {
@@ -152,6 +160,13 @@ export class Container {
   // Use Cases
   private _registerUser!: RegisterUser;
   private _authenticateUser!: AuthenticateUser;
+  private _mfaRepository!: IMfaRepository;
+  private _getMfaStatus!: GetMfaStatus;
+  private _setupTotp!: SetupTotp;
+  private _verifyEnableTotp!: VerifyEnableTotp;
+  private _disableTotp!: DisableTotp;
+  private _mfaLogin!: MfaLogin;
+  private _mfaController!: MfaController;
   private _createList!: CreateList;
   private _getUserLists!: GetUserLists;
   private _updateList!: UpdateList;
@@ -341,6 +356,7 @@ export class Container {
     }
 
     this._usuarioRepository = new PrismaUsuarioRepository(this._prisma);
+    this._mfaRepository = new PrismaMfaRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
     this._productoRepository = new PrismaProductoRepository(this._prisma);
     this._categoriaRepository = new PrismaCategoriaRepository(this._prisma);
@@ -461,8 +477,26 @@ export class Container {
     this._authenticateUser = new AuthenticateUser(
       this._usuarioRepository,
       this._passwordHasher,
-      this._tokenService
+      this._tokenService,
+      this._mfaRepository
     );
+
+    // MFA (TOTP) use cases
+    this._getMfaStatus = new GetMfaStatus(this._usuarioRepository, this._mfaRepository);
+    this._setupTotp = new SetupTotp(this._usuarioRepository, this._passwordHasher);
+    this._verifyEnableTotp = new VerifyEnableTotp(
+      this._usuarioRepository,
+      this._mfaRepository,
+      this._passwordHasher,
+      this._emailService
+    );
+    this._disableTotp = new DisableTotp(
+      this._usuarioRepository,
+      this._mfaRepository,
+      this._passwordHasher,
+      this._emailService
+    );
+    this._mfaLogin = new MfaLogin(this._usuarioRepository, this._mfaRepository, this._tokenService);
 
     // Lista use cases
     this._createList = new CreateList(this._listaRepository);
@@ -633,6 +667,14 @@ export class Container {
     this._authController = new AuthController({
       registerUser: this._registerUser,
       authenticateUser: this._authenticateUser,
+    });
+
+    this._mfaController = new MfaController({
+      getMfaStatus: this._getMfaStatus,
+      setupTotp: this._setupTotp,
+      verifyEnableTotp: this._verifyEnableTotp,
+      disableTotp: this._disableTotp,
+      mfaLogin: this._mfaLogin,
     });
 
     this._listController = new ListController(
@@ -810,6 +852,10 @@ export class Container {
 
   public get authenticateUser(): AuthenticateUser {
     return this._authenticateUser;
+  }
+
+  public get mfaController(): MfaController {
+    return this._mfaController;
   }
 
   public get createList(): CreateList {

@@ -24,6 +24,14 @@ export interface LoginResponseDto {
   };
 }
 
+/** Respuesta del paso 1 cuando el usuario tiene TOTP activo: NO contiene tokens */
+export interface LoginMfaRequiredDto {
+  mfaRequired: true;
+  mfa: {
+    challengeId: string;
+  };
+}
+
 export interface RefreshTokenDto {
   refreshToken: string;
 }

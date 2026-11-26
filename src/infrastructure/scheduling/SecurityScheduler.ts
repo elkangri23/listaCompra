@@ -32,6 +32,9 @@ export class SecurityScheduler {
     // Job 2: Cleanup de outbox events antiguos (diario)
     this.scheduleOutboxCleanup();
 
+    // Job 3: Cleanup de challenges MFA expirados (diario) — fase MFA TOTP
+    this.scheduleMfaChallengeCleanup();
+
     this.logger.info(`✅ ${this.jobs.size} scheduled jobs de seguridad inicializados`);
   }
 
@@ -190,6 +193,26 @@ export class SecurityScheduler {
   /**
    * Helper para logging de métricas de seguridad
    */
+    /**
+   * Job 3: Cleanup de challenges MFA expirados (borra expiraAt < now - 1d)
+   */
+  private scheduleMfaChallengeCleanup(): void {
+    const job = cron.schedule('30 3 * * *', async () => { // 3:30 AM diario
+      try {
+        const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const result = await this.prisma.mfaChallenge.deleteMany({
+          where: { expiraAt: { lt: cutoff } },
+        });
+        if (result.count > 0) {
+          this.logger.info(`🧹 MFA challenge cleanup: ${result.count} challenges expirados borrados`);
+        }
+      } catch (error) {
+        this.logger.error('Error en cleanup de challenges MFA', error);
+      }
+    });
+    this.jobs.set('mfa_challenge_cleanup', job);
+  }
+
   private logSecurityMetrics(operation: string, data: Record<string, any>): void {
     this.logger.info(`📊 [SECURITY_METRICS] ${operation}`, {
       operation,

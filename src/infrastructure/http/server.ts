@@ -22,6 +22,8 @@ import type { CategoryController } from './controllers/CategoryController';
 import type { DashboardController } from './controllers/DashboardController';
 import type { AuditController } from './controllers/AuditController';
 import { createAuthRoutes } from './routes/authRoutes';
+import type { MfaController } from './controllers/MfaController';
+import { createMfaRoutes, createMfaDevRoutes } from './routes/mfaRoutes';
 import { createInvitationRoutes } from './routes/invitationRoutes';
 import { createAdminRoutes } from './routes/adminRoutes';
 import { createAIRoutes } from './routes/aiRoutes';
@@ -50,6 +52,7 @@ export interface ServerDependencies {
   adminController: AdminController;
   aiController: AIController;
   aiConfigController?: AIConfigController;
+  mfaController?: MfaController;
   authMiddleware: express.RequestHandler;
   listController: ListController;
   productController: ProductController;
@@ -166,6 +169,14 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
 
   // Rutas de la aplicación
   app.use('/api/v1/auth', createAuthRoutes(dependencies.authController));
+  // Rutas MFA (TOTP) — gated por flag FF_MFA_ENABLED (default: activado en dev)
+  if (dependencies.mfaController && process.env['FF_MFA_ENABLED'] !== 'false') {
+    app.use('/api/v1/auth', createMfaRoutes(dependencies.mfaController, dependencies.authMiddleware));
+  }
+  // Ruta dev-only para E2E: solo existe si NODE_ENV === 'test' (nunca en producción)
+  if (process.env['NODE_ENV'] === 'test') {
+    app.use('/api/v1/auth', createMfaDevRoutes());
+  }
   app.use('/api/v1/invitations', createInvitationRoutes({
     invitationController: dependencies.invitationController,
     authMiddleware: dependencies.authMiddleware
