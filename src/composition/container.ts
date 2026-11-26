@@ -66,6 +66,7 @@ import { InMemoryInvitacionRepository } from '@infrastructure/persistence/in-mem
 import { InMemoryPermisoRepository } from '@infrastructure/persistence/in-memory/InMemoryPermisoRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
+import { TurnstileService } from '@infrastructure/external-services/auth/TurnstileService';
 import { RabbitMQEventPublisher } from '@infrastructure/messaging/RabbitMQEventPublisher';
 import { PrismaOutboxService } from '@infrastructure/messaging/outbox/PrismaOutboxService';
 import { OutboxWorker, DEFAULT_WORKER_CONFIG } from '@infrastructure/messaging/outbox/OutboxWorker';
@@ -116,6 +117,7 @@ import type { IAuditRepository } from '@application/ports/repositories/IAuditRep
 import type { IAnalyticsRepository } from '@application/ports/repositories/IAnalyticsRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
+import type { ITurnstileVerifier } from '@application/ports/auth/ITurnstileVerifier';
 import type { IEventPublisher } from '@application/ports/messaging/IEventPublisher';
 import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
 import type { IInvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
@@ -157,6 +159,7 @@ export class Container {
   // External Services
   private _passwordHasher!: IPasswordHasher;
   private _tokenService!: ITokenService;
+  private _turnstileVerifier!: ITurnstileVerifier;
   private _emailService!: IEmailService;
   private _aiService!: IAIService;
   private _eventPublisher!: IEventPublisher;
@@ -396,6 +399,7 @@ export class Container {
   private initializeExternalServices(): void {
     this._passwordHasher = new BcryptPasswordHasher();
     this._tokenService = new JWTTokenService();
+    this._turnstileVerifier = new TurnstileService();
     this._hashGenerator = new InvitationHashGenerator();
     this._outboxService = this.isTestEnv
       ? new InMemoryOutboxService()
@@ -496,7 +500,8 @@ export class Container {
   private initializeUseCases(): void {
     this._registerUser = new RegisterUser(
       this._usuarioRepository,
-      this._passwordHasher
+      this._passwordHasher,
+      this._turnstileVerifier
     );
 
     this._authenticateUser = new AuthenticateUser(

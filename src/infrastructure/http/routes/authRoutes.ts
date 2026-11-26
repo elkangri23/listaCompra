@@ -56,6 +56,9 @@ export function createAuthRoutes(authController: AuthController, authMiddleware?
    *                 type: boolean
    *                 description: Aceptación de los Términos de Servicio (obligatoria)
    *                 example: true
+   *               turnstileToken:
+   *                 type: string
+   *                 description: Token del captcha Turnstile (obligatorio solo cuando el servidor lo tiene configurado)
    *           examples:
    *             usuario_basico:
    *               summary: Usuario básico

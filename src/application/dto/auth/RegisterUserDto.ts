@@ -8,6 +8,7 @@ export interface RegisterUserDto {
   nombre: string;
   apellidos?: string;
   aceptoTerminos: boolean;
+  turnstileToken?: string;
 }
 
 export interface RegisterUserResponseDto {

@@ -1,4 +1,5 @@
 import { RegisterUser } from '../../../../../src/application/use-cases/auth/RegisterUser';
+import type { ITurnstileVerifier } from '../../../../../src/application/ports/auth/ITurnstileVerifier';
 import { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
 import { IPasswordHasher } from '../../../../../src/application/ports/auth/IPasswordHasher';
 import { Usuario } from '../../../../../src/domain/entities/Usuario';
@@ -9,6 +10,7 @@ describe('RegisterUser', () => {
   let registerUser: RegisterUser;
   let usuarioRepository: jest.Mocked<IUsuarioRepository>;
   let passwordHasher: jest.Mocked<IPasswordHasher>;
+  let turnstileVerifier: jest.Mocked<ITurnstileVerifier>;
 
   beforeEach(() => {
     usuarioRepository = {
@@ -28,7 +30,12 @@ describe('RegisterUser', () => {
       needsRehash: jest.fn()
     } as any;
 
-    registerUser = new RegisterUser(usuarioRepository, passwordHasher);
+    turnstileVerifier = {
+      enabled: jest.fn().mockReturnValue(false),
+      verify: jest.fn(),
+    } as unknown as jest.Mocked<ITurnstileVerifier>;
+
+    registerUser = new RegisterUser(usuarioRepository, passwordHasher, turnstileVerifier);
   });
 
   describe('execute', () => {
@@ -116,6 +123,42 @@ describe('RegisterUser', () => {
       // Assert
       expect(result.isSuccess).toBe(false);
       expect(usuarioRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('debería rechazar el registro sin token de captcha cuando Turnstile está activo', async () => {
+      turnstileVerifier.enabled.mockReturnValue(true);
+
+      const result = await registerUser.execute(validInput);
+
+      expect(result.isFailure).toBe(true);
+      if (result.isFailure) {
+        expect(result.error.message).toContain('verificación de seguridad');
+      }
+      expect(turnstileVerifier.verify).not.toHaveBeenCalled();
+      expect(usuarioRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('debería rechazar el registro cuando Cloudflare no valida el token', async () => {
+      turnstileVerifier.enabled.mockReturnValue(true);
+      turnstileVerifier.verify.mockResolvedValue(false);
+
+      const result = await registerUser.execute({ ...validInput, turnstileToken: 'token-malo' });
+
+      expect(result.isFailure).toBe(true);
+      expect(turnstileVerifier.verify).toHaveBeenCalledWith('token-malo');
+      expect(usuarioRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('debería registrar cuando Turnstile está activo y el token es válido', async () => {
+      turnstileVerifier.enabled.mockReturnValue(true);
+      turnstileVerifier.verify.mockResolvedValue(true);
+      passwordHasher.hash.mockResolvedValue(success('hashed-password'));
+      usuarioRepository.save.mockImplementation(async (usuario: Usuario) => success(usuario));
+
+      const result = await registerUser.execute({ ...validInput, turnstileToken: 'token-valido' });
+
+      expect(result.isSuccess).toBe(true);
+      expect(turnstileVerifier.verify).toHaveBeenCalledWith('token-valido');
     });
 
     it('debería guardar la fecha de aceptación de los Términos al registrar', async () => {

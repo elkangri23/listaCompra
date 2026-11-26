@@ -7,6 +7,7 @@ import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
+import type { ITurnstileVerifier } from '@application/ports/auth/ITurnstileVerifier';
 import type { RegisterUserDto, RegisterUserResponseDto } from '@application/dto/auth/RegisterUserDto';
 import { Email } from '@domain/value-objects/Email';
 import { Password } from '@domain/value-objects/Password';
@@ -16,7 +17,8 @@ import { ValidationError } from '@application/errors/ValidationError';
 export class RegisterUser {
   constructor(
     private readonly usuarioRepository: IUsuarioRepository,
-    private readonly passwordHasher: IPasswordHasher
+    private readonly passwordHasher: IPasswordHasher,
+    private readonly turnstileVerifier?: ITurnstileVerifier
   ) {}
 
   async execute(dto: RegisterUserDto): Promise<Result<RegisterUserResponseDto, ValidationError | Error>> {
@@ -27,6 +29,25 @@ export class RegisterUser {
         'aceptoTerminos',
         dto.aceptoTerminos
       ));
+    }
+
+    // 0b. Verificar el captcha Turnstile cuando está configurado (item 14)
+    if (this.turnstileVerifier?.enabled()) {
+      if (!dto.turnstileToken) {
+        return failure(ValidationError.create(
+          'Completa la verificación de seguridad para crear tu cuenta',
+          'turnstileToken',
+          dto.turnstileToken
+        ));
+      }
+      const verified = await this.turnstileVerifier.verify(dto.turnstileToken);
+      if (!verified) {
+        return failure(ValidationError.create(
+          'No se pudo verificar que eres una persona. Inténtalo de nuevo.',
+          'turnstileToken',
+          '[HIDDEN]'
+        ));
+      }
     }
 
     // 1. Validar y crear email
