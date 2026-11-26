@@ -70,6 +70,45 @@ export class PrismaMfaRepository implements IMfaRepository {
     }
   }
 
+  async createWebauthnChallenge(params: {
+    usuarioId: string | null;
+    tipo: 'PASSKEY_REG' | 'PASSKEY_LOGIN';
+    challenge: string;
+    ttlSeconds: number;
+  }): Promise<Result<MfaChallengeData, Error>> {
+    try {
+      // Un intento = una fila: revoca challenges vivos del mismo tipo primero
+      if (params.usuarioId) {
+        await this.prisma.mfaChallenge.deleteMany({
+          where: { usuarioId: params.usuarioId, tipo: params.tipo },
+        });
+      }
+      const created = await this.prisma.mfaChallenge.create({
+        data: {
+          ...(params.usuarioId && { usuarioId: params.usuarioId }),
+          tipo: params.tipo,
+          challenge: params.challenge,
+          expiraAt: new Date(Date.now() + params.ttlSeconds * 1000),
+        },
+      });
+      return success(MfaMapper.challengeToData(created));
+    } catch (error) {
+      return failure(error instanceof Error ? error : new Error('Error al crear challenge WebAuthn'));
+    }
+  }
+
+  async revokeLiveChallenges(
+    usuarioId: string,
+    tipo: 'PASSKEY_REG' | 'PASSKEY_LOGIN'
+  ): Promise<Result<void, Error>> {
+    try {
+      await this.prisma.mfaChallenge.deleteMany({ where: { usuarioId, tipo } });
+      return success(undefined);
+    } catch (error) {
+      return failure(error instanceof Error ? error : new Error('Error al revocar challenges'));
+    }
+  }
+
   async deleteExpiredChallenges(): Promise<Result<number, Error>> {
     try {
       const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);

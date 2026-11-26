@@ -121,12 +121,19 @@ import type { IOutboxService } from '@application/ports/messaging/IOutboxService
 import type { IInvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import type { IEmailService } from '@application/ports/external/IEmailService';
 import type { IMfaRepository } from '@application/ports/repositories/IMfaRepository';
+import type { IPasskeyRepository } from '@application/ports/repositories/IPasskeyRepository';
 import { PrismaMfaRepository } from '@infrastructure/persistence/repositories/PrismaMfaRepository';
+import { PrismaPasskeyRepository } from '@infrastructure/persistence/repositories/PrismaPasskeyRepository';
 import { GetMfaStatus } from '@application/use-cases/auth/GetMfaStatus';
 import { SetupTotp } from '@application/use-cases/auth/SetupTotp';
 import { VerifyEnableTotp } from '@application/use-cases/auth/VerifyEnableTotp';
 import { DisableTotp } from '@application/use-cases/auth/DisableTotp';
 import { MfaLogin } from '@application/use-cases/auth/MfaLogin';
+import { StepUpPasswordVerifier } from '@application/use-cases/auth/StepUpPasswordVerifier';
+import { RegisterPasskeyOptions } from '@application/use-cases/auth/RegisterPasskeyOptions';
+import { RegisterPasskeyVerify } from '@application/use-cases/auth/RegisterPasskeyVerify';
+import { PasskeyLoginOptions, PasskeyLoginVerify } from '@application/use-cases/auth/PasskeyLogin';
+import { ListPasskeys, RenamePasskey, DeletePasskey } from '@application/use-cases/auth/PasskeyCrud';
 import { MfaController } from '@infrastructure/http/controllers/MfaController';
 import type { IAIService } from '@application/ports/external/IAIService';
 
@@ -168,6 +175,15 @@ export class Container {
   private _updateProfile!: UpdateProfile;
   private _changePassword!: ChangePassword;
   private _mfaRepository!: IMfaRepository;
+  private _passkeyRepository!: IPasskeyRepository;
+  private _stepUpPasswordVerifier!: StepUpPasswordVerifier;
+  private _registerPasskeyOptions!: RegisterPasskeyOptions;
+  private _registerPasskeyVerify!: RegisterPasskeyVerify;
+  private _passkeyLoginOptions!: PasskeyLoginOptions;
+  private _passkeyLoginVerify!: PasskeyLoginVerify;
+  private _listPasskeys!: ListPasskeys;
+  private _renamePasskey!: RenamePasskey;
+  private _deletePasskey!: DeletePasskey;
   private _getMfaStatus!: GetMfaStatus;
   private _setupTotp!: SetupTotp;
   private _verifyEnableTotp!: VerifyEnableTotp;
@@ -365,6 +381,7 @@ export class Container {
 
     this._usuarioRepository = new PrismaUsuarioRepository(this._prisma);
     this._mfaRepository = new PrismaMfaRepository(this._prisma);
+    this._passkeyRepository = new PrismaPasskeyRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
     this._productoRepository = new PrismaProductoRepository(this._prisma);
     this._categoriaRepository = new PrismaCategoriaRepository(this._prisma);
@@ -497,7 +514,7 @@ export class Container {
     this._changePassword = new ChangePassword(this._usuarioRepository, this._passwordHasher);
 
     // MFA (TOTP) use cases
-    this._getMfaStatus = new GetMfaStatus(this._usuarioRepository, this._mfaRepository);
+    this._getMfaStatus = new GetMfaStatus(this._usuarioRepository, this._mfaRepository, this._passkeyRepository);
     this._setupTotp = new SetupTotp(this._usuarioRepository, this._passwordHasher);
     this._verifyEnableTotp = new VerifyEnableTotp(
       this._usuarioRepository,
@@ -512,6 +529,29 @@ export class Container {
       this._emailService
     );
     this._mfaLogin = new MfaLogin(this._usuarioRepository, this._mfaRepository, this._tokenService);
+
+    // Passkeys (fase 2)
+    this._stepUpPasswordVerifier = new StepUpPasswordVerifier(this._usuarioRepository, this._passwordHasher);
+    this._registerPasskeyOptions = new RegisterPasskeyOptions(
+      this._stepUpPasswordVerifier,
+      this._mfaRepository,
+      this._passkeyRepository
+    );
+    this._registerPasskeyVerify = new RegisterPasskeyVerify(
+      this._stepUpPasswordVerifier,
+      this._mfaRepository,
+      this._passkeyRepository
+    );
+    this._passkeyLoginOptions = new PasskeyLoginOptions(this._mfaRepository);
+    this._passkeyLoginVerify = new PasskeyLoginVerify(
+      this._mfaRepository,
+      this._passkeyRepository,
+      this._usuarioRepository,
+      this._tokenService
+    );
+    this._listPasskeys = new ListPasskeys(this._passkeyRepository);
+    this._renamePasskey = new RenamePasskey(this._passkeyRepository);
+    this._deletePasskey = new DeletePasskey(this._stepUpPasswordVerifier, this._passkeyRepository);
 
     // Lista use cases
     this._createList = new CreateList(this._listaRepository);
@@ -699,6 +739,13 @@ export class Container {
       verifyEnableTotp: this._verifyEnableTotp,
       disableTotp: this._disableTotp,
       mfaLogin: this._mfaLogin,
+      registerPasskeyOptions: this._registerPasskeyOptions,
+      registerPasskeyVerify: this._registerPasskeyVerify,
+      passkeyLoginOptions: this._passkeyLoginOptions,
+      passkeyLoginVerify: this._passkeyLoginVerify,
+      listPasskeys: this._listPasskeys,
+      renamePasskey: this._renamePasskey,
+      deletePasskey: this._deletePasskey,
     });
 
     this._listController = new ListController(

@@ -31,6 +31,24 @@ export function createMfaRoutes(
   // Paso 2 del login (público, rate-limited: 5 intentos/challenge + limiter IP+UA)
   router.post('/login/mfa', mfaRateLimit, mfaController.loginMfa.bind(mfaController));
 
+  // ==========================================================================
+  // Passkeys (fase 2) — gated por FF_PASSKEYS_ENABLED (default activado)
+  // ==========================================================================
+  if (process.env['FF_PASSKEYS_ENABLED'] !== 'false') {
+    // Registro (Bearer + step-up password en el body)
+    router.post('/passkeys/register-options', authMiddleware, mfaController.passkeyRegisterOptions.bind(mfaController));
+    router.post('/passkeys/register-verify', authMiddleware, mfaRateLimit, mfaController.passkeyRegisterVerify.bind(mfaController));
+
+    // CRUD (Bearer)
+    router.get('/passkeys', authMiddleware, mfaController.passkeyList.bind(mfaController));
+    router.patch('/passkeys/:id', authMiddleware, mfaController.passkeyRename.bind(mfaController));
+    router.delete('/passkeys/:id', authMiddleware, mfaController.passkeyDelete.bind(mfaController));
+
+    // Login (público, rate-limited)
+    router.post('/passkeys/login-options', mfaRateLimit, mfaController.passkeyLoginOptions.bind(mfaController));
+    router.post('/passkeys/login-verify', mfaRateLimit, mfaController.passkeyLoginVerify.bind(mfaController));
+  }
+
   return router;
 }
 

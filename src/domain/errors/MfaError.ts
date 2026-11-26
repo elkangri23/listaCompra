@@ -70,3 +70,38 @@ export class MfaCryptoError extends MfaError {
     super(message, 'MFA_DECRYPT_FAILED', 500);
   }
 }
+
+// ============================================================================
+// Passkeys (fase 2)
+// ============================================================================
+
+export class PasskeyLimitReachedError extends MfaError {
+  constructor() {
+    super('Has alcanzado el máximo de 5 passkeys. Elimina alguna para añadir otra.', 'PASSKEY_LIMIT_REACHED', 409);
+  }
+}
+
+export class PasskeyNotFoundError extends MfaError {
+  constructor() {
+    super('Passkey no encontrada.', 'PASSKEY_NOT_FOUND', 404);
+  }
+}
+
+export class PasskeyUnknownCredentialError extends MfaError {
+  constructor() {
+    super('Credencial no reconocida.', 'PASSKEY_UNKNOWN_CREDENTIAL', 404);
+  }
+}
+
+export class PasskeyInactiveError extends MfaError {
+  constructor() {
+    super('Esta passkey está bloqueada por seguridad. Inicia sesión con otra.',
+      'PASSKEY_INACTIVE', 403);
+  }
+}
+
+export class PasskeyVerificationError extends MfaError {
+  constructor(message = 'No se pudo verificar la passkey. Solicita opciones nuevas e inténtalo de nuevo.') {
+    super(message, 'PASSKEY_VERIFICATION_FAILED', 400);
+  }
+}

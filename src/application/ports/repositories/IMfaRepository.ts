@@ -27,6 +27,23 @@ export interface MfaBackupCodeData {
 
 export interface IMfaRepository {
   /**
+   * Crea un challenge WebAuthn (PASSKEY_REG | PASSKEY_LOGIN) con el challenge
+   * base64url persistido para poder verificarlo en el verify (fase 2).
+   * usuarioId null para PASSKEY_LOGIN (login usernameless).
+   */
+  createWebauthnChallenge(params: {
+    usuarioId: string | null;
+    tipo: 'PASSKEY_REG' | 'PASSKEY_LOGIN';
+    challenge: string;
+    ttlSeconds: number;
+  }): Promise<Result<MfaChallengeData, Error>>;
+
+  /** Revoca challenges vivos de un tipo para un usuario (un uso por intento) */
+  revokeLiveChallenges(usuarioId: string, tipo: 'PASSKEY_REG' | 'PASSKEY_LOGIN'): Promise<Result<void, Error>>;
+
+  /** Cuenta credenciales passkey activas del usuario (para GetMfaStatus) */
+
+  /**
    * Crea un challenge TOTP nuevo para el usuario y BORRA los challenges TOTP
    * vivos previos del mismo usuario (revocación de un uso).
    */

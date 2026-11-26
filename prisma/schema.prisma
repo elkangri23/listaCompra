@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // El builder Docker es node:20-alpine sin binario openssl: Prisma detecta
   // "linux-musl", pero el runner (Alpine con OpenSSL 3) necesita
   // "linux-musl-openssl-3.0.x". Sin este target el contenedor api entra
@@ -30,11 +30,12 @@ model Usuario {
 
   // MFA (TOTP) — feature CU-MFA fase 1
   totpSecret       String?
-  totpEnabled      Boolean   @default(false)
-  totpPendIntentos Int       @default(0)
+  totpEnabled      Boolean @default(false)
+  totpPendIntentos Int     @default(0)
 
   backupCodes   MfaBackupCode[]
   mfaChallenges MfaChallenge[]
+  passkeys      PasskeyCredential[]
 
   @@map("usuarios")
 }
@@ -177,15 +178,15 @@ model OutboxEvent {
 }
 
 model AuditEntry {
-  id              String    @id @default(uuid())
-  entityType      String    // e.g., 'Lista', 'Producto'
-  entityId        String    // ID of the entity that was changed
-  changeType      String    // e.g., 'CREATE', 'UPDATE', 'DELETE'
-  changedByUserId String?   // ID of the user who made the change (optional, for system changes)
-  timestamp       DateTime  @default(now())
-  oldValue        Json?     // JSON representation of the entity before the change
-  newValue        Json?     // JSON representation of the entity after the change
-  changedFields   Json?     // JSON array of strings indicating which fields were modified
+  id              String   @id @default(uuid())
+  entityType      String // e.g., 'Lista', 'Producto'
+  entityId        String // ID of the entity that was changed
+  changeType      String // e.g., 'CREATE', 'UPDATE', 'DELETE'
+  changedByUserId String? // ID of the user who made the change (optional, for system changes)
+  timestamp       DateTime @default(now())
+  oldValue        Json? // JSON representation of the entity before the change
+  newValue        Json? // JSON representation of the entity after the change
+  changedFields   Json? // JSON array of strings indicating which fields were modified
 
   @@index([entityType, entityId])
   @@index([changedByUserId])
@@ -221,8 +222,8 @@ model MfaChallenge {
   id        String   @id @default(uuid())
   usuarioId String?
   usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  tipo      String   // 'TOTP' | 'PASSKEY_REG' | 'PASSKEY_LOGIN'
-  challenge String?  // challenge WebAuthn (base64url) — fase 2
+  tipo      String // 'TOTP' | 'PASSKEY_REG' | 'PASSKEY_LOGIN'
+  challenge String? // challenge WebAuthn (base64url) — fase 2
   intentos  Int      @default(0)
   createdAt DateTime @default(now())
   expiraAt  DateTime
@@ -237,4 +238,24 @@ enum TipoPermiso {
   LECTURA
   ESCRITURA
   ADMIN
+}
+
+/// Credencial passkey (WebAuthn) del usuario — fase 2
+model PasskeyCredential {
+  id           String    @id @default(uuid())
+  credentialId String    @unique
+  usuarioId    String
+  usuario      Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  publicKey    Bytes
+  contador     Int       @default(0)
+  transports   String[]  @default([])
+  deviceType   String    @default("singleDevice")
+  aaguid       String?
+  nombre       String    @default("Passkey")
+  activo       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  ultimoUso    DateTime?
+
+  @@index([usuarioId])
+  @@map("webauthn_credentials")
 }
