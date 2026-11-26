@@ -15,7 +15,7 @@ const describeSkippable = ENABLE_REAL_EMAIL_TESTS ? describe : describe.skip;
 
 describeSkippable('NodemailerService Integration Tests', () => {
   let emailService: NodemailerService;
-  const testEmail = 'email-privado-eliminado@example.invalid'; // Email del desarrollador para tests
+  const testEmail = process.env['EMAIL_USER'] || 'test@example.local'; // Email de pruebas (desde .env)
 
   beforeAll(() => {
     // Configuración de Resend (API key desde entorno, nunca hardcodeada)

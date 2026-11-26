@@ -21,11 +21,11 @@ async function testEmailService() {
     secure: false, // true para 465, false para otros puertos
     from: {
       name: 'Lista de Compra',
-      email: process.env['EMAIL_USER'] || 'email-privado-eliminado@example.invalid'
+      email: process.env['EMAIL_USER'] || 'test@example.local'
     },
     auth: {
-      user: process.env['EMAIL_USER'] || 'email-privado-eliminado@example.invalid',
-      pass: process.env['EMAIL_PASS'] || '***PASSWORD-ELIMINADA***'
+      user: process.env['EMAIL_USER'] || 'test@example.local',
+      pass: process.env['EMAIL_PASS'] || 'placeholder-usa-email-pass-de-env'
     },
     maxRetries: 2,
     retryDelay: 1000
@@ -56,7 +56,7 @@ async function testEmailService() {
     // Test 2: Enviar email de invitación
     console.log('\n📬 Test 2: Enviando email de invitación...');
     const invitationResult = await emailService.sendInvitationEmail(
-      'email-privado-eliminado@example.invalid',
+      process.env['EMAIL_USER'] || 'test@example.local',
       'Anthony Moles',
       'Sistema Lista de Compra',
       'Lista de Prueba de Desarrollo',
@@ -74,7 +74,7 @@ async function testEmailService() {
     // Test 3: Enviar email de confirmación
     console.log('\n📋 Test 3: Enviando email de confirmación...');
     const confirmationResult = await emailService.sendRegistrationConfirmation(
-      'email-privado-eliminado@example.invalid',
+      process.env['EMAIL_USER'] || 'test@example.local',
       'Anthony Moles',
       'test_confirmation_token_456'
     );
@@ -89,7 +89,7 @@ async function testEmailService() {
     // Test 4: Enviar notificación de cambio
     console.log('\n🔔 Test 4: Enviando notificación de cambio...');
     const notificationResult = await emailService.sendListChangeNotification(
-      'email-privado-eliminado@example.invalid',
+      process.env['EMAIL_USER'] || 'test@example.local',
       'Anthony Moles',
       'Lista de Prueba',
       'item_added',
@@ -113,7 +113,7 @@ async function testEmailService() {
     console.log('⚙️ Servicio configurado correctamente');
 
     console.log('\n🎉 ¡Todas las pruebas completadas exitosamente!');
-    console.log('📧 Revisa tu bandeja de entrada en email-privado-eliminado@example.invalid');
+    console.log('📧 Revisa tu bandeja de entrada en EMAIL_USER');
 
   } catch (error) {
     console.error('\n💥 Error durante las pruebas:', error);

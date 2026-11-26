@@ -20,11 +20,11 @@ async function testEmailConfiguration() {
     secure: false,
     from: {
       name: 'Lista de Compra',
-      email: process.env['EMAIL_USER'] || 'email-privado-eliminado@example.invalid'
+      email: process.env['EMAIL_USER'] || 'test@example.local'
     },
     auth: {
-      user: process.env['EMAIL_USER'] || 'email-privado-eliminado@example.invalid',
-      pass: process.env['EMAIL_PASS'] || '***PASSWORD-ELIMINADA***'
+      user: process.env['EMAIL_USER'] || 'test@example.local',
+      pass: process.env['EMAIL_PASS'] || 'placeholder-usa-email-pass-de-env'
     },
     maxRetries: 1,
     retryDelay: 500

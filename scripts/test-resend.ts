@@ -36,7 +36,7 @@ async function testResendService() {
     
     const { data, error } = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
-      to: 'email-privado-eliminado@example.invalid',
+      to: process.env['EMAIL_USER'] || 'test@example.local',
       subject: 'Test de Resend - Lista de Compra',
       html: `
         <!DOCTYPE html>
@@ -111,7 +111,7 @@ Powered by Resend
     console.log('✅ Email enviado exitosamente!');
     console.log(`   ID: ${data?.id}\n`);
 
-    console.log('📬 Verifica tu bandeja de entrada en: email-privado-eliminado@example.invalid\n');
+    console.log('📬 Verifica tu bandeja de entrada en EMAIL_USER\n');
     console.log('🎉 Prueba completada con éxito!\n');
 
   } catch (error) {
