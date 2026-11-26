@@ -45,6 +45,7 @@ describe('BlueprintController (CU-22)', () => {
     createListFromBlueprintUseCase = { execute: jest.fn() };
     blueprintRepository = {
       findByUsuarioId: jest.fn(),
+      findAll: jest.fn(),
       findById: jest.fn(),
       findByTermino: jest.fn(),
       findPublicos: jest.fn()
@@ -97,16 +98,36 @@ describe('BlueprintController (CU-22)', () => {
   });
 
   describe('obtenerPorUsuario', () => {
-    it('devuelve blueprints resumidos', async () => {
-      blueprintRepository.findByUsuarioId.mockResolvedValue(ok({ items: [makeBlueprint()] }));
+    it('devuelve blueprints propios en forma paginada (contrato del frontend)', async () => {
+      blueprintRepository.findByUsuarioId.mockResolvedValue(
+        ok({ items: [makeBlueprint()], total: 1, page: 1, limit: 50, totalPages: 1 })
+      );
 
       const res = makeRes();
       await controller.obtenerPorUsuario(makeReq(), res);
 
       expect(res.statusCode).toBe(0); // res.json sin status
-      expect(res.body.blueprints).toHaveLength(1);
-      expect(res.body.blueprints[0].productosCount).toBe(1);
-      expect(res.body.blueprints[0].creadoPorId).toBe('user-1');
+      expect(res.body.items).toHaveLength(1);
+      expect(res.body.total).toBe(1);
+      expect(res.body.items[0].productos).toHaveLength(1);
+      expect(res.body.items[0].esPublico).toBe(true);
+      expect(res.body.items[0].propietarioId).toBe('user-1');
+      expect(res.body.items[0].etiquetas).toEqual([]);
+    });
+
+    it('esPublico=true devuelve plantillas publicas de todos los usuarios', async () => {
+      blueprintRepository.findAll.mockResolvedValue(
+        ok({ items: [makeBlueprint()], total: 1, page: 1, limit: 50, totalPages: 1 })
+      );
+
+      const res = makeRes();
+      await controller.obtenerPorUsuario(makeReq({ query: { esPublico: 'true', page: '1', limit: '50' } }), res);
+
+      expect(blueprintRepository.findAll).toHaveBeenCalledWith(
+        { page: 1, limit: 50 },
+        expect.objectContaining({ publico: true })
+      );
+      expect(res.body.items).toHaveLength(1);
     });
 
     it('sin auth → 401', async () => {

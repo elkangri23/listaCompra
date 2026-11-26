@@ -3,6 +3,7 @@ import { CreateBlueprint } from '@application/use-cases/blueprints/CreateBluepri
 import type { CreateListFromBlueprint } from '@application/use-cases/blueprints/CreateListFromBlueprint';
 import type { IBlueprintRepository } from '@application/ports/repositories/IBlueprintRepository';
 import { ValidationError } from '@application/errors/ValidationError';
+import type { Blueprint } from '@domain/entities/Blueprint';
 import { NotFoundError } from '@application/errors/NotFoundError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
 
@@ -43,9 +44,12 @@ export class BlueprintController {
       const dto = {
         nombre: req.body.nombre,
         descripcion: req.body.descripcion,
+        // El frontend manda esPublico; se acepta tambien publico por compatibilidad
+        publico: req.body.publico ?? req.body.esPublico ?? false,
         productos: req.body.productos.map((p: any) => ({
           nombre: p.nombre,
-          descripcion: p.notas,
+          // El frontend manda descripcion; se acepta notas por compatibilidad
+          descripcion: p.descripcion ?? p.notas,
           cantidad: p.cantidad,
           categoriaId: p.categoriaId,
           urgente: false
@@ -75,6 +79,9 @@ export class BlueprintController {
   /**
    * Obtener blueprints del usuario
    * GET /api/blueprints
+   * Responde con el contrato que espera el frontend: { items, total, page, limit, totalPages }.
+   * Query params: esPublico=true -> plantillas publicas de todos los usuarios;
+   * esPublico=false (o ausente) -> plantillas propias. search filtra por nombre.
    */
   async obtenerPorUsuario(req: Request, res: Response): Promise<void> {
     try {
@@ -85,7 +92,23 @@ export class BlueprintController {
         return;
       }
 
-      const result = await this.blueprintRepository.findByUsuarioId(userId);
+      const page = parseInt(req.query['page'] as string) || 1;
+      const limit = Math.min(parseInt(req.query['limit'] as string) || 50, 50);
+      const search = (req.query['search'] as string) || undefined;
+      const soloPublicos = req.query['esPublico'] === 'true';
+      // exactOptionalPropertyTypes: solo se pasa nombre si viene definido
+      const nombreFilter = search ? { nombre: search } : {};
+
+      const result = soloPublicos
+        ? await this.blueprintRepository.findAll(
+            { page, limit },
+            { publico: true, ...nombreFilter }
+          )
+        : await this.blueprintRepository.findByUsuarioId(
+            userId,
+            { page, limit },
+            nombreFilter
+          );
 
       if (!result.isSuccess) {
         res.status(500).json({ error: 'Error obteniendo blueprints' });
@@ -93,24 +116,37 @@ export class BlueprintController {
       }
 
       const paginatedResult = result.getValue();
-      const blueprints = paginatedResult.items.map(blueprint => ({
-        id: blueprint.id,
-        nombre: blueprint.nombre,
-        descripcion: blueprint.descripcion,
-        publico: blueprint.publico,
-        productosCount: blueprint.productos.length,
-        fechaCreacion: blueprint.fechaCreacion,
-        fechaActualizacion: blueprint.fechaActualizacion,
-        creadoPorId: blueprint.creadoPorId
-      }));
-
-      res.json({ 
-        blueprints
+      res.json({
+        items: paginatedResult.items.map((b) => this.mapBlueprintToDto(b)),
+        total: paginatedResult.total,
+        page: paginatedResult.page,
+        limit: paginatedResult.limit,
+        totalPages: paginatedResult.totalPages
       });
     } catch (error) {
       console.error('Error obteniendo blueprints:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
+  }
+
+  /**
+   * Mapea un Blueprint de dominio al DTO que consume el frontend
+   * (BlueprintDto: esPublico, etiquetas, propietarioId, productos, createdAt...).
+   * Etiquetas y usosCount no existen en el backend todavia: se devuelven vacios/0.
+   */
+  private mapBlueprintToDto(blueprint: Blueprint) {
+    return {
+      id: blueprint.id,
+      nombre: blueprint.nombre,
+      descripcion: blueprint.descripcion,
+      productos: blueprint.productos,
+      esPublico: blueprint.publico,
+      etiquetas: [] as string[],
+      propietarioId: blueprint.creadoPorId,
+      usosCount: 0,
+      createdAt: blueprint.fechaCreacion.toISOString(),
+      updatedAt: blueprint.fechaActualizacion.toISOString()
+    };
   }
 
   /**
@@ -124,7 +160,7 @@ export class BlueprintController {
 
       const result = await this.blueprintRepository.findAll(
         { page: pagina, limit: limite },
-        { activo: true }
+        { publico: true }
       );
 
       if (!result.isSuccess) {
@@ -133,22 +169,11 @@ export class BlueprintController {
       }
 
       const paginatedResult = result.getValue();
-      const blueprints = paginatedResult.items.map(blueprint => ({
-        id: blueprint.id,
-        nombre: blueprint.nombre,
-        descripcion: blueprint.descripcion,
-        publico: blueprint.publico,
-        productosCount: blueprint.productos.length,
-        fechaCreacion: blueprint.fechaCreacion,
-        fechaActualizacion: blueprint.fechaActualizacion,
-        creadoPorId: blueprint.creadoPorId
-      }));
-
-      res.json({ 
-        blueprints, 
-        pagina: paginatedResult.page, 
-        limite: paginatedResult.limit,
+      res.json({
+        items: paginatedResult.items.map((b) => this.mapBlueprintToDto(b)),
         total: paginatedResult.total,
+        page: paginatedResult.page,
+        limit: paginatedResult.limit,
         totalPages: paginatedResult.totalPages
       });
     } catch (error) {

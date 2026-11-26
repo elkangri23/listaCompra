@@ -13,6 +13,7 @@ import { BusinessRuleViolationError } from '@domain/errors/DomainError';
 export interface CreateBlueprintDto {
   nombre: string;
   descripcion?: string;
+  publico?: boolean;
   productos: Array<{
     nombre: string;
     descripcion?: string;
@@ -130,7 +131,7 @@ export class CreateBlueprint {
     const blueprintResult = Blueprint.crear(
       dto.nombre,
       dto.descripcion,
-      false, // Por defecto privado para seguridad
+      dto.publico ?? false, // Por defecto privado para seguridad
       productosProcesados,
       usuarioId
     );

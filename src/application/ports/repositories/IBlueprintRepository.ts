@@ -12,7 +12,7 @@ export interface PaginationOptions {
 }
 
 export interface BlueprintFilters {
-  activo?: boolean;
+  publico?: boolean;
   usuarioId?: string;
   nombre?: string;
 }

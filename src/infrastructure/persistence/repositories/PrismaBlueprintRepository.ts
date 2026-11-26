@@ -109,6 +109,10 @@ export class PrismaBlueprintRepository implements IBlueprintRepository {
         whereClause.nombre = { contains: filters.nombre, mode: 'insensitive' };
       }
 
+      if (filters?.publico !== undefined) {
+        whereClause.publico = filters.publico;
+      }
+
       const [blueprintsData, total] = await Promise.all([
         this.prisma.blueprint.findMany({
           where: whereClause,
@@ -284,10 +288,12 @@ export class PrismaBlueprintRepository implements IBlueprintRepository {
 
   async countByUsuarioId(usuarioId: string, onlyActive?: boolean): Promise<Result<number, Error>> {
     try {
+      // Nota: el schema de Blueprint no tiene campo 'activo' (no hay soft delete),
+      // asi que onlyActive no filtra nada: todos los blueprints cuentan.
+      void onlyActive;
       const count = await this.prisma.blueprint.count({
-        where: { 
-          creadoPorId: usuarioId,
-          ...(onlyActive && { activo: true })
+        where: {
+          creadoPorId: usuarioId
         }
       });
       return success(count);
