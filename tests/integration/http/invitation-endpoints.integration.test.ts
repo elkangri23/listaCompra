@@ -190,6 +190,10 @@ describe('Invitation Endpoints Integration', () => {
           aceptoTerminos: true
         });
 
+      // Verificar el correo del segundo usuario (item 3): sin verificar,
+      // el login no entrega tokens
+      await markTestUserEmailVerified(container, secondUserCredentials.email);
+
       const loginResponse = await request(app)
         .post('/api/v1/auth/login')
         .send(secondUserCredentials);
