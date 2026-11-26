@@ -1,5 +1,10 @@
 generator client {
   provider = "prisma-client-js"
+  // El builder Docker es node:20-alpine sin binario openssl: Prisma detecta
+  // "linux-musl", pero el runner (Alpine con OpenSSL 3) necesita
+  // "linux-musl-openssl-3.0.x". Sin este target el contenedor api entra
+  // en bucle de reinicios (PrismaClientInitializationError).
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
