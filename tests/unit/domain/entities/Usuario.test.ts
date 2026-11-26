@@ -331,7 +331,8 @@ describe('Usuario Entity', () => {
         activo: true,
         emailVerificado: false,
         fechaCreacion: usuario.fechaCreacion,
-        fechaActualizacion: usuario.fechaActualizacion
+        fechaActualizacion: usuario.fechaActualizacion,
+        terminosAceptadosEn: null
       });
     });
 
@@ -348,7 +349,8 @@ describe('Usuario Entity', () => {
         activo: true,
         emailVerificado: false,
         fechaCreacion: usuario.fechaCreacion,
-        fechaActualizacion: usuario.fechaActualizacion
+        fechaActualizacion: usuario.fechaActualizacion,
+        terminosAceptadosEn: null
       });
     });
 

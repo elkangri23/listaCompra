@@ -51,7 +51,8 @@ describe('List realtime streaming (SSE)', () => {
       .send({
         email: credentials.email,
         password: credentials.password,
-        nombre: 'Realtime User'
+        nombre: 'Realtime User',
+        aceptoTerminos: true
       })
       .expect(201);
 

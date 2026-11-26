@@ -49,7 +49,8 @@ describe('Invitation Endpoints Integration', () => {
       .send({
         email: userCredentials.email,
         password: userCredentials.password,
-        nombre: 'Test User Invitations'
+        nombre: 'Test User Invitations',
+        aceptoTerminos: true
       });
 
     console.log('Register status:', registerResponse.status);
@@ -181,7 +182,8 @@ describe('Invitation Endpoints Integration', () => {
         .send({
           email: secondUserCredentials.email,
           password: secondUserCredentials.password,
-          nombre: 'Second Test User'
+          nombre: 'Second Test User',
+          aceptoTerminos: true
         });
 
       const loginResponse = await request(app)
@@ -284,7 +286,8 @@ describe('Invitation Endpoints Integration', () => {
         .send({
           email: targetUserCredentials.email,
           password: targetUserCredentials.password,
-          nombre: 'Target User'
+          nombre: 'Target User',
+          aceptoTerminos: true
         });
 
       if (registerResponse.status === 201) {
@@ -353,7 +356,8 @@ describe('Invitation Endpoints Integration', () => {
         .send({
           email: targetUserCredentials.email,
           password: targetUserCredentials.password,
-          nombre: 'Delete User'
+          nombre: 'Delete User',
+          aceptoTerminos: true
         });
 
       if (registerResponse.status === 201) {

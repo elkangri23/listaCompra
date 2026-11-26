@@ -132,7 +132,8 @@ describe('E2E: AI Features Flow', () => {
     email: `aiuser-${Date.now()}@example.com`,
     password: 'TestPassword123!',
     nombre: 'Usuario',
-    apellidos: 'IA'
+    apellidos: 'IA',
+    aceptoTerminos: true
   };
 
   const adminUser = {
@@ -140,7 +141,8 @@ describe('E2E: AI Features Flow', () => {
     password: 'AdminPassword123!',
     nombre: 'Admin',
     apellidos: 'IA',
-    role: 'ADMIN'
+    role: 'ADMIN',
+    aceptoTerminos: true
   };
 
   beforeAll(async () => {

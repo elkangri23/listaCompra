@@ -82,6 +82,7 @@ export class AuthController {
             activo: result.value.activo,
             emailVerificado: result.value.emailVerificado,
             fechaCreacion: result.value.fechaCreacion,
+            terminosAceptadosEn: result.value.terminosAceptadosEn,
           },
         },
         message: 'Usuario registrado exitosamente',

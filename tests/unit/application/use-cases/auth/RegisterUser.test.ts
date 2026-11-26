@@ -36,7 +36,8 @@ describe('RegisterUser', () => {
       nombre: 'Juan',
       apellidos: 'Pérez García',
       email: 'juan.perez@example.com',
-      password: 'SecurePass123!'
+      password: 'SecurePass123!',
+      aceptoTerminos: true
     };
 
     it('debería registrar un usuario exitosamente', async () => {
@@ -78,7 +79,8 @@ describe('RegisterUser', () => {
         nombre: '',
         apellidos: 'Pérez',
         email: 'invalid-email',
-        password: '123'
+        password: '123',
+        aceptoTerminos: true
       };
 
       // Act
@@ -87,6 +89,50 @@ describe('RegisterUser', () => {
       // Assert
       expect(result.isSuccess).toBe(false);
       expect(usuarioRepository.findByEmail).not.toHaveBeenCalled();
+    });
+
+    it('debería fallar si no se aceptan los Términos de Servicio', async () => {
+      // Act
+      const result = await registerUser.execute({ ...validInput, aceptoTerminos: false });
+
+      // Assert
+      expect(result.isSuccess).toBe(false);
+      expect(usuarioRepository.existsByEmail).not.toHaveBeenCalled();
+      expect(usuarioRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('debería fallar si falta la aceptación de los Términos de Servicio', async () => {
+      // Arrange
+      const sinAceptacion = {
+        nombre: 'Juan',
+        apellidos: 'Pérez García',
+        email: 'juan.perez@example.com',
+        password: 'Password123!'
+      };
+
+      // Act
+      const result = await registerUser.execute(sinAceptacion as any);
+
+      // Assert
+      expect(result.isSuccess).toBe(false);
+      expect(usuarioRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('debería guardar la fecha de aceptación de los Términos al registrar', async () => {
+      // Arrange
+      usuarioRepository.existsByEmail.mockResolvedValue(success(false));
+      passwordHasher.hash.mockResolvedValue(success('hashed-password'));
+      usuarioRepository.save.mockImplementation(async (usuario: Usuario) => success(usuario));
+
+      // Act
+      const result = await registerUser.execute(validInput);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      if (!result.isSuccess) throw new Error('Expected success');
+      expect(result.value.terminosAceptadosEn).toBeDefined();
+      const usuarioGuardado = usuarioRepository.save.mock.calls[0]?.[0] as Usuario;
+      expect(usuarioGuardado.terminosAceptadosEn).toBeInstanceOf(Date);
     });
 
     it('debería fallar si el email ya está registrado', async () => {

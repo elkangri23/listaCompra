@@ -20,6 +20,15 @@ export class RegisterUser {
   ) {}
 
   async execute(dto: RegisterUserDto): Promise<Result<RegisterUserResponseDto, ValidationError | Error>> {
+    // 0. Exigir la aceptación de los Términos de Servicio (item 1)
+    if (dto.aceptoTerminos !== true) {
+      return failure(ValidationError.create(
+        'Debes aceptar los Términos de Servicio para crear tu cuenta',
+        'aceptoTerminos',
+        dto.aceptoTerminos
+      ));
+    }
+
     // 1. Validar y crear email
     const emailResult = Email.create(dto.email);
     if (emailResult.isFailure) {
@@ -69,6 +78,7 @@ export class RegisterUser {
       password: passwordHash,
       nombre: dto.nombre,
       ...(dto.apellidos && { apellidos: dto.apellidos }),
+      terminosAceptadosEn: new Date(),
     });
 
     if (usuarioResult.isFailure) {
@@ -98,6 +108,7 @@ export class RegisterUser {
       activo: usuarioGuardado.activo,
       emailVerificado: usuarioGuardado.emailVerificado,
       fechaCreacion: usuarioGuardado.fechaCreacion.toISOString(),
+      ...(usuarioGuardado.terminosAceptadosEn && { terminosAceptadosEn: usuarioGuardado.terminosAceptadosEn.toISOString() }),
     };
 
     return success(response);

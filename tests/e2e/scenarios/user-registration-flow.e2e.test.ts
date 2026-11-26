@@ -14,7 +14,8 @@ describe('E2E: User Registration Flow', () => {
     email: `test-${Date.now()}@example.com`,
     password: 'TestPassword123!',
     nombre: 'Usuario',
-    apellidos: 'Test'
+    apellidos: 'Test',
+    aceptoTerminos: true
   };
 
   beforeAll(async () => {
@@ -61,6 +62,23 @@ describe('E2E: User Registration Flow', () => {
       expect(response.body.data.user.email).toBe(testUser.email);
       expect(response.body.data.user.nombre).toBe(testUser.nombre);
       expect(response.body.data.user.emailVerificado).toBe(false); // Inicialmente no verificado
+    });
+
+    it('1b. Debe rechazar el registro sin aceptar los Términos de Servicio', async () => {
+      const sinTerminos = {
+        email: `test-${Date.now()}-sin-terminos@example.com`,
+        password: 'TestPassword123!',
+        nombre: 'Usuario',
+        apellidos: 'Test'
+      };
+      const response = await request(app)
+        .post('/api/v1/auth/register')
+        .send(sinTerminos)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBe('VALIDATION_ERROR');
+      expect(response.body.message).toContain('Términos');
     });
 
     it('2. Debe fallar al registrar el mismo email dos veces', async () => {

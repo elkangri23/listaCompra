@@ -7,6 +7,7 @@ export interface RegisterUserDto {
   password: string;
   nombre: string;
   apellidos?: string;
+  aceptoTerminos: boolean;
 }
 
 export interface RegisterUserResponseDto {
@@ -19,4 +20,5 @@ export interface RegisterUserResponseDto {
   activo: boolean;
   emailVerificado: boolean;
   fechaCreacion: string;
+  terminosAceptadosEn?: string;
 }

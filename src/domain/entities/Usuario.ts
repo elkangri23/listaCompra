@@ -24,6 +24,7 @@ export interface UsuarioProps {
   rol?: RolUsuario;
   activo?: boolean;
   emailVerificado?: boolean;
+  terminosAceptadosEn?: Date | null;
   // MFA (TOTP) — opcional en create (defaults); reconstruct los recibe del mapper
   totpSecret?: string | null;
   totpEnabled?: boolean;
@@ -42,6 +43,7 @@ export class Usuario {
     private _rol: RolUsuario,
     private _activo: boolean,
     private _emailVerificado: boolean,
+    private _terminosAceptadosEn: Date | null,
     private _totpSecret: string | null, // AEAD AES-256-GCM (mfa-crypto), formato "v1:..."
     private _totpEnabled: boolean,
     private _totpPendIntentos: number, // cap de fallos de verify-enable sobre el secret pendiente
@@ -93,6 +95,7 @@ export class Usuario {
       props.rol || RolUsuario.USUARIO,
       props.activo ?? true,
       props.emailVerificado ?? false,
+      props.terminosAceptadosEn ?? null,
       props.totpSecret ?? null,
       props.totpEnabled ?? false,
       props.totpPendIntentos ?? 0,
@@ -113,6 +116,7 @@ export class Usuario {
       props.rol ?? RolUsuario.USUARIO,
       props.activo ?? true,
       props.emailVerificado ?? false,
+      props.terminosAceptadosEn ?? null,
       props.totpSecret ?? null,
       props.totpEnabled ?? false,
       props.totpPendIntentos ?? 0,
@@ -209,6 +213,11 @@ export class Usuario {
 
   get emailVerificado(): boolean {
     return this._emailVerificado;
+  }
+
+  /** Fecha en la que el usuario aceptó los Términos de Servicio (null en cuentas anteriores al item 1) */
+  get terminosAceptadosEn(): Date | null {
+    return this._terminosAceptadosEn;
   }
 
   get fechaCreacion(): Date {
@@ -394,6 +403,7 @@ export class Usuario {
       rol: this._rol,
       activo: this._activo,
       emailVerificado: this._emailVerificado,
+      terminosAceptadosEn: this._terminosAceptadosEn,
       fechaCreacion: this._fechaCreacion,
       fechaActualizacion: this._fechaActualizacion,
     };
@@ -410,6 +420,7 @@ export class Usuario {
       rol: this._rol,
       activo: this._activo,
       emailVerificado: this._emailVerificado,
+      terminosAceptadosEn: this._terminosAceptadosEn,
       fechaCreacion: this._fechaCreacion,
       fechaActualizacion: this._fechaActualizacion,
     };

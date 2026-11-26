@@ -19,14 +19,16 @@ describe('E2E: Shopping List Management Flow', () => {
     email: `listowner-${Date.now()}@example.com`,
     password: 'TestPassword123!',
     nombre: 'Propietario',
-    apellidos: 'Lista'
+    apellidos: 'Lista',
+    aceptoTerminos: true
   };
 
   const secondUser = {
     email: `collaborator-${Date.now()}@example.com`,
     password: 'TestPassword123!',
     nombre: 'Colaborador',
-    apellidos: 'Lista'
+    apellidos: 'Lista',
+    aceptoTerminos: true
   };
 
   beforeAll(async () => {

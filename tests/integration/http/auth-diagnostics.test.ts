@@ -53,7 +53,8 @@ describe('Auth Diagnostics', () => {
         .send({
           email: uniqueEmail,
           password: 'Password123!',
-          nombre: 'Test Diagnostic User'
+          nombre: 'Test Diagnostic User',
+          aceptoTerminos: true
         });
 
       console.log('Register response:', JSON.stringify(response.body, null, 2));
@@ -72,7 +73,8 @@ describe('Auth Diagnostics', () => {
         .send({
           email: duplicateEmail,
           password: 'Password123!',
-          nombre: 'First User'
+          nombre: 'First User',
+          aceptoTerminos: true
         });
 
       // Segundo registro con mismo email
@@ -93,7 +95,8 @@ describe('Auth Diagnostics', () => {
     const testUser = {
       email: `login-test-${Date.now()}@diagnostic.com`,
       password: 'Password123!',
-      nombre: 'Login Test User'
+      nombre: 'Login Test User',
+      aceptoTerminos: true
     };
 
     beforeAll(async () => {

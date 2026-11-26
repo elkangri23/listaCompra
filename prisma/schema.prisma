@@ -21,6 +21,7 @@ model Usuario {
   rol                RolUsuario  @default(USUARIO)
   activo             Boolean     @default(true)
   emailVerificado    Boolean     @default(false)
+  terminosAceptadosEn DateTime?
   fechaCreacion      DateTime    @default(now())
   fechaActualizacion DateTime    @updatedAt
   blueprints         Blueprint[]

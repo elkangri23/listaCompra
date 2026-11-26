@@ -45,7 +45,8 @@ describe('AuthController', () => {
         nombre: 'Juan',
         apellidos: 'Pérez',
         email: 'juan@example.com',
-        password: 'SecurePass123!'
+        password: 'SecurePass123!',
+        aceptoTerminos: true
       };
 
       const mockResponse = {

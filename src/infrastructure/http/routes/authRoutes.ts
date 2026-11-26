@@ -29,6 +29,7 @@ export function createAuthRoutes(authController: AuthController, authMiddleware?
    *               - nombre
    *               - email
    *               - password
+   *               - aceptoTerminos
    *             properties:
    *               nombre:
    *                 type: string
@@ -51,6 +52,10 @@ export function createAuthRoutes(authController: AuthController, authMiddleware?
    *                 minLength: 8
    *                 description: Contraseña segura (mín. 8 caracteres)
    *                 example: miPassword123
+   *               aceptoTerminos:
+   *                 type: boolean
+   *                 description: Aceptación de los Términos de Servicio (obligatoria)
+   *                 example: true
    *           examples:
    *             usuario_basico:
    *               summary: Usuario básico
@@ -58,6 +63,7 @@ export function createAuthRoutes(authController: AuthController, authMiddleware?
    *                 nombre: Juan
    *                 email: juan@ejemplo.com
    *                 password: miPassword123
+   *                 aceptoTerminos: true
    *             usuario_completo:
    *               summary: Usuario con apellidos
    *               value:
@@ -65,6 +71,7 @@ export function createAuthRoutes(authController: AuthController, authMiddleware?
    *                 apellidos: García López
    *                 email: maria@ejemplo.com
    *                 password: passwordSeguro456
+   *                 aceptoTerminos: true
    *     responses:
    *       201:
    *         description: Usuario creado exitosamente
