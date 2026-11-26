@@ -23,6 +23,12 @@ jest.mock('bcrypt', () => {
 // Cargar variables de entorno para testing
 dotenv.config({ path: '.env' });
 
+// Fallback a .env.example: en un checkout limpio no hay .env y los tests
+// que solo comprueban la presencia de variables (p. ej. DATABASE_URL)
+// fallarían sin motivo. Solo rellena las que sigan sin definir, así un
+// .env real o las variables del CI siempre tienen prioridad.
+dotenv.config({ path: '.env.example' });
+
 // Variables obligatorias para servicios críticos
 if (!process.env['JWT_SECRET']) {
   process.env['JWT_SECRET'] = 'test-jwt-secret-that-is-long-enough-1234567890';
