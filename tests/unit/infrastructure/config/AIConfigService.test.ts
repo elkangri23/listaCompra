@@ -108,3 +108,105 @@ describe('AIConfigService (CU-31)', () => {
     });
   });
 });
+
+describe('AIConfigService — persistencia en .env (Opción B)', () => {
+  const fs = require('fs');
+  const tmp = 'C:/Users/amoles/AppData/Local/Temp';
+  let envPath: string;
+  let prevNodeEnv: string | undefined;
+  let prevEnvFilePath: string | undefined;
+
+  const makeServiceWithPersist = (initial?: any) =>
+    new (require('../../../../src/infrastructure/config/AIConfigService').AIConfigService)(initial, true);
+
+  beforeEach(() => {
+    envPath = `${tmp}/ai-env-${Date.now()}.env`;
+    fs.writeFileSync(
+      envPath,
+      'AI_PROVIDER=freellmapi\nFREE_LLMAPI_API_KEY=clave-anterior-1234567890abcdef\n'
+    );
+    prevNodeEnv = process.env['NODE_ENV'];
+    prevEnvFilePath = process.env['ENV_FILE_PATH'];
+    process.env['NODE_ENV'] = 'development';
+    process.env['ENV_FILE_PATH'] = envPath;
+  });
+
+  afterEach(() => {
+    if (prevNodeEnv === undefined) delete process.env['NODE_ENV'];
+    else process.env['NODE_ENV'] = prevNodeEnv;
+    if (prevEnvFilePath === undefined) delete process.env['ENV_FILE_PATH'];
+    else process.env['ENV_FILE_PATH'] = prevEnvFilePath;
+    if (fs.existsSync(envPath)) fs.unlinkSync(envPath);
+  });
+
+  it('update() escribe proveedor y variables del proveedor en .env', () => {
+    const initial = {
+      provider: 'freellmapi',
+      apiKey: 'clave-anterior-1234567890abcdef',
+      apiUrl: 'https://api.electronhub.ai/v1',
+      model: 'gpt-4o-mini',
+      temperature: 0.7,
+      maxTokens: 1000,
+      timeout: 30000,
+      cache: { enabled: true, ttl: 3600 },
+      rateLimit: { requestsPerMinute: 10 }
+    };
+    const service = makeServiceWithPersist(initial);
+
+    service.update({
+      provider: 'anthropic',
+      apiKey: 'sk-ant-api03-clave-nueva-larga-suficiente-123456789',
+      model: 'claude-3-5-haiku-20241022',
+      apiUrl: 'https://api.anthropic.com'
+    });
+
+    const out = fs.readFileSync(envPath, 'utf-8');
+    expect(out).toContain('AI_PROVIDER=anthropic');
+    expect(out).toMatch(/ANTHROPIC_API_KEY=sk-ant-api03/);
+    expect(out).toContain('ANTHROPIC_MODEL=claude-3-5-haiku-20241022');
+    expect(out).toContain('ANTHROPIC_API_URL=https://api.anthropic.com');
+    // la variable del proveedor anterior se mantiene (histórica)
+    expect(out).toContain('FREE_LLMAPI_API_KEY=clave-anterior');
+  });
+
+  it('update() sin cambio de proveedor actualiza su key', () => {
+    const initial = {
+      provider: 'freellmapi',
+      apiKey: 'clave-anterior-1234567890abcdef',
+      apiUrl: '',
+      model: 'gpt-4o-mini',
+      temperature: 0.7,
+      maxTokens: 1000,
+      timeout: 30000,
+      cache: { enabled: false, ttl: 3600 },
+      rateLimit: { requestsPerMinute: 10 }
+    };
+    const service = makeServiceWithPersist(initial);
+
+    service.update({ apiKey: 'clave-actualizada-9876543210abcdef' });
+
+    const out = fs.readFileSync(envPath, 'utf-8');
+    expect(out).toContain('AI_PROVIDER=freellmapi');
+    expect(out).toContain('FREE_LLMAPI_API_KEY=clave-actualizada-9876543210abcdef');
+  });
+
+  it('si la escritura del .env falla, el cambio en memoria sigue aplicado', () => {
+    const initial = {
+      provider: 'freellmapi',
+      apiKey: 'clave-anterior-1234567890abcdef',
+      apiUrl: '',
+      model: 'm',
+      temperature: 0.7,
+      maxTokens: 1000,
+      timeout: 30000,
+      cache: { enabled: false, ttl: 3600 },
+      rateLimit: { requestsPerMinute: 10 }
+    };
+    const service = makeServiceWithPersist(initial);
+    process.env['ENV_FILE_PATH'] = `${tmp}/dir-no-existe/env.env`;
+
+    const result = service.update({ apiKey: 'clave-otra-mas-larga-aaaa-bbbb-cccc' });
+    expect(result.apiKey).toBe('clave-otra-mas-larga-aaaa-bbbb-cccc');
+    expect(service.get().apiKey).toBe('clave-otra-mas-larga-aaaa-bbbb-cccc');
+  });
+});

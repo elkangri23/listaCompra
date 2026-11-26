@@ -12,6 +12,7 @@
 
 import { AIConfig, AIProviderId, PerplexityConfig, getAIProviderMeta, getDefaultModelForProvider } from './ai.config';
 import { Logger } from '@infrastructure/observability/logger/Logger';
+import { persistEnvVars } from './EnvFileWriter';
 
 export interface AIConfigUpdateDto {
   provider?: AIProviderId;
@@ -32,7 +33,10 @@ export class AIConfigService {
   private readonly logger = new Logger('AIConfigService');
   private current: PerplexityConfig;
 
-  constructor(initial?: PerplexityConfig) {
+  constructor(
+    initial?: PerplexityConfig,
+    private readonly persistToEnv = true
+  ) {
     this.current = initial ?? AIConfigService.fromEnvironment();
   }
 
@@ -98,6 +102,9 @@ export class AIConfigService {
   /**
    * Actualiza la configuración en caliente. Solo se modifican los campos
    * enviados; la apiKey vacía/undefined conserva la actual.
+   *
+   * Tras aplicar el cambio persiste en .env (Opción B): AI_PROVIDER y las
+   * variables específicas del proveedor resultante (key, url y modelo).
    */
   update(dto: AIConfigUpdateDto): PerplexityConfig {
     const next: PerplexityConfig = {
@@ -114,6 +121,9 @@ export class AIConfigService {
     this.validate(next);
     this.current = next;
 
+    // Opción B: hacer perdurable el cambio en .env (nunca lanza)
+    this.persistToEnvFile(next);
+
     this.logger.ai('Configuración IA actualizada en runtime', {
       provider: next.provider,
       model: next.model,
@@ -122,6 +132,30 @@ export class AIConfigService {
     });
 
     return next;
+  }
+
+  /**
+   * Escribe en .env las variables que definen la configuración activa:
+   * el proveedor y las env vars propias del proveedor (key, url, modelo).
+   * Se desactiva en tests para no tocar el .env del repo.
+   */
+  private persistToEnvFile(config: PerplexityConfig): void {
+    if (!this.persistToEnv || process.env['NODE_ENV'] === 'test') {
+      return;
+    }
+
+    const meta = getAIProviderMeta(config.provider);
+    const updates: Record<string, string> = {
+      AI_PROVIDER: config.provider,
+    };
+
+    if (meta) {
+      if (meta.apiKeyEnv) updates[meta.apiKeyEnv] = config.apiKey;
+      if (meta.modelEnv && config.model) updates[meta.modelEnv] = config.model;
+      if (meta.apiUrlEnv && config.apiUrl) updates[meta.apiUrlEnv] = config.apiUrl;
+    }
+
+    persistEnvVars(updates);
   }
 
   private validate(config: PerplexityConfig): void {
