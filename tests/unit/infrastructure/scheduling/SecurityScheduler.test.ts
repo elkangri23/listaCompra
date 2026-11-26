@@ -27,6 +27,10 @@ describe('SecurityScheduler', () => {
     },
     outboxEvent: {
       count: jest.fn().mockResolvedValue(5)
+    },
+    usuario: {
+      findMany: jest.fn().mockResolvedValue([]),
+      delete: jest.fn().mockResolvedValue({})
     }
   };
 
@@ -52,9 +56,9 @@ describe('SecurityScheduler', () => {
 
     scheduler.initializeSecurityJobs();
 
-    expect(cron.schedule).toHaveBeenCalledTimes(3); // invitaciones + outbox + mfa challenge cleanup
+    expect(cron.schedule).toHaveBeenCalledTimes(4); // invitaciones + outbox + mfa challenge cleanup + purga GDPR
     const expressions = cron.schedule.mock.calls.map((call: any[]) => call[0]);
-    expect(expressions).toEqual(expect.arrayContaining(['0 * * * *', '0 2 * * *', '30 3 * * *']));
+    expect(expressions).toEqual(expect.arrayContaining(['0 * * * *', '0 2 * * *', '30 3 * * *', '0 4 * * *']));
   });
 
   it('arranca y detiene todos los jobs correctamente', () => {
@@ -107,6 +111,40 @@ describe('SecurityScheduler', () => {
     if (typeof outboxCallback === 'function') {
       await outboxCallback();
       expect(prismaMock.outboxEvent.count).toHaveBeenCalled();
+    }
+  });
+
+  it('purga las cuentas con eliminación solicitada hace más de 30 días (GDPR)', async () => {
+    prismaMock.usuario.findMany.mockResolvedValue([{ id: 'u-1' }, { id: 'u-2' }]);
+    const scheduler = new SecurityScheduler(prismaMock, loggerMock);
+    scheduler.initializeSecurityJobs();
+
+    const purgeCall = cron.schedule.mock.calls.find((call: any[]) => call[0] === '0 4 * * *');
+    expect(purgeCall).toBeDefined();
+
+    const purgeCallback = purgeCall?.[1];
+    expect(typeof purgeCallback).toBe('function');
+
+    if (typeof purgeCallback === 'function') {
+      await purgeCallback();
+      expect(prismaMock.usuario.findMany).toHaveBeenCalled();
+      expect(prismaMock.usuario.delete).toHaveBeenCalledTimes(2);
+      expect(prismaMock.usuario.delete).toHaveBeenCalledWith({ where: { id: 'u-1' } });
+      expect(prismaMock.usuario.delete).toHaveBeenCalledWith({ where: { id: 'u-2' } });
+    }
+  });
+
+  it('no purga nada cuando no hay cuentas pendientes (GDPR)', async () => {
+    prismaMock.usuario.findMany.mockResolvedValue([]);
+    const scheduler = new SecurityScheduler(prismaMock, loggerMock);
+    scheduler.initializeSecurityJobs();
+
+    const purgeCall = cron.schedule.mock.calls.find((call: any[]) => call[0] === '0 4 * * *');
+    const purgeCallback = purgeCall?.[1];
+
+    if (typeof purgeCallback === 'function') {
+      await purgeCallback();
+      expect(prismaMock.usuario.delete).not.toHaveBeenCalled();
     }
   });
 });

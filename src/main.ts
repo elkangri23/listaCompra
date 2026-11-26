@@ -63,6 +63,10 @@ async function bootstrap(): Promise<void> {
       throw new Error('Health check de base de datos falló');
     }
 
+    // Jobs programados (limpiezas de seguridad + purga GDPR, item 15)
+    container.securityScheduler.initializeSecurityJobs();
+    container.securityScheduler.startAllJobs();
+
     const { createServer } = await import('./infrastructure/http/server');
 
     // Crear y configurar el servidor

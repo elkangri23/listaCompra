@@ -22,6 +22,7 @@ model Usuario {
   activo             Boolean     @default(true)
   emailVerificado    Boolean     @default(false)
   terminosAceptadosEn DateTime?
+  eliminacionSolicitadaEn DateTime?
   fechaCreacion      DateTime    @default(now())
   fechaActualizacion DateTime    @updatedAt
   blueprints         Blueprint[]
@@ -52,7 +53,7 @@ model Lista {
   fechaActualizacion DateTime     @updatedAt
   propietarioId      String
   invitaciones       Invitacion[]
-  propietario        Usuario      @relation(fields: [propietarioId], references: [id])
+  propietario        Usuario      @relation(fields: [propietarioId], references: [id], onDelete: Cascade)
   permisos           Permiso[]
   productos          Producto[]
 
@@ -75,7 +76,7 @@ model Producto {
   categoriaId        String?
   creadoPorId        String
   categoria          Categoria? @relation(fields: [categoriaId], references: [id])
-  creadoPor          Usuario    @relation(fields: [creadoPorId], references: [id])
+  creadoPor          Usuario    @relation(fields: [creadoPorId], references: [id], onDelete: Cascade)
   lista              Lista      @relation(fields: [listaId], references: [id], onDelete: Cascade)
 
   @@map("productos")
@@ -133,7 +134,7 @@ model Permiso {
   listaId       String
   tipoPermiso   TipoPermiso
   lista         Lista       @relation(fields: [listaId], references: [id], onDelete: Cascade)
-  usuario       Usuario     @relation(fields: [usuarioId], references: [id])
+  usuario       Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@unique([usuarioId, listaId])
   @@map("permisos")
@@ -148,7 +149,7 @@ model Blueprint {
   fechaCreacion      DateTime @default(now())
   fechaActualizacion DateTime @updatedAt
   creadoPorId        String
-  creadoPor          Usuario  @relation(fields: [creadoPorId], references: [id])
+  creadoPor          Usuario  @relation(fields: [creadoPorId], references: [id], onDelete: Cascade)
 
   @@map("blueprints")
 }

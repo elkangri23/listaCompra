@@ -46,6 +46,8 @@ import { GetGlobalAuditHistory } from '@application/use-cases/audit/GetGlobalAud
 import { GetCollaborativeDashboard } from '@application/use-cases/analytics/GetCollaborativeDashboard';
 import { GetCategorySuggestionsUseCase } from '@application/use-cases/ai/GetCategorySuggestions';
 import { AnalyzePurchaseHabitsUseCase } from '@application/use-cases/ai/AnalyzePurchaseHabits';
+import { RequestAccountDeletion } from '@application/use-cases/gdpr/RequestAccountDeletion';
+import { ExportMyData } from '@application/use-cases/gdpr/ExportMyData';
 
 // Infrastructure Adapters
 import { PrismaUsuarioRepository } from '@infrastructure/persistence/repositories/PrismaUsuarioRepository';
@@ -57,6 +59,7 @@ import { PrismaInvitacionRepository } from '@infrastructure/persistence/reposito
 import { PrismaPermisoRepository } from '@infrastructure/persistence/repositories/PrismaPermisoRepository';
 import { PrismaAuditRepository } from '@infrastructure/persistence/prisma/repositories/PrismaAuditRepository';
 import { PrismaAnalyticsRepository } from '@infrastructure/persistence/repositories/PrismaAnalyticsRepository';
+import { SecurityScheduler } from '@infrastructure/scheduling/SecurityScheduler';
 import { InMemoryUsuarioRepository } from '@infrastructure/persistence/in-memory/InMemoryUsuarioRepository';
 import { InMemoryListaRepository } from '@infrastructure/persistence/in-memory/InMemoryListaRepository';
 import { InMemoryProductoRepository } from '@infrastructure/persistence/in-memory/InMemoryProductoRepository';
@@ -170,6 +173,7 @@ export class Container {
   private _realTimeGateway!: RealTimeGateway;
   private _metricsCollector!: MetricsCollector;
   private _cachedAIService!: CachedAIService;
+  private _securityScheduler!: SecurityScheduler;
 
   // Use Cases
   private _registerUser!: RegisterUser;
@@ -177,6 +181,8 @@ export class Container {
   private _refreshTokens!: RefreshTokens;
   private _updateProfile!: UpdateProfile;
   private _changePassword!: ChangePassword;
+  private _requestAccountDeletion!: RequestAccountDeletion;
+  private _exportMyData!: ExportMyData;
   private _mfaRepository!: IMfaRepository;
   private _passkeyRepository!: IPasskeyRepository;
   private _stepUpPasswordVerifier!: StepUpPasswordVerifier;
@@ -254,6 +260,7 @@ export class Container {
     this.initializeUseCases();
     this.initializeRealtime();
     this.initializeControllers();
+    this.initializeScheduler();
   }
 
   public static getInstance(): Container {
@@ -512,7 +519,23 @@ export class Container {
     );
 
     // Renovación de sesión (POST /auth/refresh)
-    this._refreshTokens = new RefreshTokens(this._tokenService);
+    this._refreshTokens = new RefreshTokens(this._tokenService, this._usuarioRepository);
+
+    // GDPR (item 15): exportar datos y solicitar eliminación de cuenta
+    this._requestAccountDeletion = new RequestAccountDeletion(
+      this._usuarioRepository,
+      this._passwordHasher
+    );
+    this._exportMyData = new ExportMyData(
+      this._usuarioRepository,
+      this._listaRepository,
+      this._productoRepository,
+      this._categoriaRepository,
+      this._tiendaRepository,
+      this._blueprintRepository,
+      this._permisoRepository,
+      this._invitacionRepository
+    );
 
     // Perfil del usuario (13A)
     this._updateProfile = new UpdateProfile(this._usuarioRepository);
@@ -728,6 +751,15 @@ export class Container {
     this._realTimeGateway = new RealTimeGateway();
   }
 
+  /**
+   * Jobs programados (GDPR, item 15): el scheduler estaba definido pero nunca
+   * se instanciaba, así que ningún job corría en producción. Se inicializa
+   * aquí; main.ts arranca los jobs tras conectar a la base de datos.
+   */
+  private initializeScheduler(): void {
+    this._securityScheduler = new SecurityScheduler(this._prisma, new Logger('SecurityScheduler'));
+  }
+
   private initializeControllers(): void {
     this._authController = new AuthController({
       registerUser: this._registerUser,
@@ -735,6 +767,8 @@ export class Container {
       refreshTokens: this._refreshTokens,
       updateProfile: this._updateProfile,
       changePassword: this._changePassword,
+      requestAccountDeletion: this._requestAccountDeletion,
+      exportMyData: this._exportMyData,
       usuarioRepository: this._usuarioRepository,
     });
 
@@ -867,6 +901,10 @@ export class Container {
 
   public get prisma(): PrismaClient {
     return this._prisma;
+  }
+
+  public get securityScheduler(): SecurityScheduler {
+    return this._securityScheduler;
   }
 
   public get usuarioRepository(): IUsuarioRepository {

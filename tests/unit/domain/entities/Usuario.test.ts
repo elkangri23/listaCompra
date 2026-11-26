@@ -265,6 +265,22 @@ describe('Usuario Entity', () => {
       expect(usuario.activo).toBe(false);
     });
 
+    it('debería solicitar la eliminación: desactiva y fija la fecha (GDPR)', () => {
+      const result = usuario.solicitarEliminacion();
+
+      expect(result.isSuccess).toBe(true);
+      expect(usuario.activo).toBe(false);
+      expect(usuario.eliminacionSolicitadaEn).toBeInstanceOf(Date);
+    });
+
+    it('no debería solicitar la eliminación de un usuario ya inactivo', () => {
+      usuario.desactivar();
+
+      const result = usuario.solicitarEliminacion();
+
+      expect(result.isFailure).toBe(true);
+    });
+
     it('debería promover a admin correctamente', () => {
       const result = usuario.promoverAAdmin();
 
@@ -332,7 +348,8 @@ describe('Usuario Entity', () => {
         emailVerificado: false,
         fechaCreacion: usuario.fechaCreacion,
         fechaActualizacion: usuario.fechaActualizacion,
-        terminosAceptadosEn: null
+        terminosAceptadosEn: null,
+        eliminacionSolicitadaEn: null
       });
     });
 
@@ -350,7 +367,8 @@ describe('Usuario Entity', () => {
         emailVerificado: false,
         fechaCreacion: usuario.fechaCreacion,
         fechaActualizacion: usuario.fechaActualizacion,
-        terminosAceptadosEn: null
+        terminosAceptadosEn: null,
+        eliminacionSolicitadaEn: null
       });
     });
 

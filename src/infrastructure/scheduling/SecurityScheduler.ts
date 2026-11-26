@@ -6,6 +6,7 @@
 import * as cron from 'node-cron';
 import { PrismaClient } from '@prisma/client';
 import { Logger } from '../observability/logger/Logger';
+import { DIAS_GRACIA_ELIMINACION } from '@application/use-cases/gdpr/RequestAccountDeletion';
 
 export class SecurityScheduler {
   private prisma: PrismaClient;
@@ -34,6 +35,9 @@ export class SecurityScheduler {
 
     // Job 3: Cleanup de challenges MFA expirados (diario) — fase MFA TOTP
     this.scheduleMfaChallengeCleanup();
+
+    // Job 4: Purga de cuentas con eliminación solicitada hace más de 30 días (GDPR, item 15)
+    this.scheduleDeletedAccountsPurge();
 
     this.logger.info(`✅ ${this.jobs.size} scheduled jobs de seguridad inicializados`);
   }
@@ -211,6 +215,48 @@ export class SecurityScheduler {
       }
     });
     this.jobs.set('mfa_challenge_cleanup', job);
+  }
+
+  /**
+   * Job 4: Purga de cuentas con eliminación solicitada hace más de 30 días (GDPR, item 15)
+   */
+  private scheduleDeletedAccountsPurge(): void {
+    const job = cron.schedule('0 4 * * *', async () => { // 4:00 AM diario
+      try {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - DIAS_GRACIA_ELIMINACION);
+        const pendientes = await this.prisma.usuario.findMany({
+          where: {
+            activo: false,
+            eliminacionSolicitadaEn: { lte: cutoff },
+          },
+          select: { id: true },
+        });
+        if (pendientes.length === 0) {
+          this.logger.debug('No hay cuentas pendientes de purga definitiva');
+          return;
+        }
+        let purgadas = 0;
+        for (const pendiente of pendientes) {
+          try {
+            // hardDelete en cascada (listas, productos, permisos, plantillas, MFA)
+            await this.prisma.usuario.delete({ where: { id: pendiente.id } });
+            purgadas += 1;
+          } catch (error) {
+            this.logger.error(`Error purgando la cuenta ${pendiente.id}:`, error);
+          }
+        }
+        this.logger.info(`🧹 Purga GDPR completada: ${purgadas}/${pendientes.length} cuentas eliminadas`);
+        this.logSecurityMetrics('gdpr_purge', {
+          purged_count: purgadas,
+          pending_count: pendientes.length,
+          purge_timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
+        this.logger.error('❌ Error en purga de cuentas eliminadas:', error);
+      }
+    });
+    this.jobs.set('deleted-accounts-purge', job);
   }
 
   private logSecurityMetrics(operation: string, data: Record<string, any>): void {

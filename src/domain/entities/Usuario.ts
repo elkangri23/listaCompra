@@ -25,6 +25,7 @@ export interface UsuarioProps {
   activo?: boolean;
   emailVerificado?: boolean;
   terminosAceptadosEn?: Date | null;
+  eliminacionSolicitadaEn?: Date | null;
   // MFA (TOTP) — opcional en create (defaults); reconstruct los recibe del mapper
   totpSecret?: string | null;
   totpEnabled?: boolean;
@@ -44,6 +45,7 @@ export class Usuario {
     private _activo: boolean,
     private _emailVerificado: boolean,
     private _terminosAceptadosEn: Date | null,
+    private _eliminacionSolicitadaEn: Date | null,
     private _totpSecret: string | null, // AEAD AES-256-GCM (mfa-crypto), formato "v1:..."
     private _totpEnabled: boolean,
     private _totpPendIntentos: number, // cap de fallos de verify-enable sobre el secret pendiente
@@ -96,6 +98,7 @@ export class Usuario {
       props.activo ?? true,
       props.emailVerificado ?? false,
       props.terminosAceptadosEn ?? null,
+      props.eliminacionSolicitadaEn ?? null,
       props.totpSecret ?? null,
       props.totpEnabled ?? false,
       props.totpPendIntentos ?? 0,
@@ -117,6 +120,7 @@ export class Usuario {
       props.activo ?? true,
       props.emailVerificado ?? false,
       props.terminosAceptadosEn ?? null,
+      props.eliminacionSolicitadaEn ?? null,
       props.totpSecret ?? null,
       props.totpEnabled ?? false,
       props.totpPendIntentos ?? 0,
@@ -218,6 +222,11 @@ export class Usuario {
   /** Fecha en la que el usuario aceptó los Términos de Servicio (null en cuentas anteriores al item 1) */
   get terminosAceptadosEn(): Date | null {
     return this._terminosAceptadosEn;
+  }
+
+  /** Fecha en la que el usuario solicitó la eliminación de su cuenta (null si no la ha solicitado) */
+  get eliminacionSolicitadaEn(): Date | null {
+    return this._eliminacionSolicitadaEn;
   }
 
   get fechaCreacion(): Date {
@@ -344,6 +353,25 @@ export class Usuario {
     return success(undefined);
   }
 
+  /**
+   * Solicita la eliminación de la cuenta (GDPR, item 15): desactiva la
+   * cuenta y fija la fecha de solicitud; la purga definitiva llega a los 30 días.
+   */
+  solicitarEliminacion(): Result<void, BusinessRuleViolationError> {
+    if (!this._activo) {
+      return failure(new BusinessRuleViolationError(
+        'El usuario ya está inactivo',
+        'USER_ALREADY_INACTIVE'
+      ));
+    }
+
+    this._activo = false;
+    this._eliminacionSolicitadaEn = new Date();
+    this._fechaActualizacion = createDate();
+
+    return success(undefined);
+  }
+
   promoverAAdmin(): Result<void, BusinessRuleViolationError> {
     if (!this._activo) {
       return failure(new BusinessRuleViolationError(
@@ -404,6 +432,7 @@ export class Usuario {
       activo: this._activo,
       emailVerificado: this._emailVerificado,
       terminosAceptadosEn: this._terminosAceptadosEn,
+      eliminacionSolicitadaEn: this._eliminacionSolicitadaEn,
       fechaCreacion: this._fechaCreacion,
       fechaActualizacion: this._fechaActualizacion,
     };
@@ -421,6 +450,7 @@ export class Usuario {
       activo: this._activo,
       emailVerificado: this._emailVerificado,
       terminosAceptadosEn: this._terminosAceptadosEn,
+      eliminacionSolicitadaEn: this._eliminacionSolicitadaEn,
       fechaCreacion: this._fechaCreacion,
       fechaActualizacion: this._fechaActualizacion,
     };

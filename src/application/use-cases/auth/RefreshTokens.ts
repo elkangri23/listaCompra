@@ -9,6 +9,7 @@
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
+import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
 
 export interface RefreshTokensResult {
@@ -19,7 +20,10 @@ export interface RefreshTokensResult {
 }
 
 export class RefreshTokens {
-  constructor(private readonly tokenService: ITokenService) {}
+  constructor(
+    private readonly tokenService: ITokenService,
+    private readonly usuarioRepository: IUsuarioRepository
+  ) {}
 
   async execute(refreshToken: string): Promise<Result<RefreshTokensResult, Error>> {
     if (!refreshToken || typeof refreshToken !== 'string') {
@@ -33,6 +37,13 @@ export class RefreshTokens {
     }
 
     const payload = verified.value;
+
+    // Una cuenta desactivada (p. ej. eliminación solicitada, GDPR) no puede renovar sesión.
+    const usuarioResult = await this.usuarioRepository.findById(payload.userId);
+    if (usuarioResult.isFailure || !usuarioResult.value || !usuarioResult.value.activo) {
+      return failure(new UnauthorizedError('Refresh token inválido o expirado'));
+    }
+
     const tokensResult = await this.tokenService.generateTokenPair({
       userId: payload.userId,
       email: payload.email,

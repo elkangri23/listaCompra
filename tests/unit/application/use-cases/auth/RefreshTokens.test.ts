@@ -1,11 +1,13 @@
 import { RefreshTokens } from '../../../../../src/application/use-cases/auth/RefreshTokens';
 import { ITokenService } from '../../../../../src/application/ports/auth/ITokenService';
+import { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
 import { success, failure } from '../../../../../src/shared/result';
 import { UnauthorizedError } from '../../../../../src/application/errors/UnauthorizedError';
 
 describe('RefreshTokens', () => {
   let refreshTokens: RefreshTokens;
   let tokenService: jest.Mocked<ITokenService>;
+  let usuarioRepository: jest.Mocked<IUsuarioRepository>;
 
   const payload = { userId: 'user-1', email: 'test@example.com', role: 'Usuario' };
   const newPair = { accessToken: 'new-access-token', refreshToken: 'new-refresh-token' };
@@ -19,7 +21,11 @@ describe('RefreshTokens', () => {
       verifyRefreshToken: jest.fn(),
     } as any;
 
-    refreshTokens = new RefreshTokens(tokenService);
+    usuarioRepository = {
+      findById: jest.fn().mockResolvedValue(success({ activo: true } as any)),
+    } as any;
+
+    refreshTokens = new RefreshTokens(tokenService, usuarioRepository);
   });
 
   it('renueva el par de tokens con un refresh token válido', async () => {
@@ -81,5 +87,32 @@ describe('RefreshTokens', () => {
     if (result.isFailure) {
       expect(result.error.message).toBe('Fallo al firmar');
     }
+  });
+
+  it('rechaza la renovación si la cuenta está desactivada (GDPR)', async () => {
+    tokenService.verifyRefreshToken.mockResolvedValue(success(payload));
+    usuarioRepository.findById.mockResolvedValue(success({ activo: false } as any));
+
+    const result = await refreshTokens.execute('old-refresh-token');
+
+    expect(result.isFailure).toBe(true);
+    if (result.isFailure) {
+      expect(result.error).toBeInstanceOf(UnauthorizedError);
+      expect(result.error.message).toBe('Refresh token inválido o expirado');
+    }
+    expect(tokenService.generateTokenPair).not.toHaveBeenCalled();
+  });
+
+  it('rechaza la renovación si el usuario ya no existe', async () => {
+    tokenService.verifyRefreshToken.mockResolvedValue(success(payload));
+    usuarioRepository.findById.mockResolvedValue(success(null as any));
+
+    const result = await refreshTokens.execute('old-refresh-token');
+
+    expect(result.isFailure).toBe(true);
+    if (result.isFailure) {
+      expect(result.error).toBeInstanceOf(UnauthorizedError);
+    }
+    expect(tokenService.generateTokenPair).not.toHaveBeenCalled();
   });
 });

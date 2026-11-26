@@ -9,6 +9,8 @@ import type { AuthenticateUser } from '@application/use-cases/auth/AuthenticateU
 import type { RefreshTokens } from '@application/use-cases/auth/RefreshTokens';
 import type { UpdateProfile } from '@application/use-cases/auth/UpdateProfile';
 import type { ChangePassword } from '@application/use-cases/auth/ChangePassword';
+import type { RequestAccountDeletion } from '@application/use-cases/gdpr/RequestAccountDeletion';
+import type { ExportMyData } from '@application/use-cases/gdpr/ExportMyData';
 import type { RegisterUserDto } from '@application/dto/auth/RegisterUserDto';
 import type { LoginDto } from '@application/dto/auth/LoginDto';
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
@@ -22,6 +24,8 @@ export interface AuthControllerDependencies {
   refreshTokens?: RefreshTokens;
   updateProfile?: UpdateProfile;
   changePassword?: ChangePassword;
+  requestAccountDeletion?: RequestAccountDeletion;
+  exportMyData?: ExportMyData;
   usuarioRepository?: IUsuarioRepository;
 }
 
@@ -391,6 +395,96 @@ export class AuthController {
       }
 
       res.status(200).json(result.value);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * DELETE /auth/me
+   * Solicita la eliminación de la cuenta (GDPR, item 15). Requiere la contraseña
+   * actual; desactiva la cuenta y la purga definitiva llega a los 30 días.
+   */
+  requestDeletion = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        res.status(401).json({
+          success: false,
+          error: 'UNAUTHORIZED',
+          message: 'Token de acceso requerido',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      if (!this.dependencies.requestAccountDeletion) {
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { password } = req.body as { password?: string };
+      const result = await this.dependencies.requestAccountDeletion.execute({
+        usuarioId: user.userId,
+        password: password ?? '',
+      });
+
+      if (result.isFailure) {
+        this.handleUseCaseError(result.error, res);
+        return;
+      }
+
+      res.status(200).json(result.value);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /auth/me/export
+   * Exporta todos los datos del usuario autenticado en JSON (GDPR, item 15).
+   */
+  exportMyData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        res.status(401).json({
+          success: false,
+          error: 'UNAUTHORIZED',
+          message: 'Token de acceso requerido',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      if (!this.dependencies.exportMyData) {
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const result = await this.dependencies.exportMyData.execute({
+        usuarioId: user.userId,
+      });
+
+      if (result.isFailure) {
+        this.handleUseCaseError(result.error, res);
+        return;
+      }
+
+      const fecha = new Date().toISOString().slice(0, 10);
+      res
+        .status(200)
+        .set('Content-Type', 'application/json')
+        .set('Content-Disposition', `attachment; filename="mis-datos-lista-compra-${fecha}.json"`)
+        .json(result.value);
     } catch (error) {
       next(error);
     }

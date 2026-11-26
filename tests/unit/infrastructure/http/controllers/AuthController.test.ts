@@ -3,6 +3,7 @@ import { AuthController } from '../../../../../src/infrastructure/http/controlle
 import { RegisterUser } from '../../../../../src/application/use-cases/auth/RegisterUser';
 import { AuthenticateUser } from '../../../../../src/application/use-cases/auth/AuthenticateUser';
 import { success, failure } from '../../../../../src/shared/result';
+import { UnauthorizedError } from '../../../../../src/application/errors/UnauthorizedError';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -233,6 +234,113 @@ describe('AuthController', () => {
 
       // Assert
       expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+  });
+});
+describe('AuthController (GDPR, item 15)', () => {
+  let authController: AuthController;
+  let requestAccountDeletion: any;
+  let exportMyData: any;
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+  let next: jest.MockedFunction<NextFunction>;
+
+  beforeEach(() => {
+    requestAccountDeletion = { execute: jest.fn() };
+    exportMyData = { execute: jest.fn() };
+
+    authController = new AuthController({
+      registerUser: {} as any,
+      authenticateUser: {} as any,
+      requestAccountDeletion,
+      exportMyData,
+    });
+
+    req = {
+      body: {},
+      user: { userId: 'user-1' },
+    } as any;
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+    };
+
+    next = jest.fn();
+  });
+
+  describe('requestDeletion', () => {
+    it('solicita la eliminación y devuelve la fecha definitiva', async () => {
+      req.body = { password: 'SecurePass123!' };
+      requestAccountDeletion.execute.mockResolvedValue(
+        success({
+          mensaje: 'Cuenta desactivada',
+          eliminacionSolicitadaEn: '2026-11-26T00:00:00.000Z',
+          eliminacionDefinitivaEn: '2026-12-26T00:00:00.000Z',
+        })
+      );
+
+      await authController.requestDeletion(req as Request, res as Response, next);
+
+      expect(requestAccountDeletion.execute).toHaveBeenCalledWith({
+        usuarioId: 'user-1',
+        password: 'SecurePass123!',
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ eliminacionDefinitivaEn: '2026-12-26T00:00:00.000Z' })
+      );
+    });
+
+    it('devuelve 401 sin usuario autenticado', async () => {
+      (req as any).user = undefined;
+
+      await authController.requestDeletion(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(requestAccountDeletion.execute).not.toHaveBeenCalled();
+    });
+
+    it('devuelve 401 con la contraseña incorrecta', async () => {
+      req.body = { password: 'ClaveMala123!' };
+      requestAccountDeletion.execute.mockResolvedValue(
+        failure(new UnauthorizedError('La contraseña actual no es correcta'))
+      );
+
+      await authController.requestDeletion(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+    });
+  });
+
+  describe('exportMyData', () => {
+    it('exporta los datos como archivo JSON descargable', async () => {
+      exportMyData.execute.mockResolvedValue(
+        success({ exportadoEn: '2026-11-26T00:00:00.000Z', usuario: { email: 'a@example.com' } })
+      );
+
+      await authController.exportMyData(req as Request, res as Response, next);
+
+      expect(exportMyData.execute).toHaveBeenCalledWith({ usuarioId: 'user-1' });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.set).toHaveBeenCalledWith('Content-Type', 'application/json');
+      expect(res.set).toHaveBeenCalledWith(
+        'Content-Disposition',
+        expect.stringContaining('mis-datos-lista-compra-')
+      );
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ exportadoEn: '2026-11-26T00:00:00.000Z' })
+      );
+    });
+
+    it('devuelve 401 sin usuario autenticado', async () => {
+      (req as any).user = undefined;
+
+      await authController.exportMyData(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(exportMyData.execute).not.toHaveBeenCalled();
     });
   });
 });

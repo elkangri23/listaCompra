@@ -16,6 +16,7 @@ interface PersistenceUsuario {
   activo: boolean;
   emailVerificado?: boolean;
   terminosAceptadosEn?: Date | null;
+  eliminacionSolicitadaEn?: Date | null;
   totpSecret?: string | null;
   totpEnabled?: boolean;
   totpPendIntentos?: number;
@@ -42,6 +43,7 @@ export class UsuarioMapper {
       activo: raw.activo,
       emailVerificado: raw.emailVerificado,
       terminosAceptadosEn: raw.terminosAceptadosEn ?? null,
+      eliminacionSolicitadaEn: raw.eliminacionSolicitadaEn ?? null,
       totpSecret: raw.totpSecret ?? null,
       totpEnabled: raw.totpEnabled ?? false,
       totpPendIntentos: raw.totpPendIntentos ?? 0,
@@ -74,6 +76,7 @@ export class UsuarioMapper {
       activo: usuario.activo,
       emailVerificado: usuario.emailVerificado,
       terminosAceptadosEn: usuario.terminosAceptadosEn ?? null,
+      eliminacionSolicitadaEn: usuario.eliminacionSolicitadaEn ?? null,
       totpSecret: usuario.totpSecret,
       totpEnabled: usuario.totpEnabled,
       totpPendIntentos: usuario.totpPendIntentos,

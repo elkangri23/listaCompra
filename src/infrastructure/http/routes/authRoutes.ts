@@ -307,16 +307,76 @@ export function createAuthRoutes(authController: AuthController, authMiddleware?
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
+  /**
+   * @swagger
+   * /api/v1/auth/me:
+   *   delete:
+   *     tags: [Autenticación]
+   *     summary: Solicitar la eliminación de la cuenta (GDPR)
+   *     description: Verifica la contraseña actual, desactiva la cuenta y fija la fecha de solicitud; la purga definitiva llega a los 30 días.
+   *     operationId: requestAccountDeletion
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [password]
+   *             properties:
+   *               password:
+   *                 type: string
+   *                 description: Contraseña actual de la cuenta
+   *     responses:
+   *       200:
+   *         description: Eliminación solicitada; cuenta desactivada
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 mensaje:
+   *                   type: string
+   *                 eliminacionSolicitadaEn:
+   *                   type: string
+   *                   format: date-time
+   *                 eliminacionDefinitivaEn:
+   *                   type: string
+   *                   format: date-time
+   *       401:
+   *         $ref: '#/components/responses/UnauthorizedError'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   *   get:
+   *     tags: [Autenticación]
+   *     summary: Exportar mis datos (GDPR)
+   *     description: Descarga un JSON con el perfil, las listas con sus productos, las categorías, las tiendas, las plantillas, las colaboraciones y las invitaciones del usuario.
+   *     operationId: exportMyData
+   *     responses:
+   *       200:
+   *         description: Archivo JSON con los datos del usuario
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *       401:
+   *         $ref: '#/components/responses/UnauthorizedError'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   // GET /me, PATCH /me y PATCH /me/password requieren autenticación (13A).
   // Antes /me no tenía middleware: req.user nunca se rellenaba y siempre daba 401.
   if (authMiddleware) {
     router.get('/me', authMiddleware, authController.me);
     router.patch('/me', authMiddleware, authController.updateMe);
     router.patch('/me/password', authMiddleware, authController.changeMyPassword);
+    router.delete('/me', authMiddleware, authController.requestDeletion);
+    router.get('/me/export', authMiddleware, authController.exportMyData);
   } else {
     router.get('/me', authController.me);
     router.patch('/me', authController.updateMe);
     router.patch('/me/password', authController.changeMyPassword);
+    router.delete('/me', authController.requestDeletion);
+    router.get('/me/export', authController.exportMyData);
   }
 
   return router;
