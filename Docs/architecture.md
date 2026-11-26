@@ -56,7 +56,7 @@ La aplicación de Lista de Compra Colaborativa está diseñada siguiendo los pri
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        FRAMEWORKS                           │
-│  Express/Fastify │ PostgreSQL │ RabbitMQ │ Perplexity API  │
+│  Express/Fastify │ PostgreSQL │ RabbitMQ │ Multi-proveedor LLM │
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
@@ -186,7 +186,7 @@ infrastructure/
 │   ├── outbox/        # Patrón Outbox
 │   └── consumers/     # Consumidores de eventos
 ├── external-services/ # Servicios externos
-│   ├── ai/            # Integración con Perplexity
+│   ├── ai/            # Adaptadores de proveedores LLM (OpenAI-compatible, Anthropic, Gemini)
 │   ├── email/         # Servicio de emails
 │   ├── auth/          # JWT y bcrypt
 │   └── cache/         # Cache Redis
@@ -323,7 +323,7 @@ export class EmailSpecification {
 - **Headers de Seguridad**: Helmet
 
 ### IA y Servicios Externos
-- **Provider**: Perplexity API (Llama 3.1 Sonar)
+- **Provider**: Multi-proveedor LLM (`AI_PROVIDER=freellmapi` por defecto; anthropic y google usan APIs nativas)
 - **HTTP Client**: Axios
 - **Emails**: Nodemailer
 
