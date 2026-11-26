@@ -55,13 +55,17 @@ const getAllowedOrigins = (): string[] => {
 const isOriginAllowed = (origin: string | undefined): boolean => {
   const allowedOrigins = getAllowedOrigins();
   
-  // En desarrollo, permitir requests sin origin (Postman, etc.)
-  if (!origin && process.env['NODE_ENV'] !== 'production') {
+  // Requests sin Origin no son cross-origin de navegador: son healthchecks
+  // (wget/curl sin Origin), llamadas server-to-server o navegación
+  // same-origin. Permitirlas siempre; en producción el healthcheck de
+  // Docker y el proxy nginx las hacen sin Origin y si no, la api queda
+  // unhealthy y el web no arranca.
+  if (!origin) {
     return true;
   }
-  
+
   // Verificar si el origin está en la lista permitida
-  return origin ? allowedOrigins.includes(origin) : false;
+  return allowedOrigins.includes(origin);
 };
 
 /**
