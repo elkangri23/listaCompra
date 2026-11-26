@@ -9,6 +9,11 @@ import type {
   EmailOptions, 
   EmailResult 
 } from '@application/ports/external/IEmailService';
+import {
+  renderInvitationEmail,
+  renderConfirmationEmail,
+  renderNotificationEmail,
+} from './templates/email-templates';
 
 export interface EmailConfig {
   // API Key de Resend
@@ -278,59 +283,7 @@ El equipo de Lista Compra Colaborativa
     invitationUrl: string;
     expiresAt: Date;
   }): string {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invitación a Lista Colaborativa</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { background: #007bff; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { padding: 30px; }
-        .button { display: inline-block; padding: 12px 30px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-        .expires { background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin: 15px 0; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🛒 Lista Compra Colaborativa</h1>
-            <p>Invitación para colaborar</p>
-        </div>
-        <div class="content">
-            <h2>¡Hola ${data.recipientName}!</h2>
-            <p><strong>${data.inviterName}</strong> te ha invitado a colaborar en la lista <strong>"${data.listName}"</strong>.</p>
-            <p>Con esta invitación podrás:</p>
-            <ul>
-                <li>Ver y editar elementos de la lista</li>
-                <li>Marcar productos como comprados</li>
-                <li>Colaborar en tiempo real</li>
-            </ul>
-            <div style="text-align: center;">
-                <a href="${data.invitationUrl}" class="button">🎯 Acceder a la Lista</a>
-            </div>
-            <div class="expires">
-                <strong>⏰ Importante:</strong> Esta invitación expira el ${data.expiresAt.toLocaleDateString('es-ES', {
-                  year: 'numeric',
-                  month: 'long', 
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}.
-            </div>
-        </div>
-        <div class="footer">
-            <p>Si no esperabas esta invitación, puedes ignorar este email.</p>
-            <p>© 2025 Lista Compra Colaborativa</p>
-        </div>
-    </div>
-</body>
-</html>
-    `.trim();
+    return renderInvitationEmail(data);
   }
 
   private generateNotificationHtml(data: {
@@ -339,107 +292,17 @@ El equipo de Lista Compra Colaborativa
     changeType: 'item_added' | 'item_removed' | 'item_updated' | 'list_updated';
     changeDetails: string;
   }): string {
-    const icons: Record<typeof data.changeType, string> = {
-      item_added: '➕',
-      item_removed: '➖', 
-      item_updated: '✏️',
-      list_updated: '📝'
-    };
-
-    const colors: Record<typeof data.changeType, string> = {
-      item_added: '#28a745',
-      item_removed: '#dc3545',
-      item_updated: '#ffc107', 
-      list_updated: '#007bff'
-    };
-
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cambios en Lista</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { background: ${colors[data.changeType]}; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { padding: 30px; }
-        .change-box { background: #f8f9fa; border-left: 4px solid ${colors[data.changeType]}; padding: 15px; margin: 15px 0; }
-        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>${icons[data.changeType]} Cambios en Lista</h1>
-        </div>
-        <div class="content">
-            <h2>¡Hola ${data.recipientName}!</h2>
-            <p>Ha habido cambios en la lista <strong>"${data.listName}"</strong>.</p>
-            <div class="change-box">
-                <strong>Detalles del cambio:</strong><br>
-                ${data.changeDetails}
-            </div>
-            <p>Ve todos los cambios en tu panel de listas.</p>
-        </div>
-        <div class="footer">
-            <p>© 2025 Lista Compra Colaborativa</p>
-        </div>
-    </div>
-</body>
-</html>
-    `.trim();
+    return renderNotificationEmail({
+      ...data,
+      listsUrl: `${process.env['FRONTEND_URL'] || 'http://localhost:3333'}/lists`,
+    });
   }
 
   private generateConfirmationHtml(data: {
     recipientName: string;
     confirmationUrl: string;
   }): string {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirma tu cuenta</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { background: #28a745; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { padding: 30px; }
-        .button { display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>✅ ¡Bienvenido!</h1>
-            <p>Lista Compra Colaborativa</p>
-        </div>
-        <div class="content">
-            <h2>¡Hola ${data.recipientName}!</h2>
-            <p>¡Bienvenido a Lista Compra Colaborativa! Estás a solo un paso de comenzar a colaborar en listas de compra.</p>
-            <p>Para activar tu cuenta y comenzar a usar la plataforma, confirma tu email:</p>
-            <div style="text-align: center;">
-                <a href="${data.confirmationUrl}" class="button">🎯 Confirmar Email</a>
-            </div>
-            <p>Una vez confirmado tu email, podrás:</p>
-            <ul>
-                <li>Crear y gestionar listas de compra</li>
-                <li>Compartir listas con familia y amigos</li>
-                <li>Colaborar en tiempo real</li>
-                <li>Recibir notificaciones de cambios</li>
-            </ul>
-        </div>
-        <div class="footer">
-            <p>Si no creaste esta cuenta, puedes ignorar este email.</p>
-            <p>© 2025 Lista Compra Colaborativa</p>
-        </div>
-    </div>
-</body>
-</html>
-    `.trim();
+    return renderConfirmationEmail(data);
   }
+
 }
