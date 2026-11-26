@@ -167,7 +167,8 @@ describe('Auth Diagnostics', () => {
     const protectedTestUser = {
       email: `protected-test-${Date.now()}@diagnostic.com`,
       password: 'Password123!',
-      nombre: 'Protected Test User'
+      nombre: 'Protected Test User',
+      aceptoTerminos: true
     };
 
     beforeAll(async () => {
