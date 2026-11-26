@@ -8,7 +8,7 @@
 [![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.x-orange.svg)](https://www.rabbitmq.com/)
 [![Security](https://img.shields.io/badge/Security-9.5%2F10-brightgreen.svg)](./ESTADO_PROYECTO.md)
 [![Tests](https://img.shields.io/badge/Tests-495%2F543%20passing%20(91%25)-brightgreen.svg)](./ESTADO_PROYECTO.md)
-[![Coverage](https://img.shields.io/badge/Coverage-18.94%25-yellow.svg)](./coverage/lcov-report/index.html)
+[![Coverage](https://img.shields.io/badge/Coverage-66.72%25-green.svg)](./coverage/lcov-report/index.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -42,7 +42,7 @@ Para un desglose detallado del estado actual, la arquitectura, los endpoints y l
 - **Base de Datos**: PostgreSQL, Prisma
 - **Mensajería**: RabbitMQ
 - **Cache**: Redis
-- **IA**: Perplexity API (Llama 3.1 Sonar)
+- **IA**: Multi-proveedor LLM (FreeLLMAPI por defecto; OpenAI, OpenAI-compatible, Anthropic, Google Gemini, Perplexity, OpenRouter, Azure) seleccionable en caliente vía admin
 - **Testing**: Jest, Supertest
 - **Seguridad**: bcrypt, jsonwebtoken, helmet
 

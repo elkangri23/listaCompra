@@ -1,8 +1,9 @@
 # 📊 ESTADO DEL PROYECTO - Lista de la Compra Colaborativa
 
-**Última actualización**: 23 de Noviembre, 2025
+**Última actualización**: 29 de Noviembre, 2025
 **Versión API**: 2.0.0
-**Tests**: 686/698 pasando (12 skipped por diseño - email real) 🟢
+**Tests**: 1255 tests (12 skipped por diseño - email real) 🟢
+**Coverage**: 66.72% statements / 69.35% functions (baseline pre-MFA) 📈
 **Estado general**: 🟢 Suite completa en verde con PostgreSQL + Redis + RabbitMQ (docker-compose up)
 
 ---
@@ -15,6 +16,17 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 - **Consolidación de `README.md`**: El `README.md` principal ha sido reestructurado para ser más conciso y directo, enlazando a este documento para detalles exhaustivos.
 - **Creación de `DOCS_INDEX.md`**: Se ha añadido un nuevo archivo para centralizar y facilitar el acceso a toda la documentación del proyecto.
 - **Actualización de `GEMINI.md`**: El perfil del proyecto para el asistente de IA ha sido actualizado.
+
+---
+
+## 🆕 **Avances Recientes (Noviembre 2025)**
+
+- **Multi-proveedor LLM (CU-31 extendido)**: `AI_PROVIDER` con FreeLLMAPI por defecto + OpenAI, OpenAI-compatible, Anthropic (API nativa), Google Gemini (API nativa), Perplexity, OpenRouter y Azure. Cambio de proveedor en caliente desde el panel admin. Nueva capa de adaptadores en `src/infrastructure/external-services/ai/providers/LLMProviderAdapter.ts`.
+- **CU-30 (Análisis de Hábitos de Compra)**: `GET /api/v1/ai/purchase-habits/:userId` con insights de frecuencia/estacionalidad y `confidence` calculada.
+- **CSRF**: middleware `csrfProtectionMiddleware` con doble submit token.
+- **Seguridad**: secretos reales (JWT, SMTP de Gmail, API key de Resend, emails personales) eliminados de todos los ficheros y **purgados del historial de git** (`git filter-repo` + force-push de `main` y ramas `codex/*`). Las credenciales afectadas deben rotarse igualmente.
+- **Testing**: repos Prisma al 100% de cobertura de tests (Usuario, Lista, Producto, Categoría, Tienda, Permiso, Invitación, Blueprint, Outbox), RabbitMQ (Connection, Consumer, Publisher, WorkerService), RedisCacheService, controllers y use cases de tiendas.
+- **Postman**: colección con 82 requests; `API_Testing_Guide.md` actualizada con CU-30 y CU-31.
 
 ---
 

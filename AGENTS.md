@@ -30,7 +30,7 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 - **Validación**: Zod o Joi
 - **Documentación**: Swagger/OpenAPI (swagger-ui-express)
 - **Code Quality**: ESLint, Prettier
-- **IA**: Perplexity API (Llama 3.1 Sonar)
+- **IA**: Multi-proveedor LLM (FreeLLMAPI por defecto, OpenAI/compatible, Anthropic, Google, Perplexity, OpenRouter, Azure) — seleccionable vía `AI_PROVIDER` o panel admin (CU-31)
 
 ---
 
@@ -648,7 +648,25 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 
 ---
 
-### �🚀 Fase Extra: IA Avanzada - Funcionalidades Premium Restantes (Semana 17+)
+### Fase 18: Multi-proveedor LLM, CU-30 y Seguridad (Nov 2025) ✅ **COMPLETADA**
+#### Entregables ✅:
+1. ✅ **Multi-proveedor LLM**: `AI_PROVIDERS` en `ai.config.ts` con `freellmapi` (por defecto), `openai`, `openai-compatible`, `anthropic` (nativa), `google` (nativa), `perplexity`, `openrouter`, `azure-openai`
+2. ✅ **Adaptadores**: `providers/LLMProviderAdapter.ts` (OpenAICompatible / Anthropic /v1/messages / Gemini generateContent) + factory por estilo de API
+3. ✅ **PerplexityService refactorizado**: todo pasa por adaptadores; `updateConfig()` (CU-31) cambia proveedor/modelo/apiKey en caliente
+4. ✅ **CU-30**: `GET /api/v1/ai/purchase-habits/:userId` (frecuencia, estacionalidad, preferencias, confidence)
+5. ✅ **CSRF**: `csrfProtectionMiddleware` (doble submit token)
+6. ✅ **Purga de secretos**: JWT/SMTP/Resend keys eliminados de ficheros e historial (`git filter-repo` + force-push) — rotar credenciales igualmente
+7. ✅ **Tests**: ~317 tests nuevos; coverage 46% → 66.72%; repos Prisma y RabbitMQ al 100% de cobertura de tests
+8. ✅ **Postman**: 82 requests; API_Testing_Guide.md con CU-30/CU-31
+
+#### Pendiente (Fase 19):
+- MFA/TOTP (fase 1 en desarrollo por agente paralelo)
+- Coverage > 80%: CacheIntegrityService, container.ts, controladores IA restantes
+- Persistir config IA en BD (ahora en memoria)
+
+---
+
+### 🚀 Fase Extra: IA Avanzada - Funcionalidades Premium Restantes (Semana 17+)
 **Casos de uso**: CU-30, CU-31
 
 #### Entregables Pendientes:

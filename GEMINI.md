@@ -5,7 +5,7 @@
 Este es un sistema backend de nivel empresarial para una aplicación de "Lista de la Compra Colaborativa". Está construido con TypeScript y Node.js, siguiendo una **arquitectura hexagonal** para garantizar una clara separación de responsabilidades y una alta mantenibilidad.
 
 El proyecto está diseñado para ser robusto, escalable y seguro, incorporando características avanzadas como:
-- **Inteligencia Artificial**: Para la categorización de productos, generación de listas y recomendaciones, utilizando la API de Perplexity (Llama 3.1 Sonar).
+- **Inteligencia Artificial**: Para la categorización de productos, generación de listas y recomendaciones, utilizando un **sistema multi-proveedor LLM** (`AI_PROVIDER`): FreeLLMAPI por defecto, con soporte para OpenAI, OpenAI-compatible, Anthropic, Google Gemini, Perplexity, OpenRouter y Azure OpenAI. El administrador puede cambiar de proveedor en caliente (CU-31).
 - **Arquitectura Orientada a Eventos**: Utiliza RabbitMQ y el patrón Outbox para una comunicación asíncrona y fiable entre servicios.
 - **Seguridad Avanzada**: Implementa autenticación JWT, control de acceso basado en roles (RBAC), limitación de velocidad (rate limiting) con Redis, y sanitización de entradas.
 - **Notificaciones en Tiempo Real**: Sistema de notificaciones por email para invitaciones y otras acciones.
