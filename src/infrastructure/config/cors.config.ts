@@ -15,10 +15,7 @@ const getAllowedOrigins = (): string[] => {
     case 'production':
       // 🔒 En producción: solo dominios específicos autorizados
       return [
-        'https://listacompra.tudominio.com',
-        'https://app.listacompra.tudominio.com',
-        'https://www.listacompra.tudominio.com',
-        // Añadir otros dominios de producción según sea necesario
+        'https://listacompra.laurafernandezenfermeria.com',
       ];
       
     case 'staging':
