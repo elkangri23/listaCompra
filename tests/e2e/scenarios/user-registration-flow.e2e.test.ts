@@ -9,6 +9,7 @@ import { createServer } from '../../../src/infrastructure/http/server';
 import { Container } from '../../../src/composition/container';
 import { Email } from '../../../src/domain/value-objects/Email';
 import { hmacVerificationCode } from '../../../src/infrastructure/security/email-verification-crypto';
+import { InMemoryEmailVerificationCodeRepository } from '../../../src/infrastructure/persistence/in-memory/InMemoryEmailVerificationCodeRepository';
 
 describe('E2E: User Registration Flow', () => {
   let app: Application;
@@ -130,15 +131,11 @@ describe('E2E: User Registration Flow', () => {
       if (!emailResult.isSuccess) throw new Error('Email inválido');
       const userResult = await container.usuarioRepository.findByEmail(emailResult.value);
       if (userResult.isFailure || !userResult.value) throw new Error('Usuario no encontrado');
-      const codigo = await container.prisma.emailVerificationCode.findFirst({
-        where: { usuarioId: userResult.value.id, usado: false },
-        orderBy: { createdAt: 'desc' },
-      });
-      if (!codigo) throw new Error('No hay código pendiente tras el registro');
-      await container.prisma.emailVerificationCode.update({
-        where: { id: codigo.id },
-        data: { codeHash: hmacVerificationCode('482913') },
-      });
+      const pendingResult = await container.emailVerificationCodeRepository.findLatestPendingByUsuarioId(userResult.value.id);
+      if (pendingResult.isFailure || !pendingResult.value) throw new Error('No hay código pendiente tras el registro');
+      // Costura de test: el repo en memoria permite fijar un código conocido
+      (container.emailVerificationCodeRepository as InMemoryEmailVerificationCodeRepository)
+        .setCodeHashForTest(pendingResult.value.id, hmacVerificationCode('482913'));
 
       const response = await request(app)
         .post('/api/v1/auth/verify-email')

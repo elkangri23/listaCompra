@@ -69,6 +69,7 @@ import { InMemoryCategoriaRepository } from '@infrastructure/persistence/in-memo
 import { InMemoryTiendaRepository } from '@infrastructure/persistence/in-memory/InMemoryTiendaRepository';
 import { InMemoryInvitacionRepository } from '@infrastructure/persistence/in-memory/InMemoryInvitacionRepository';
 import { InMemoryPermisoRepository } from '@infrastructure/persistence/in-memory/InMemoryPermisoRepository';
+import { InMemoryEmailVerificationCodeRepository } from '@infrastructure/persistence/in-memory/InMemoryEmailVerificationCodeRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { TurnstileService } from '@infrastructure/external-services/auth/TurnstileService';
@@ -355,6 +356,7 @@ export class Container {
       this._tiendaRepository = new InMemoryTiendaRepository();
       this._invitacionRepository = new InMemoryInvitacionRepository();
       this._permisoRepository = new InMemoryPermisoRepository();
+      this._emailVerificationCodeRepository = new InMemoryEmailVerificationCodeRepository();
       this._auditRepository = { save: async () => success({} as any), findById: async () => success(null), find: async () => success([]), count: async () => success(0) };
       this._blueprintRepository = {
         save: async (bp: any) => success(bp),
@@ -931,6 +933,10 @@ export class Container {
 
   public get usuarioRepository(): IUsuarioRepository {
     return this._usuarioRepository;
+  }
+
+  public get emailVerificationCodeRepository(): IEmailVerificationCodeRepository {
+    return this._emailVerificationCodeRepository;
   }
 
   public get listaRepository(): IListaRepository {
