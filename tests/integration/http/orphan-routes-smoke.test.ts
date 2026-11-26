@@ -64,7 +64,7 @@ describe('Smoke: rutas previamente huérfanas montadas', () => {
   test('GET /api/v1/blueprints/publicos responde (público)', async () => {
     const res = await request(app).get('/api/v1/blueprints/publicos');
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('blueprints');
+    expect(res.body).toHaveProperty('items');
   });
 
   test('POST /api/v1/blueprints exige auth (401 sin token)', async () => {

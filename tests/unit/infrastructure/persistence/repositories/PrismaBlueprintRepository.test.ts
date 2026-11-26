@@ -138,10 +138,10 @@ describe('PrismaBlueprintRepository', () => {
       expect(prisma.blueprint.count.mock.calls[1][0].where.id).toEqual({ not: 'bp1' });
     });
 
-    it('countByUsuarioId con onlyActive añade activo: true', async () => {
+    it('countByUsuarioId ignora onlyActive (el schema no tiene campo activo)', async () => {
       expect(unwrap(await repo.countByUsuarioId('u1'))).toBe(1);
       await repo.countByUsuarioId('u1', true);
-      expect(prisma.blueprint.count.mock.calls[1][0].where).toEqual({ creadoPorId: 'u1', activo: true });
+      expect(prisma.blueprint.count.mock.calls[1][0].where).toEqual({ creadoPorId: 'u1' });
     });
 
     it('count/exists errores como failure', async () => {
