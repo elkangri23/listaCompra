@@ -12,6 +12,7 @@ import { RegisterUser } from '@application/use-cases/auth/RegisterUser';
 import { UpdateProfile } from '@application/use-cases/auth/UpdateProfile';
 import { ChangePassword } from '@application/use-cases/auth/ChangePassword';
 import { AuthenticateUser } from '@application/use-cases/auth/AuthenticateUser';
+import { RefreshTokens } from '@application/use-cases/auth/RefreshTokens';
 import { CreateList } from '@application/use-cases/lists/CreateList';
 import { GetUserLists } from '@application/use-cases/lists/GetUserLists';
 import { UpdateList } from '@application/use-cases/lists/UpdateList';
@@ -163,6 +164,7 @@ export class Container {
   // Use Cases
   private _registerUser!: RegisterUser;
   private _authenticateUser!: AuthenticateUser;
+  private _refreshTokens!: RefreshTokens;
   private _updateProfile!: UpdateProfile;
   private _changePassword!: ChangePassword;
   private _mfaRepository!: IMfaRepository;
@@ -487,6 +489,9 @@ export class Container {
       this._mfaRepository
     );
 
+    // Renovación de sesión (POST /auth/refresh)
+    this._refreshTokens = new RefreshTokens(this._tokenService);
+
     // Perfil del usuario (13A)
     this._updateProfile = new UpdateProfile(this._usuarioRepository);
     this._changePassword = new ChangePassword(this._usuarioRepository, this._passwordHasher);
@@ -682,6 +687,7 @@ export class Container {
     this._authController = new AuthController({
       registerUser: this._registerUser,
       authenticateUser: this._authenticateUser,
+      refreshTokens: this._refreshTokens,
       updateProfile: this._updateProfile,
       changePassword: this._changePassword,
       usuarioRepository: this._usuarioRepository,

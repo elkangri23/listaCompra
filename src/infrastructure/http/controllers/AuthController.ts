@@ -6,6 +6,7 @@
 import { Request, Response, NextFunction } from 'express';
 import type { RegisterUser } from '@application/use-cases/auth/RegisterUser';
 import type { AuthenticateUser } from '@application/use-cases/auth/AuthenticateUser';
+import type { RefreshTokens } from '@application/use-cases/auth/RefreshTokens';
 import type { UpdateProfile } from '@application/use-cases/auth/UpdateProfile';
 import type { ChangePassword } from '@application/use-cases/auth/ChangePassword';
 import type { RegisterUserDto } from '@application/dto/auth/RegisterUserDto';
@@ -18,6 +19,7 @@ import { NotFoundError } from '@application/errors/NotFoundError';
 export interface AuthControllerDependencies {
   registerUser: RegisterUser;
   authenticateUser: AuthenticateUser;
+  refreshTokens?: RefreshTokens;
   updateProfile?: UpdateProfile;
   changePassword?: ChangePassword;
   usuarioRepository?: IUsuarioRepository;
@@ -184,12 +186,44 @@ export class AuthController {
         return;
       }
 
-      // TODO: Implementar caso de uso RefreshTokens
-      // Por ahora, respuesta temporal
-      res.status(501).json({
-        success: false,
-        error: 'NOT_IMPLEMENTED',
-        message: 'Funcionalidad de refresh token pendiente de implementar',
+      if (!this.dependencies.refreshTokens) {
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Renovación de sesión no disponible',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const result = await this.dependencies.refreshTokens.execute(refreshToken);
+
+      if (result.isFailure) {
+        if (result.error instanceof UnauthorizedError) {
+          res.status(401).json({
+            success: false,
+            error: 'UNAUTHORIZED',
+            message: result.error.message,
+            timestamp: new Date().toISOString(),
+          });
+          return;
+        }
+
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: {
+          tokens: result.value.tokens,
+        },
+        message: 'Token renovado',
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
