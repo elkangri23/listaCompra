@@ -135,8 +135,7 @@ export class WorkerService {
       queueName: 'audit_queue',
       exchangeName: 'lista_compra_events',
       exchangeType: 'topic',
-      routingKey: 'lista.#', // Listen to all list-related events
-      // routingKey: '#' // Listen to all domain events
+      routingKey: '#', // Todos los eventos: los de producto se publican como producto.* y con 'lista.#' nunca llegaban, asi que ningun cambio de producto quedaba registrado
       prefetch: 5,
       autoAck: false,
       maxRetries: 3,

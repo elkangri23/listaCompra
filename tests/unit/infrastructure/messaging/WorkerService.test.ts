@@ -87,7 +87,7 @@ describe('WorkerService', () => {
     const [, handler2, options2] = createAndStart.mock.calls[1];
     expect(handler2).toBeInstanceOf(AuditEventHandler);
     expect(options2.queueName).toBe('audit_queue');
-    expect(options2.routingKey).toBe('lista.#');
+    expect(options2.routingKey).toBe('#');
 
     const status = svc.getStatus();
     expect(status.isRunning).toBe(true);
