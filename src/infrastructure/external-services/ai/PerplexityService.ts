@@ -5,6 +5,8 @@
  */
 
 import axios from 'axios';
+import { createChatAdapter } from './providers/LLMProviderAdapter';
+import type { ILLMChatAdapter, ChatResult } from './providers/LLMProviderAdapter';
 import { 
   IAIService, 
   CategorySuggestion, 
@@ -25,14 +27,14 @@ import { AISecurityUtils } from './AISecurityUtils';
 
 export class PerplexityService implements IAIService {
   private readonly logger = new Logger('PerplexityService');
-  private httpClient: any; // mutable: updateConfig() recrea el cliente en caliente
+  private chatAdapter: ILLMChatAdapter; // mutable: updateConfig() recrea el adaptador en caliente
   private readonly config: PerplexityConfig;
   private readonly cacheService: CacheService | undefined;
 
   constructor(config: PerplexityConfig, cacheService?: CacheService) {
     this.config = config;
     this.cacheService = cacheService;
-    this.httpClient = this.buildHttpClient(config);
+    this.chatAdapter = createChatAdapter(config);
 
     // Logging seguro - NUNCA exponer la API key completa
     this.logger.ai('PerplexityService inicializado', {
@@ -44,20 +46,9 @@ export class PerplexityService implements IAIService {
     });
   }
 
-  private buildHttpClient(config: PerplexityConfig): any {
-    return axios.create({
-      baseURL: config.apiUrl,
-      timeout: config.timeout,
-      headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
-  }
-
   /**
    * Actualiza la configuración del proveedor en caliente (CU-31).
-   * Recrea el cliente HTTP con la nueva baseUrl/apiKey/modelo.
+   * Recrea el adaptador del proveedor con la nueva baseUrl/apiKey/modelo/estilo API.
    */
   updateConfig(config: PerplexityConfig): void {
     this.config.provider = config.provider;
@@ -67,7 +58,7 @@ export class PerplexityService implements IAIService {
     this.config.temperature = config.temperature;
     this.config.maxTokens = config.maxTokens;
 
-    this.httpClient = this.buildHttpClient(config);
+    this.chatAdapter = createChatAdapter(config);
 
     this.logger.ai('Configuración del proveedor IA actualizada en runtime', {
       provider: config.provider,
@@ -403,35 +394,18 @@ REGLAS ESTRICTAS:
   }
 
   /**
-   * Llama a la API de Perplexity con prompts seguros
-   * ACTUALIZADO para soportar system/user prompts separados
+   * Llama al proveedor LLM configurado a traves del adaptador
+   * (OpenAI-compatible, Anthropic o Gemini segun config.provider)
    */
   private async callPerplexityAPI(
     systemPrompt: string,
     userPrompt: string,
     temperature: number,
     maxTokens: number
-  ): Promise<{ content: string; confidence?: number }> {
+  ): Promise<ChatResult> {
     try {
-      const requestBody = {
-        model: this.config.model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: userPrompt
-          }
-        ],
-        temperature,
-        max_tokens: maxTokens,
-        return_citations: false,
-        return_images: false
-      };
-
-      this.logger.ai('Llamada a Perplexity API', {
+      this.logger.ai('Llamada al proveedor LLM', {
+        provider: this.config.provider,
         model: this.config.model,
         temperature,
         maxTokens,
@@ -439,24 +413,23 @@ REGLAS ESTRICTAS:
         userPromptLength: userPrompt.length
       });
 
-      const response = await this.httpClient.post('/chat/completions', requestBody);
-
-      const content = response.data?.choices?.[0]?.message?.content;
-      if (!content) {
-        throw new Error('Respuesta vacía de Perplexity API');
-      }
-
-      this.logger.ai('Respuesta recibida de Perplexity', {
-        responseLength: content.length,
-        usage: response.data?.usage
+      const result = await this.chatAdapter.chat(systemPrompt, userPrompt, {
+        temperature,
+        maxTokens,
       });
 
-      return { content };
+      this.logger.ai('Respuesta recibida del proveedor LLM', {
+        responseLength: result.content.length,
+        usage: result.usage
+      });
+
+      return result;
 
     } catch (error: any) {
       if (axios.isAxiosError && axios.isAxiosError(error)) {
         // Logging seguro - NO exponer headers que contienen API keys
-        this.logger.error('Error HTTP en Perplexity API', new Error(error.message), {
+        this.logger.error('Error HTTP en el proveedor LLM', new Error(error.message), {
+          provider: this.config.provider,
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
@@ -464,11 +437,11 @@ REGLAS ESTRICTAS:
             url: error.config?.url,
             method: error.config?.method,
             timeout: error.config?.timeout
-            // NO incluir headers, auth, o otra información sensible
+            // NO incluir headers, auth, u otra informacion sensible
           }
         });
       } else {
-        this.logger.error('Error inesperado en Perplexity API', error instanceof Error ? error : new Error(String(error)));
+        this.logger.error('Error inesperado en el proveedor LLM', error instanceof Error ? error : new Error(String(error)));
       }
       throw error;
     }
@@ -720,25 +693,18 @@ Proporciona insights sobre frecuencia, patrones y recomendaciones.`;
         promptLength: prompt.length
       });
 
-      // Llamar a Perplexity API
-      const response = await this.httpClient.post('/chat/completions', {
-        model: this.config.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'Eres un asistente experto en alimentación y compras que sugiere productos complementarios basándose en lo que el usuario ya tiene. Siempre respondes con JSON válido.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: this.getTemperatureForCreativity(creativityLevel),
-        max_tokens: Math.min(maxRecommendations * 150 + 300, 2000), // Estimación: ~150 tokens por recomendación
-        response_format: { type: 'json_object' }
-      });
+      // Llamar al proveedor LLM configurado (a través del adaptador)
+      const response = await this.chatAdapter.chat(
+        'Eres un asistente experto en alimentación y compras que sugiere productos complementarios basándose en lo que el usuario ya tiene. Siempre respondes con JSON válido.',
+        prompt,
+        {
+          temperature: this.getTemperatureForCreativity(creativityLevel),
+          maxTokens: Math.min(maxRecommendations * 150 + 300, 2000), // Estimación: ~150 tokens por recomendación
+          responseFormatJson: true,
+        }
+      );
 
-      const content = response.data.choices[0]?.message?.content;
+      const content = response.content;
 
       if (!content) {
         throw new Error('No se recibió respuesta de la IA');
@@ -756,7 +722,7 @@ Proporciona insights sobre frecuencia, patrones y recomendaciones.`;
       this.logger.ai('Recomendaciones generadas exitosamente', {
         processingTime,
         responseLength: content.length,
-        tokensUsed: response.data.usage?.total_tokens
+        tokensUsed: response.usage?.totalTokens
       });
 
       return content;
@@ -1058,25 +1024,18 @@ Responde SOLO con el JSON, sin texto adicional.`;
         promptLength: prompt.length
       });
 
-      // Llamar a Perplexity API
-      const response = await this.httpClient.post('/chat/completions', {
-        model: this.config.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'Eres un asistente experto en categorización de productos de supermercado. Siempre respondes con JSON válido estricto.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.3, // Baja temperatura para categorización consistente
-        max_tokens: Math.min(products.length * 80 + 200, 2000), // ~80 tokens por producto
-        response_format: { type: 'json_object' }
-      });
+      // Llamar al proveedor LLM configurado (a través del adaptador)
+      const response = await this.chatAdapter.chat(
+        'Eres un asistente experto en categorización de productos de supermercado. Siempre respondes con JSON válido estricto.',
+        prompt,
+        {
+          temperature: 0.3, // Baja temperatura para categorización consistente
+          maxTokens: Math.min(products.length * 80 + 200, 2000), // ~80 tokens por producto
+          responseFormatJson: true,
+        }
+      );
 
-      const content = response.data.choices[0]?.message?.content;
+      const content = response.content;
 
       if (!content) {
         throw new Error('No se recibió respuesta de la IA');
@@ -1102,7 +1061,7 @@ Responde SOLO con el JSON, sin texto adicional.`;
         processingTime,
         productsProcessed: parsed.products.length,
         responseLength: content.length,
-        tokensUsed: response.data.usage?.total_tokens
+        tokensUsed: response.usage?.totalTokens
       });
 
       return content;

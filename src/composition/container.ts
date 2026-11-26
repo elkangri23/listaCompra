@@ -68,7 +68,7 @@ import { OutboxWorker, DEFAULT_WORKER_CONFIG } from '@infrastructure/messaging/o
 import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import { NodemailerService } from '@infrastructure/external-services/email/NodemailerService';
 import { PerplexityService } from '@infrastructure/external-services/ai/PerplexityService';
-import { PerplexityConfig } from '@infrastructure/config/ai.config';
+import { PerplexityConfig, getAIProviderMeta } from '@infrastructure/config/ai.config';
 import { WorkerService } from '@infrastructure/messaging/WorkerService';
 import { InMemoryOutboxService } from '@infrastructure/messaging/outbox/InMemoryOutboxService';
 
@@ -377,23 +377,11 @@ export class Container {
     
     this._emailService = new NodemailerService(emailConfig);
     
-    // Configurar IA Service (Perplexity)
-    const aiConfig: PerplexityConfig = {
-      provider: 'perplexity',
-      apiKey: process.env['PERPLEXITY_API_KEY'] || '',
-      apiUrl: process.env['PERPLEXITY_API_URL'] || 'https://api.perplexity.ai',
-      model: (process.env['PERPLEXITY_MODEL'] as any) || 'sonar',
-      temperature: parseFloat(process.env['AI_TEMPERATURE'] || '0.1'),
-      maxTokens: parseInt(process.env['AI_MAX_TOKENS'] || '1000'),
-      timeout: parseInt(process.env['AI_TIMEOUT'] || '30000'),
-      cache: {
-        enabled: process.env['AI_CACHE_ENABLED'] === 'true',
-        ttl: parseInt(process.env['AI_CACHE_TTL'] || '3600')
-      },
-      rateLimit: {
-        requestsPerMinute: parseInt(process.env['AI_RATE_LIMIT_PER_MINUTE'] || '10')
-      }
-    };
+    // Configurar IA Service (proveedor LLM configurable, por defecto FreeLLMAPI)
+    const aiConfig: PerplexityConfig = AIConfigService.fromEnvironment();
+    if (!aiConfig.apiKey) {
+      console.warn(`⚠️  ${getAIProviderMeta(aiConfig.provider)?.apiKeyEnv ?? 'API key del proveedor IA'} no está configurada en .env - El servicio de IA no funcionará (proveedor por defecto: freellmapi)`);
+    }
     this._aiService = new PerplexityService(aiConfig);
     this._aiConfigService = new AIConfigService(aiConfig);
     this._aiConfigController = new AIConfigController(

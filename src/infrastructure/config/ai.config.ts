@@ -30,9 +30,44 @@ export interface PerplexityConfig extends AIConfig {
 }
 
 /**
- * Proveedores LLM soportados (todos OpenAI-compatible: POST {apiUrl}/chat/completions)
+ * Estilos de API soportados:
+ *  - openai:    POST {apiUrl}/chat/completions con Bearer auth (Perplexity, OpenAI,
+ *               OpenRouter, Azure, FreeLLMAPI, cualquier endpoint compatible)
+ *  - anthropic: POST {apiUrl}/v1/messages con x-api-key + anthropic-version
+ *  - google:    POST {apiUrl}/v1beta/models/{model}:generateContent?key=...
  */
-export const AI_PROVIDERS = [
+export type APIStyle = 'openai' | 'anthropic' | 'google';
+
+export interface AIProviderMeta {
+  id: string;
+  nombre: string;
+  apiUrlPorDefecto: string;
+  modelosSugeridos: string[];
+  apiStyle: APIStyle;
+  /** Variable de entorno que contiene la API key de este proveedor */
+  apiKeyEnv: string;
+  /** Variable de entorno opcional para sobreescribir la apiUrl por defecto */
+  apiUrlEnv: string;
+  /** Variable de entorno opcional para fijar el modelo */
+  modelEnv: string;
+}
+
+/**
+ * Proveedores LLM soportados. Los de estilo 'openai' son intercambiables
+ * entre sí (misma forma de llamada); 'anthropic' y 'google' usan adaptadores
+ * propios (ver src/infrastructure/external-services/ai/providers/).
+ */
+export const AI_PROVIDERS: readonly AIProviderMeta[] = [
+  {
+    id: 'freellmapi',
+    nombre: 'FreeLLMAPI (gratuito, OpenAI-compatible)',
+    apiUrlPorDefecto: 'https://api.electronhub.ai/v1',
+    modelosSugeridos: ['gpt-4o-mini', 'llama-3.1-8b-instruct', 'gemini-flash-1.5', 'claude-3-haiku'],
+    apiStyle: 'openai',
+    apiKeyEnv: 'FREE_LLMAPI_API_KEY',
+    apiUrlEnv: 'FREE_LLMAPI_API_URL',
+    modelEnv: 'FREE_LLMAPI_MODEL',
+  },
   {
     id: 'perplexity',
     nombre: 'Perplexity (Sonar online)',
@@ -43,34 +78,91 @@ export const AI_PROVIDERS = [
       'sonar-reasoning-pro',
       'sonar-deep-research',
     ],
+    apiStyle: 'openai',
+    apiKeyEnv: 'PERPLEXITY_API_KEY',
+    apiUrlEnv: 'PERPLEXITY_API_URL',
+    modelEnv: 'PERPLEXITY_MODEL',
   },
   {
     id: 'openai',
     nombre: 'OpenAI (GPT)',
     apiUrlPorDefecto: 'https://api.openai.com/v1',
     modelosSugeridos: ['gpt-4o-mini', 'gpt-4o'],
+    apiStyle: 'openai',
+    apiKeyEnv: 'OPENAI_API_KEY',
+    apiUrlEnv: 'OPENAI_API_URL',
+    modelEnv: 'OPENAI_MODEL',
+  },
+  {
+    id: 'openai-compatible',
+    nombre: 'OpenAI-compatible (endpoint personalizado)',
+    apiUrlPorDefecto: '',
+    modelosSugeridos: [],
+    apiStyle: 'openai',
+    apiKeyEnv: 'OPENAI_COMPATIBLE_API_KEY',
+    apiUrlEnv: 'OPENAI_COMPATIBLE_API_URL',
+    modelEnv: 'OPENAI_COMPATIBLE_MODEL',
+  },
+  {
+    id: 'anthropic',
+    nombre: 'Anthropic Claude (API nativa /v1/messages)',
+    apiUrlPorDefecto: 'https://api.anthropic.com',
+    modelosSugeridos: ['claude-3-5-haiku-20241022', 'claude-3-5-sonnet-20241022'],
+    apiStyle: 'anthropic',
+    apiKeyEnv: 'ANTHROPIC_API_KEY',
+    apiUrlEnv: 'ANTHROPIC_API_URL',
+    modelEnv: 'ANTHROPIC_MODEL',
+  },
+  {
+    id: 'google',
+    nombre: 'Google Gemini (API nativa generateContent)',
+    apiUrlPorDefecto: 'https://generativelanguage.googleapis.com',
+    modelosSugeridos: ['gemini-1.5-flash', 'gemini-1.5-pro'],
+    apiStyle: 'google',
+    apiKeyEnv: 'GOOGLE_API_KEY',
+    apiUrlEnv: 'GOOGLE_API_URL',
+    modelEnv: 'GOOGLE_MODEL',
   },
   {
     id: 'openrouter',
     nombre: 'OpenRouter (multi-proveedor)',
     apiUrlPorDefecto: 'https://openrouter.ai/api/v1',
     modelosSugeridos: ['openai/gpt-4o-mini', 'meta-llama/llama-3.1-8b-instruct'],
-  },
-  {
-    id: 'claude',
-    nombre: 'Anthropic Claude (compatible OpenAI)',
-    apiUrlPorDefecto: 'https://api.anthropic.com/v1',
-    modelosSugeridos: [],
+    apiStyle: 'openai',
+    apiKeyEnv: 'OPENROUTER_API_KEY',
+    apiUrlEnv: 'OPENROUTER_API_URL',
+    modelEnv: 'OPENROUTER_MODEL',
   },
   {
     id: 'azure-openai',
     nombre: 'Azure OpenAI',
     apiUrlPorDefecto: '',
     modelosSugeridos: [],
+    apiStyle: 'openai',
+    apiKeyEnv: 'AZURE_OPENAI_API_KEY',
+    apiUrlEnv: 'AZURE_OPENAI_API_URL',
+    modelEnv: 'AZURE_OPENAI_MODEL',
   },
-] as const;
+];
 
-export type AIProviderId = (typeof AI_PROVIDERS)[number]['id'];
+/**
+ * Devuelve los metadatos de un proveedor (o undefined si no existe)
+ */
+export const getAIProviderMeta = (id: string): AIProviderMeta | undefined =>
+  AI_PROVIDERS.find(p => p.id === id);
+
+/**
+ * Modelo por defecto de un proveedor (primer modelo sugerido o fallback genérico)
+ */
+export const getDefaultModelForProvider = (id: string): string => {
+  const meta = getAIProviderMeta(id);
+  return meta?.modelosSugeridos[0] ?? 'gpt-4o-mini';
+};
+
+/**
+ * ID de proveedor IA (extensible: los de la lista AI_PROVIDERS)
+ */
+export type AIProviderId = string;
 
 /**
  * Configuración por defecto para desarrollo con Perplexity

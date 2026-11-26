@@ -10,7 +10,7 @@
  * migración; se documenta como mejora futura.
  */
 
-import { AIConfig, AIProviderId, PerplexityConfig } from './ai.config';
+import { AIConfig, AIProviderId, PerplexityConfig, getAIProviderMeta, getDefaultModelForProvider } from './ai.config';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 
 export interface AIConfigUpdateDto {
@@ -40,14 +40,35 @@ export class AIConfigService {
    * Construye la configuración desde variables de entorno (sin lanzar si
    * falta la key: el servicio queda sin configurar y los endpoints IA
    * devuelven error de configuración en runtime).
+   *
+   * Proveedor por defecto: FREE_LLMAPI (AI_PROVIDER=freellmapi). Cada
+   * proveedor tiene su propia variable de API key (ver AI_PROVIDERS).
    */
   static fromEnvironment(): PerplexityConfig {
+    const provider = process.env['AI_PROVIDER'] || 'freellmapi';
+    const meta = getAIProviderMeta(provider);
+
+    // API key específica del proveedor (con fallback a PERPLEXITY_API_KEY
+    // por compatibilidad con instalaciones anteriores)
+    const apiKey =
+      process.env[meta?.apiKeyEnv ?? 'FREE_LLMAPI_API_KEY'] ||
+      (provider === 'perplexity'
+        ? ''
+        : process.env['PERPLEXITY_API_KEY'] || '');
+
+    const apiUrl =
+      process.env[meta?.apiUrlEnv ?? 'FREE_LLMAPI_API_URL'] ||
+      meta?.apiUrlPorDefecto ||
+      '';
+
     return {
-      provider: (process.env['AI_PROVIDER'] as AIProviderId) || 'perplexity',
-      apiKey: process.env['PERPLEXITY_API_KEY'] || '',
-      apiUrl: process.env['PERPLEXITY_API_URL'] || 'https://api.perplexity.ai',
+      provider,
+      apiKey,
+      apiUrl,
       model:
-        process.env['PERPLEXITY_MODEL'] || 'sonar',
+        process.env[meta?.modelEnv ?? 'AI_MODEL'] ||
+        process.env['AI_MODEL'] ||
+        getDefaultModelForProvider(provider),
       temperature: parseFloat(process.env['AI_TEMPERATURE'] || '0.7'),
       maxTokens: parseInt(process.env['AI_MAX_TOKENS'] || '1000'),
       timeout: parseInt(process.env['AI_TIMEOUT'] || '30000'),

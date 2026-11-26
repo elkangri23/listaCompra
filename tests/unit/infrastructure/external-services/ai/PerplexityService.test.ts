@@ -44,9 +44,8 @@ describe('PerplexityService', () => {
   });
 
   describe('constructor y updateConfig', () => {
-    it('crea el cliente HTTP con la config y NO loguea la apiKey completa', () => {
-      // Si el constructor lanza por apiKey inválida el test fallaría; no hace nada más
-      expect((service as unknown as { httpClient: unknown }).httpClient).toBeTruthy();
+    it('crea el adaptador con la config', () => {
+      expect((service as unknown as { chatAdapter: unknown }).chatAdapter).toBeTruthy();
     });
 
     it('updateConfig recrea el cliente y cambia modelo/apiUrl', () => {
