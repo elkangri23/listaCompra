@@ -28,6 +28,8 @@ export class PrismaUsuarioRepository implements IUsuarioRepository {
           rol: persistenceData.rol as any,
           activo: persistenceData.activo,
           ...(persistenceData.emailVerificado !== undefined && { emailVerificado: persistenceData.emailVerificado }),
+          terminosAceptadosEn: persistenceData.terminosAceptadosEn ?? null,
+          eliminacionSolicitadaEn: persistenceData.eliminacionSolicitadaEn ?? null,
         },
       });
 
@@ -53,6 +55,8 @@ export class PrismaUsuarioRepository implements IUsuarioRepository {
           rol: persistenceData.rol as any,
           activo: persistenceData.activo,
           ...(persistenceData.emailVerificado !== undefined && { emailVerificado: persistenceData.emailVerificado }),
+          terminosAceptadosEn: persistenceData.terminosAceptadosEn ?? null,
+          eliminacionSolicitadaEn: persistenceData.eliminacionSolicitadaEn ?? null,
           totpSecret: persistenceData.totpSecret ?? null,
           totpEnabled: persistenceData.totpEnabled ?? false,
           totpPendIntentos: persistenceData.totpPendIntentos ?? 0,

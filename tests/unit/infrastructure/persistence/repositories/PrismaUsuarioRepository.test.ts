@@ -61,6 +61,39 @@ describe('PrismaUsuarioRepository', () => {
     );
   });
 
+  it('save persiste la fecha de aceptación de términos', async () => {
+    const fechaTerminos = new Date('2026-11-26T10:00:00.000Z');
+    const creado = Usuario.create({
+      email: Email.createUnsafe('carlos@test.local'),
+      password: 'hashed-password-1234567890',
+      nombre: 'Carlos',
+      terminosAceptadosEn: fechaTerminos
+    });
+    const usuario = (creado as { value?: Usuario }).value!;
+    const result = await repo.save(usuario);
+
+    expect(result.isSuccess).toBe(true);
+    expect(prisma.usuario.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ terminosAceptadosEn: fechaTerminos })
+      })
+    );
+  });
+
+  it('update persiste la fecha de eliminación solicitada (GDPR)', async () => {
+    const usuario = UsuarioMapperFactory.create();
+    usuario.solicitarEliminacion();
+    const result = await repo.update(usuario);
+
+    expect(result.isSuccess).toBe(true);
+    expect(prisma.usuario.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: usuario.id },
+        data: expect.objectContaining({ activo: false, eliminacionSolicitadaEn: expect.any(Date) })
+      })
+    );
+  });
+
   it('findById devuelve la entidad o null', async () => {
     const found = await repo.findById('u1');
     expect(unwrap(found)?.id).toBe('u1');
