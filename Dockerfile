@@ -19,10 +19,8 @@ COPY src ./src
 RUN npx prisma generate
 RUN npm run build
 
-# El código usa alias @/ (@infrastructure/...) y `tsc` NO los reescribe:
-# sin esto, `node dist/main.js` fallaría con "Cannot find module".
-# tsc-alias reescribe los require() de dist/ a rutas relativas.
-RUN npx -y tsc-alias@1.8.10 -p tsconfig.json
+# `npm run build` ya ejecuta tsc-alias: reescribe los alias @/ de dist/ a
+# rutas relativas (sin esto, `node dist/main.js` fallaría con "Cannot find module").
 
 FROM node:20-alpine AS runner
 WORKDIR /app
