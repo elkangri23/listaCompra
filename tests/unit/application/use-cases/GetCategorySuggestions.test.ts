@@ -28,7 +28,8 @@ const mockProductoRepository: jest.Mocked<IProductoRepository> = {
   findByCategory: jest.fn(),
   findUrgentByUser: jest.fn(),
   findCategorizedByUser: jest.fn(),
-  deleteAllByList: jest.fn()
+  deleteAllByList: jest.fn(),
+  updateOrden: jest.fn()
 };
 
 const mockCategoriaRepository: jest.Mocked<ICategoriaRepository> = {

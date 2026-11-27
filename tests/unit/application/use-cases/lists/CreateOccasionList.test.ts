@@ -76,7 +76,8 @@ const mockProductoRepository = {
   findByCategory: jest.fn(),
   findUrgentByUser: jest.fn(),
   findCategorizedByUser: jest.fn(),
-  deleteAllByList: jest.fn()
+  deleteAllByList: jest.fn(),
+  updateOrden: jest.fn()
 };
 
 const mockTiendaRepository = {

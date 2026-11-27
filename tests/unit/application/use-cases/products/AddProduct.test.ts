@@ -38,7 +38,8 @@ describe('AddProduct', () => {
       findByCategory: jest.fn(),
       findUrgentByUser: jest.fn(),
       findCategorizedByUser: jest.fn(),
-      deleteAllByList: jest.fn()
+      deleteAllByList: jest.fn(),
+      updateOrden: jest.fn()
     } as jest.Mocked<IProductoRepository>;
 
     mockListaRepository = {
