@@ -143,7 +143,8 @@ export class AIController {
       const input: GetCategorySuggestionsDto = {
         productName: req.body.productName,
         storeName: req.body.storeName,
-        existingCategories: req.body.existingCategories
+        existingCategories: req.body.existingCategories,
+        ...(req.user?.userId && { userId: req.user.userId })
       };
 
       // Validaciones básicas
@@ -213,7 +214,9 @@ export class AIController {
           })),
           cached: suggestions.cached,
           requestId: suggestions.requestId,
-          timestamp: suggestions.timestamp
+          timestamp: suggestions.timestamp,
+          personalized: suggestions.personalized,
+          examplesUsed: suggestions.examplesUsed
         }
       });
 

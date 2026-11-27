@@ -110,6 +110,8 @@ export function createAIRoutes(dependencies: {
    *       - Cache Redis con TTL de 24h para categorías
    *       - Filtrado automático por confianza >= 0.7
    *       - Normalización Unicode para caracteres especiales
+   *       - Personalización: si el usuario autenticado ya categorizó productos
+   *         parecidos, la sugerencia sigue su criterio (personalized, examplesUsed)
    *     operationId: suggestCategories
    *     requestBody:
    *       required: true
@@ -180,6 +182,8 @@ export function createAIRoutes(dependencies: {
    *                       confianza: 0.80
    *                       razon: Las bebidas lácteas se clasifican como bebidas
    *                   cached: false
+   *                   personalized: true
+   *                   examplesUsed: 2
    *                   timestamp: 2024-10-29T10:30:00Z
    *               respuesta_cache:
    *                 summary: Respuesta desde cache

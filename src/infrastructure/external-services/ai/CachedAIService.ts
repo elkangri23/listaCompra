@@ -13,6 +13,7 @@ import { Logger } from '../../observability/logger/Logger';
 import type {
   IAIService,
   CategorySuggestion,
+  PastCategoryExample,
   PurchaseInsight,
   ProductRecommendation,
   AIAnalysisRequest,
@@ -72,12 +73,16 @@ export class CachedAIService implements IAIService {
   async suggestCategories(
     productName: string,
     storeName?: string,
-    existingCategories?: string[]
+    existingCategories?: string[],
+    pastExamples?: PastCategoryExample[],
+    storeContext?: string
   ): Promise<CategorySuggestion[]> {
     return await this.perplexityService.suggestCategories(
       productName,
       storeName,
-      existingCategories
+      existingCategories,
+      pastExamples,
+      storeContext
     );
   }
 

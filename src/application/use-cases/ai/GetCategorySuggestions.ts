@@ -7,12 +7,18 @@ import type { Result} from '../../../shared/result';
 import { success, failure } from '../../../shared/result';
 import type { IAIService, CategorySuggestion } from '../../ports/external/IAIService';
 import type { GetCategorySuggestionsDto, CategorySuggestionResponseDto } from '../../dto/ai/AIDto';
+import type { IProductoRepository } from '../../ports/repositories/IProductoRepository';
+import type { ICategoriaRepository } from '../../ports/repositories/ICategoriaRepository';
+import { matchPastExamples } from './match-past-examples';
+import type { PastCategorizedProduct, PastCategoryExample } from './match-past-examples';
 import { Logger } from '../../../infrastructure/observability/logger/Logger';
 import { ValidationError } from '../../errors/ValidationError';
 import { v4 as uuidv4 } from 'uuid';
 
 interface GetCategorySuggestionsUseCaseDeps {
   aiService: IAIService;
+  productoRepository: IProductoRepository;
+  categoriaRepository: ICategoriaRepository;
 }
 
 export class GetCategorySuggestionsUseCase {
@@ -35,14 +41,25 @@ export class GetCategorySuggestionsUseCase {
         existingCategories: dto.existingCategories?.length || 0
       });
 
-      // Preparar el contexto para la IA (para futuras mejoras)
-      this.buildAIContext(dto);
+      // Historial del usuario: ejemplos de cómo categoriza él (best-effort;
+      // si falla, la sugerencia sigue siendo genérica)
+      const pastExamples = dto.userId
+        ? await this.loadPastExamples(dto.userId, dto.productName)
+        : [];
+
+      // Contexto para la IA (tienda, categorías existentes)
+      const aiContext = this.buildAIContext(dto);
+      const storeContext = typeof aiContext['storeContext'] === 'string'
+        ? aiContext['storeContext']
+        : undefined;
 
       // Solicitar sugerencias a la IA
       const suggestions = await this.deps.aiService.suggestCategories(
         dto.productName,
         dto.storeName,
-        dto.existingCategories
+        dto.existingCategories,
+        pastExamples,
+        storeContext
       );
 
       // Procesar y filtrar las sugerencias
@@ -57,13 +74,17 @@ export class GetCategorySuggestionsUseCase {
         ...(dto.storeName && { storeName: dto.storeName }), // Solo incluir si existe
         cached: false, // El servicio no devuelve info de cache por ahora
         requestId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        personalized: pastExamples.length > 0,
+        examplesUsed: pastExamples.length
       };
 
       this.logger.ai('Sugerencias generadas exitosamente', {
         requestId,
         suggestionsCount: processedSuggestions.length,
         cached: response.cached,
+        personalized: response.personalized,
+        examplesUsed: response.examplesUsed,
         avgConfidence: this.calculateAverageConfidence(processedSuggestions)
       });
 
@@ -122,6 +143,49 @@ export class GetCategorySuggestionsUseCase {
   }
 
   /**
+   * Ejemplos del historial del usuario para personalizar la sugerencia.
+   * Best-effort: cualquier fallo devuelve [] y la sugerencia sigue siendo genérica.
+   */
+  private async loadPastExamples(userId: string, productName: string): Promise<PastCategoryExample[]> {
+    try {
+      const historyResult = await this.deps.productoRepository.findCategorizedByUser(userId, 200);
+      if (historyResult.isFailure || historyResult.value.length === 0) {
+        return [];
+      }
+
+      // Resolver los nombres de las categorías (los productos guardan el UUID)
+      const categoryIds = [...new Set(
+        historyResult.value
+          .map(producto => producto.categoriaId)
+          .filter((id): id is string => id !== null)
+      )];
+      const namesById = new Map<string, string>();
+      await Promise.all(categoryIds.map(async categoryId => {
+        const categoryResult = await this.deps.categoriaRepository.findById(categoryId);
+        if (categoryResult.isSuccess && categoryResult.value) {
+          namesById.set(categoryId, categoryResult.value.nombre);
+        }
+      }));
+
+      const history: PastCategorizedProduct[] = historyResult.value
+        .filter(producto => producto.categoriaId !== null && namesById.has(producto.categoriaId))
+        .map(producto => ({
+          productName: producto.nombre,
+          category: namesById.get(producto.categoriaId as string) as string,
+          updatedAt: producto.fechaActualizacion
+        }));
+
+      return matchPastExamples(productName, history);
+    } catch (error) {
+      this.logger.warn('No se pudo cargar el historial de categorías del usuario, sugerencia genérica', {
+        userId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return [];
+    }
+  }
+
+  /**
    * Construir contexto para la IA basado en los datos disponibles
    */
   private buildAIContext(dto: GetCategorySuggestionsDto): Record<string, any> {
@@ -176,16 +240,11 @@ export class GetCategorySuggestionsUseCase {
     suggestions: CategorySuggestion[],
     existingCategories?: string[]
   ): Array<{ category: string; confidence: number; reasoning?: string }> {
-    let processed = suggestions
-      // Filtrar duplicados con categorías existentes (case-insensitive)
-      .filter(suggestion => {
-        if (!existingCategories) return true;
-        
-        const normalizedSuggestion = suggestion.category.toLowerCase().trim();
-        const normalizedExisting = existingCategories.map(cat => cat.toLowerCase().trim());
-        
-        return !normalizedExisting.includes(normalizedSuggestion);
-      })
+    const normalizedExisting = (existingCategories ?? []).map(cat => cat.toLowerCase().trim());
+    const isExisting = (category: string): boolean =>
+      normalizedExisting.includes(category.toLowerCase().trim());
+
+    const processed = suggestions
       // Filtrar sugerencias con baja confianza
       .filter(suggestion => suggestion.confidence >= 0.3)
       // Normalizar nombres de categorías
@@ -194,13 +253,17 @@ export class GetCategorySuggestionsUseCase {
         confidence: Math.round(suggestion.confidence * 100) / 100, // Redondear a 2 decimales
         ...(suggestion.reasoning && { reasoning: suggestion.reasoning }) // Solo incluir si existe
       }))
-      // Ordenar por confianza descendente
-      .sort((a, b) => b.confidence - a.confidence);
+      // Las categorías que el usuario ya tiene van primero: son las que puede
+      // aplicar directamente. Antes se eliminaban aquí, lo que obligaba al
+      // modelo a inventar categorías nuevas aunque una existente encajara.
+      // Dentro de cada grupo, por confianza descendente.
+      .sort((a, b) =>
+        Number(isExisting(b.category)) - Number(isExisting(a.category)) ||
+        b.confidence - a.confidence
+      );
 
     // Limitar a máximo 5 sugerencias
-    processed = processed.slice(0, 5);
-
-    return processed;
+    return processed.slice(0, 5);
   }
 
   /**

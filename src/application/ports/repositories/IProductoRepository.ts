@@ -155,6 +155,13 @@ export interface IProductoRepository {
   findUrgentByUser(userId: string): Promise<Result<Producto[], Error>>;
 
   /**
+   * Busca productos categorizados creados por un usuario (su historial de
+   * categorización), los más recientes primero, limitados en número.
+   * Solo productos con categoría asignada.
+   */
+  findCategorizedByUser(userId: string, limit?: number): Promise<Result<Producto[], Error>>;
+
+  /**
    * Elimina todos los productos de una lista
    */
   deleteAllByList(listaId: string): Promise<Result<number, Error>>;

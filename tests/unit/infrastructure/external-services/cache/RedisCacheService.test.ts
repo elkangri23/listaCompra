@@ -33,7 +33,7 @@ jest.mock('redis', () => ({
   createClient: jest.fn(() => createClientMock)
 }));
 
-import { RedisCacheService } from '../../../../../src/infrastructure/external-services/cache/RedisCacheService';
+import { RedisCacheService, CacheKeyBuilder } from '../../../../../src/infrastructure/external-services/cache/RedisCacheService';
 import { createClient } from 'redis';
 
 const makeConfig = (overrides: any = {}) => ({
@@ -237,6 +237,50 @@ describe('RedisCacheService', () => {
 
     it('sin cliente no lanza', async () => {
       await expect(service.disconnect()).resolves.toBeUndefined();
+    });
+  });
+
+  describe('CacheKeyBuilder.buildCategorySuggestionsKey', () => {
+    it('sin ejemplos, la clave depende de producto, tienda y categorías', () => {
+      const a = CacheKeyBuilder.buildCategorySuggestionsKey('Leche', 'Mercadona', ['Lácteos']);
+      const b = CacheKeyBuilder.buildCategorySuggestionsKey('Leche', 'Mercadona', ['Lácteos']);
+      const c = CacheKeyBuilder.buildCategorySuggestionsKey('Pan', 'Mercadona', ['Lácteos']);
+      expect(a).toBe(b);
+      expect(a).not.toBe(c);
+    });
+
+    it('con ejemplos distintos, la clave cambia (no se mezclan usuarios)', () => {
+      const base = CacheKeyBuilder.buildCategorySuggestionsKey('Leche', 'Mercadona', ['Lácteos']);
+      const withExamples = CacheKeyBuilder.buildCategorySuggestionsKey(
+        'Leche',
+        'Mercadona',
+        ['Lácteos'],
+        [{ productName: 'Leche entera', category: 'Lácteos' }]
+      );
+      const otherExamples = CacheKeyBuilder.buildCategorySuggestionsKey(
+        'Leche',
+        'Mercadona',
+        ['Lácteos'],
+        [{ productName: 'Leche de avena', category: 'Bebidas' }]
+      );
+      expect(withExamples).not.toBe(base);
+      expect(withExamples).not.toBe(otherExamples);
+    });
+
+    it('mismos ejemplos dan la misma clave (reutiliza el cache)', () => {
+      const a = CacheKeyBuilder.buildCategorySuggestionsKey(
+        'Leche',
+        undefined,
+        undefined,
+        [{ productName: 'Leche entera', category: 'Lácteos' }]
+      );
+      const b = CacheKeyBuilder.buildCategorySuggestionsKey(
+        'Leche',
+        undefined,
+        undefined,
+        [{ productName: 'Leche entera', category: 'Lácteos' }]
+      );
+      expect(a).toBe(b);
     });
   });
 });

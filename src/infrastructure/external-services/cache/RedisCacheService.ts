@@ -316,14 +316,21 @@ export class CacheKeyBuilder {
   static buildCategorySuggestionsKey(
     productName: string,
     storeName?: string,
-    existingCategories?: string[]
+    existingCategories?: string[],
+    pastExamples?: Array<{ productName: string; category: string }>
   ): string {
     const normalizedProduct = productName.toLowerCase().trim();
     const normalizedStore = storeName?.toLowerCase().trim() || 'generic';
     const categoriesHash = existingCategories?.sort().join(',') || '';
+    // Los ejemplos personalizan la respuesta: sin ellos en la clave, un
+    // usuario recibiría sugerencias generadas con el historial de otro.
+    // (Si el historial cambia, los ejemplos cambian y la clave también.)
+    const examplesHash = pastExamples && pastExamples.length > 0
+      ? pastExamples.map(example => `${example.productName}=>${example.category}`).join('|')
+      : '';
     
     // Crear hash simple para evitar claves muy largas
-    const hash = Buffer.from(normalizedProduct + normalizedStore + categoriesHash)
+    const hash = Buffer.from(normalizedProduct + normalizedStore + categoriesHash + examplesHash)
       .toString('base64')
       .replace(/[/+=]/g, '');
     

@@ -75,6 +75,7 @@ const mockProductoRepository = {
   markAllAsPurchased: jest.fn(),
   findByCategory: jest.fn(),
   findUrgentByUser: jest.fn(),
+  findCategorizedByUser: jest.fn(),
   deleteAllByList: jest.fn()
 };
 

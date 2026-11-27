@@ -7,6 +7,47 @@ import { GetCategorySuggestionsUseCase } from '../../../../src/application/use-c
 import type { IAIService, CategorySuggestion } from '../../../../src/application/ports/external/IAIService';
 import type { GetCategorySuggestionsDto } from '../../../../src/application/dto/ai/AIDto';
 import { ValidationError } from '../../../../src/application/errors/ValidationError';
+import { success, failure } from '@shared/result';
+import type { IProductoRepository } from '../../../../src/application/ports/repositories/IProductoRepository';
+import type { ICategoriaRepository } from '../../../../src/application/ports/repositories/ICategoriaRepository';
+import type { Producto } from '../../../../src/domain/entities/Producto';
+import type { Categoria } from '../../../../src/domain/entities/Categoria';
+
+// Mocks de repositorios (historial del usuario)
+const mockProductoRepository: jest.Mocked<IProductoRepository> = {
+  save: jest.fn(),
+  findById: jest.fn(),
+  findByIdAndList: jest.fn(),
+  findByList: jest.fn(),
+  findByNameAndList: jest.fn(),
+  deleteById: jest.fn(),
+  existsById: jest.fn(),
+  countByList: jest.fn(),
+  getResumenByList: jest.fn(),
+  markAllAsPurchased: jest.fn(),
+  findByCategory: jest.fn(),
+  findUrgentByUser: jest.fn(),
+  findCategorizedByUser: jest.fn(),
+  deleteAllByList: jest.fn()
+};
+
+const mockCategoriaRepository: jest.Mocked<ICategoriaRepository> = {
+  save: jest.fn(),
+  update: jest.fn(),
+  findById: jest.fn(),
+  findByTienda: jest.fn(),
+  findAll: jest.fn(),
+  findByNombre: jest.fn(),
+  findByColor: jest.fn(),
+  existsByNombreAndTienda: jest.fn(),
+  delete: jest.fn(),
+  countByTienda: jest.fn(),
+  search: jest.fn(),
+  getMostUsed: jest.fn(),
+  moveToTienda: jest.fn(),
+  deactivateByTienda: jest.fn(),
+  getStats: jest.fn()
+};
 
 // Mock del servicio de IA
 const mockAIService: jest.Mocked<IAIService> = {
@@ -26,8 +67,11 @@ describe('GetCategorySuggestionsUseCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockProductoRepository.findCategorizedByUser.mockResolvedValue(success([]));
     useCase = new GetCategorySuggestionsUseCase({
-      aiService: mockAIService
+      aiService: mockAIService,
+      productoRepository: mockProductoRepository,
+      categoriaRepository: mockCategoriaRepository
     });
   });
 
@@ -67,7 +111,9 @@ describe('GetCategorySuggestionsUseCase', () => {
       expect(mockAIService.suggestCategories).toHaveBeenCalledWith(
         'Leche desnatada',
         'Mercadona',
-        ['Bebidas', 'Carne'] // Actualizar las categorías
+        ['Bebidas', 'Carne'], // Actualizar las categorías
+        [],
+        'supermercado general español'
       );
     });
 
@@ -254,6 +300,113 @@ describe('GetCategorySuggestionsUseCase', () => {
         expect(result2.value.requestId).toBeDefined();
         expect(result1.value.requestId).not.toBe(result2.value.requestId);
       }
+    });
+
+    describe('personalización por historial del usuario', () => {
+      const historyProducts = [
+        { nombre: 'Leche entera', categoriaId: 'cat-lacteos', fechaActualizacion: new Date('2026-11-20T10:00:00Z') },
+        { nombre: 'Leche desnatada', categoriaId: 'cat-lacteos', fechaActualizacion: new Date('2026-11-21T10:00:00Z') },
+        { nombre: 'Pan de molde', categoriaId: 'cat-panaderia', fechaActualizacion: new Date('2026-11-22T10:00:00Z') }
+      ];
+
+      beforeEach(() => {
+        mockProductoRepository.findCategorizedByUser.mockResolvedValue(
+          success(historyProducts as unknown as Producto[])
+        );
+        mockCategoriaRepository.findById.mockImplementation(async (id: string) =>
+          success({ nombre: id === 'cat-lacteos' ? 'Lácteos' : 'Panadería' } as unknown as Categoria)
+        );
+      });
+
+      it('con userId e historial, pasa los ejemplos a la IA y marca personalized', async () => {
+        const dto: GetCategorySuggestionsDto = { productName: 'Leche semidesnatada', userId: 'user-1' };
+        mockAIService.suggestCategories.mockResolvedValue([{ category: 'Lácteos', confidence: 0.97 }]);
+
+        const result = await useCase.execute(dto);
+
+        expect(result.isSuccess).toBe(true);
+        expect(mockProductoRepository.findCategorizedByUser).toHaveBeenCalledWith('user-1', 200);
+        expect(mockAIService.suggestCategories).toHaveBeenCalledWith(
+          'Leche semidesnatada',
+          undefined,
+          undefined,
+          [
+            { productName: 'Leche desnatada', category: 'Lácteos' },
+            { productName: 'Leche entera', category: 'Lácteos' }
+          ],
+          undefined
+        );
+        if (result.isSuccess) {
+          expect(result.value.personalized).toBe(true);
+          expect(result.value.examplesUsed).toBe(2);
+        }
+      });
+
+      it('con userId sin historial, se comporta como antes (genérico)', async () => {
+        mockProductoRepository.findCategorizedByUser.mockResolvedValue(success([]));
+        const dto: GetCategorySuggestionsDto = { productName: 'Leche', userId: 'user-1' };
+        mockAIService.suggestCategories.mockResolvedValue([{ category: 'Lácteos', confidence: 0.9 }]);
+
+        const result = await useCase.execute(dto);
+
+        expect(result.isSuccess).toBe(true);
+        expect(mockAIService.suggestCategories).toHaveBeenCalledWith('Leche', undefined, undefined, [], undefined);
+        if (result.isSuccess) {
+          expect(result.value.personalized).toBe(false);
+          expect(result.value.examplesUsed).toBe(0);
+        }
+      });
+
+      it('sin userId no consulta el historial', async () => {
+        const dto: GetCategorySuggestionsDto = { productName: 'Leche' };
+        mockAIService.suggestCategories.mockResolvedValue([{ category: 'Lácteos', confidence: 0.9 }]);
+
+        const result = await useCase.execute(dto);
+
+        expect(result.isSuccess).toBe(true);
+        expect(mockProductoRepository.findCategorizedByUser).not.toHaveBeenCalled();
+        expect(mockAIService.suggestCategories).toHaveBeenCalledWith('Leche', undefined, undefined, [], undefined);
+        if (result.isSuccess) {
+          expect(result.value.personalized).toBe(false);
+          expect(result.value.examplesUsed).toBe(0);
+        }
+      });
+
+      it('si el historial falla, la sugerencia sigue siendo genérica', async () => {
+        mockProductoRepository.findCategorizedByUser.mockResolvedValue(
+          failure(new Error('BD caída'))
+        );
+        const dto: GetCategorySuggestionsDto = { productName: 'Leche', userId: 'user-1' };
+        mockAIService.suggestCategories.mockResolvedValue([{ category: 'Lácteos', confidence: 0.9 }]);
+
+        const result = await useCase.execute(dto);
+
+        expect(result.isSuccess).toBe(true);
+        expect(mockAIService.suggestCategories).toHaveBeenCalledWith('Leche', undefined, undefined, [], undefined);
+        if (result.isSuccess) {
+          expect(result.value.personalized).toBe(false);
+          expect(result.value.examplesUsed).toBe(0);
+        }
+      });
+
+      it('mantiene y prioriza las sugerencias que ya son categorías del usuario', async () => {
+        const dto: GetCategorySuggestionsDto = {
+          productName: 'Leche',
+          existingCategories: ['Lácteos', 'Bebidas']
+        };
+        mockAIService.suggestCategories.mockResolvedValue([
+          { category: 'Bebidas', confidence: 0.8 },
+          { category: 'Lácteos', confidence: 0.9 },
+          { category: 'Otros', confidence: 0.7 }
+        ]);
+
+        const result = await useCase.execute(dto);
+
+        expect(result.isSuccess).toBe(true);
+        if (result.isSuccess) {
+          expect(result.value.suggestions.map(s => s.category)).toEqual(['Lácteos', 'Bebidas', 'Otros']);
+        }
+      });
     });
   });
 });

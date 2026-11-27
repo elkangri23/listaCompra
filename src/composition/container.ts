@@ -785,6 +785,8 @@ export class Container {
 
     this._getCategorySuggestions = new GetCategorySuggestionsUseCase({
       aiService: this._aiService,
+      productoRepository: this._productoRepository,
+      categoriaRepository: this._categoriaRepository,
     });
 
     this._getAuditHistoryForList = new GetAuditHistoryForList(this._auditRepository);

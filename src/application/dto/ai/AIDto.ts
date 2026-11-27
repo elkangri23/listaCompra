@@ -7,6 +7,8 @@ export interface GetCategorySuggestionsDto {
   storeName?: string;
   existingCategories?: string[];
   language?: 'es' | 'en';
+  /** ID del usuario autenticado (desde el token). Sin él no hay personalización. */
+  userId?: string;
 }
 
 export interface CategorySuggestionResponseDto {
@@ -20,6 +22,10 @@ export interface CategorySuggestionResponseDto {
   cached: boolean;
   requestId: string;
   timestamp: string;
+  /** true si la sugerencia usó ejemplos del historial del usuario */
+  personalized: boolean;
+  /** nº de ejemplos del historial incluidos en el prompt */
+  examplesUsed: number;
 }
 
 export interface AnalyzePurchaseHabitsDto {

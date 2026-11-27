@@ -9,6 +9,15 @@ export interface CategorySuggestion {
   reasoning?: string;
 }
 
+/**
+ * Ejemplo de cómo un usuario categoriza sus productos.
+ * Se usa para personalizar las sugerencias con su propio criterio.
+ */
+export interface PastCategoryExample {
+  productName: string;
+  category: string;
+}
+
 export interface PurchaseInsight {
   type: 'frequency' | 'seasonal' | 'preference' | 'optimization';
   title: string;
@@ -50,12 +59,16 @@ export interface IAIService {
    * @param productName Nombre del producto
    * @param storeName Nombre de la tienda (opcional)
    * @param existingCategories Categorías existentes para contexto
+   * @param pastExamples Ejemplos de cómo este usuario categoriza (opcional, personaliza la sugerencia)
+   * @param storeContext Descripción de la tienda (opcional, da contexto al modelo)
    * @returns Lista de sugerencias de categorías
    */
   suggestCategories(
     productName: string,
     storeName?: string,
-    existingCategories?: string[]
+    existingCategories?: string[],
+    pastExamples?: PastCategoryExample[],
+    storeContext?: string
   ): Promise<CategorySuggestion[]>;
 
   /**

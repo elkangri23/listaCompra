@@ -237,4 +237,46 @@ describe('PerplexityService', () => {
       expect(parsed.products).toBeTruthy();
     });
   });
+
+  describe('suggestCategories con ejemplos del usuario', () => {
+    const messagesOf = () => {
+      const body = postMock.mock.calls[0]?.[1] as any;
+      return (body?.messages ?? []) as Array<{ role: string; content: string }>;
+    };
+
+    it('incluye los ejemplos y la preferencia por categorías existentes en el prompt', async () => {
+      postMock.mockResolvedValue(aiResponse(JSON.stringify([
+        { category: 'Lácteos', confidence: 0.97, reasoning: 'como siempre' }
+      ])));
+
+      const suggestions = await service.suggestCategories(
+        'Leche semidesnatada',
+        'Mercadona',
+        ['Lácteos'],
+        [{ productName: 'Leche entera', category: 'Lácteos' }],
+        'supermercado general español'
+      );
+
+      expect(suggestions[0]!.category).toBe('Lácteos');
+      const system = messagesOf().find(m => m.role === 'system')?.content ?? '';
+      const user = messagesOf().find(m => m.role === 'user')?.content ?? '';
+      expect(system).toContain('Ejemplos de cómo este usuario categoriza');
+      expect(system).toContain('Leche entera');
+      expect(system).toContain('Lácteos');
+      expect(system).toContain('Prefiere las categorías que el usuario ya tiene');
+      expect(user).toContain('supermercado general español');
+    });
+
+    it('sin ejemplos no añade el bloque de ejemplos', async () => {
+      postMock.mockResolvedValue(aiResponse(JSON.stringify([
+        { category: 'Lácteos', confidence: 0.9, reasoning: 'leche' }
+      ])));
+
+      await service.suggestCategories('Leche');
+
+      const system = messagesOf().find(m => m.role === 'system')?.content ?? '';
+      expect(system).not.toContain('Ejemplos de cómo este usuario categoriza');
+      expect(system).toContain('Prefiere las categorías que el usuario ya tiene');
+    });
+  });
 });

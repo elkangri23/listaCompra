@@ -143,6 +143,14 @@ export class InMemoryProductoRepository implements IProductoRepository {
     return success(items);
   }
 
+  async findCategorizedByUser(userId: string, limit = 200): Promise<Result<Producto[], Error>> {
+    const items = Array.from(this.productos.values())
+      .filter(producto => producto.creadoPorId === userId && producto.categoriaId !== null)
+      .sort((a, b) => b.fechaActualizacion.getTime() - a.fechaActualizacion.getTime())
+      .slice(0, limit);
+    return success(items);
+  }
+
   async findTopPurchasedByUser(): Promise<Result<Producto[], Error>> {
     return success([]);
   }

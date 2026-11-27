@@ -223,6 +223,26 @@ describe('InMemoryProductoRepository', () => {
 
     expect(unwrapOpt(await repo.findById('p1'))).toBeNull();
   });
+
+  it('findCategorizedByUser devuelve solo los categorizados del usuario, recientes primero', async () => {
+    await repo.save(makeProducto('p1', 'l1', 'Leche entera', { categoriaId: 'cat-1', creadoPorId: 'user-1', fechaActualizacion: new Date('2026-11-20T10:00:00Z') }));
+    await repo.save(makeProducto('p2', 'l1', 'Pan', { creadoPorId: 'user-1', fechaActualizacion: new Date('2026-11-21T10:00:00Z') }));
+    await repo.save(makeProducto('p3', 'l1', 'Leche desnatada', { categoriaId: 'cat-1', creadoPorId: 'user-1', fechaActualizacion: new Date('2026-11-22T10:00:00Z') }));
+    await repo.save(makeProducto('p4', 'l2', 'Leche', { categoriaId: 'cat-1', creadoPorId: 'user-2', fechaActualizacion: new Date('2026-11-23T10:00:00Z') }));
+
+    const result = unwrap(await repo.findCategorizedByUser('user-1'));
+
+    expect(result.map(p => p.id)).toEqual(['p3', 'p1']);
+  });
+
+  it('findCategorizedByUser respeta el límite', async () => {
+    await repo.save(makeProducto('p1', 'l1', 'Leche', { categoriaId: 'cat-1', creadoPorId: 'user-1' }));
+    await repo.save(makeProducto('p2', 'l1', 'Pan', { categoriaId: 'cat-1', creadoPorId: 'user-1' }));
+
+    const result = unwrap(await repo.findCategorizedByUser('user-1', 1));
+
+    expect(result).toHaveLength(1);
+  });
 });
 
 describe('InMemoryCategoriaRepository', () => {

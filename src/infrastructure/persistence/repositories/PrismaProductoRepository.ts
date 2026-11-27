@@ -304,6 +304,28 @@ export class PrismaProductoRepository implements IProductoRepository {
     }
   }
 
+  async findCategorizedByUser(userId: string, limit = 200): Promise<Result<Producto[], Error>> {
+    try {
+      const data = await this.prisma.producto.findMany({
+        where: {
+          creadoPorId: userId,
+          categoriaId: { not: null }
+        },
+        orderBy: { fechaActualizacion: 'desc' },
+        take: limit
+      });
+
+      const productosResult = ProductoMapper.toDomainArray(data);
+      if (productosResult.isFailure) {
+        return failure(new Error(`Error al mapear productos: ${productosResult.error.message}`));
+      }
+
+      return success(productosResult.value);
+    } catch (error) {
+      return failure(new Error(`Error al buscar productos categorizados del usuario: ${error}`));
+    }
+  }
+
   async deleteAllByList(listaId: string): Promise<Result<number, Error>> {
     try {
       const result = await this.prisma.producto.deleteMany({

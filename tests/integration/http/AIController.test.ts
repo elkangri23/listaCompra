@@ -78,7 +78,9 @@ describe('AIController Integration Tests', () => {
         ],
         cached: false,
         requestId: 'test-request-id',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        personalized: true,
+        examplesUsed: 1
       };
 
       mockGetCategorySuggestionsUseCase.execute.mockResolvedValue(
@@ -105,14 +107,17 @@ describe('AIController Integration Tests', () => {
           ],
           cached: false,
           requestId: 'test-request-id',
-          timestamp: mockResponse.timestamp
+          timestamp: mockResponse.timestamp,
+          personalized: true,
+          examplesUsed: 1
         }
       });
 
       expect(mockGetCategorySuggestionsUseCase.execute).toHaveBeenCalledWith({
         productName: 'Leche desnatada',
         storeName: 'Mercadona',
-        existingCategories: ['Lácteos']
+        existingCategories: ['Lácteos'],
+        userId: 'test-user-id'
       });
     });
 
