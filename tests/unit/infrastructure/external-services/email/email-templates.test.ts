@@ -38,18 +38,27 @@ describe('email-templates', () => {
     it('es un documento completo con la marca y el pie', () => {
       expect(html).toContain('<!DOCTYPE html>');
       expect(html).toContain('<html lang="es">');
-      expect(html).toContain('Lista de Compra');
+      expect(html).toContain('ListaCompra');
       expect(html).toContain('Adelanto de prueba');
       expect(html).toContain('Hola, Mundo');
-      expect(html).toContain(`© ${new Date().getFullYear()} Lista de Compra`);
+      expect(html).toContain(`© ${new Date().getFullYear()} ListaCompra`);
       expect(html).toContain('listacompra.laurafernandezenfermeria.com');
+    });
+
+    it('muestra el logo en la banda de marca, sin emoji', () => {
+      expect(html).toContain('#2563eb');
+      expect(html).toContain(
+        '<img src="https://listacompra.laurafernandezenfermeria.com/logo.svg" width="40" height="40" alt="ListaCompra"',
+      );
+      expect(html).not.toContain('&#128722;');
+      expect(html).not.toContain('Lista de Compra');
     });
 
     it('usa tablas con estilos en línea y ningún bloque <style>', () => {
       expect(html).not.toContain('<style>');
       expect(html).toContain('<table role="presentation"');
       expect(html).toContain('width="600"');
-      expect(html).toContain('#4387f4');
+      expect(html).toContain('#2563eb');
     });
   });
 

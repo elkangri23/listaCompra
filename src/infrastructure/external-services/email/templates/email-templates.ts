@@ -1,13 +1,13 @@
 /**
- * Plantillas de correo de Lista de Compra (item 12 del backlog).
+ * Plantillas de correo de ListaCompra (item 12 del backlog).
  *
  * HTML compatible con Outlook (motor Word), Gmail y Apple Mail:
  * - todo con tablas y estilos EN LÍNEA, sin bloque <style> (Gmail lo
  *   recorta y Outlook lo ignora casi todo)
- * - ancho fijo 600px, sin imágenes externas (los clientes las bloquean
- *   por defecto y el correo se vería roto)
- * - aspecto de la web: primario #4387f4, texto #111418, secundario
- *   #60708a, fondo #f0f2f5, éxito #10b981
+ * - ancho fijo 600px; la única imagen externa es el logo de la marca
+ *   (con alt como respaldo si el cliente la bloquea)
+ * - aspecto de la web: banda de marca #2563eb, botones #4387f4, texto
+ *   #111418, secundario #60708a, fondo #f0f2f5, éxito #10b981
  * - todos los datos que vienen del usuario (nombres, listas, detalles)
  *   se escapan con escapeHtml: antes se interpolaban tal cual y un
  *   nombre de lista con HTML podía romper el correo o inyectar marcado
@@ -24,6 +24,7 @@ export function escapeHtml(value: string): string {
 
 const FONT = "Inter, 'Noto Sans', Arial, sans-serif";
 const PRIMARY = '#4387f4';
+const BRAND_BAND = '#2563eb';
 const TEXT = '#111418';
 const MUTED = '#60708a';
 const PAGE_BG = '#f0f2f5';
@@ -62,8 +63,11 @@ export function renderEmailLayout(options: EmailLayoutOptions): string {
 <td align="center" style="padding:24px 12px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background-color:#ffffff;">
 <tr>
-<td style="background-color:${PRIMARY};padding:28px 32px;">
-<p style="margin:0;color:#ffffff;font-family:${FONT};font-size:22px;font-weight:800;line-height:1.2;">&#128722; Lista de Compra</p>
+<td style="background-color:${BRAND_BAND};padding:28px 32px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="vertical-align:middle;padding-right:12px;"><img src="${SITE_URL}/logo.svg" width="40" height="40" alt="ListaCompra" style="display:block;"></td>
+<td style="vertical-align:middle;color:#ffffff;font-family:${FONT};font-size:22px;font-weight:800;line-height:1.2;">ListaCompra</td>
+</tr></table>
 </td>
 </tr>
 <tr>
@@ -75,7 +79,7 @@ ${options.bodyHtml}
 <tr>
 <td style="padding:24px 32px;border-top:1px solid ${BORDER};font-family:${FONT};font-size:12px;line-height:1.5;color:${MUTED};text-align:center;">
 <p style="margin:0 0 8px 0;">Si no esperabas este correo, puedes ignorarlo.</p>
-<p style="margin:0;">© ${year} Lista de Compra &middot; <a href="${SITE_URL}" style="color:${MUTED};text-decoration:underline;">listacompra.laurafernandezenfermeria.com</a></p>
+<p style="margin:0;">© ${year} ListaCompra &middot; <a href="${SITE_URL}" style="color:${MUTED};text-decoration:underline;">listacompra.laurafernandezenfermeria.com</a></p>
 </td>
 </tr>
 </table>
