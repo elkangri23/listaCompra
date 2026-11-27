@@ -178,7 +178,6 @@ export class SecurityAuditService {
     outcome: 'SUCCESS' | 'FAILURE' | 'DENIED';
     details: Record<string, any>;
     ipAddress?: string | undefined;
-    userAgent?: string | undefined;
     riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   }): Omit<AuditEvent, 'id' | 'timestamp'> {
     const eventData: any = {
@@ -200,10 +199,6 @@ export class SecurityAuditService {
 
     if (data.ipAddress !== undefined) {
       eventData.ipAddress = data.ipAddress;
-    }
-
-    if (data.userAgent !== undefined) {
-      eventData.userAgent = data.userAgent;
     }
 
     return eventData;

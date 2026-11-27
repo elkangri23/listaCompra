@@ -282,10 +282,11 @@ Este documento ha sido actualizado para reflejar el estado más reciente del pro
 - ✅ Email: NodemailerService completamente implementado
 - ✅ Cache: Redis configurado y operativo
 
-**Observability** (70%)
-- ✅ Logger: Winston implementado
-- ✅ Metrics: MetricsCollector funcionando
-- ⚠️ Tracing: No implementado
+**Observability** (100%)
+- ✅ Logger: Winston con enriquecimiento de traceId/spanId de OpenTelemetry (100% cobertura de tests)
+- ✅ Metrics: MetricsCollector + MetricsMiddleware + endpoints /metrics (100% cobertura de tests)
+- ✅ Tracing: OpenTelemetry SDK (http/express/prisma) con exportador OTLP, activable con TRACING_ENABLED (100% cobertura de tests)
+- ✅ Audit: SecurityAuditService + InMemoryAuditRepository (100% cobertura de tests)
 
 ---
 
