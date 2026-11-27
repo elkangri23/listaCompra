@@ -389,6 +389,21 @@ describe('GetCategorySuggestionsUseCase', () => {
         }
       });
 
+      it('sin repositorios inyectados (solo aiService), la sugerencia es genérica', async () => {
+        const useCaseSinRepos = new GetCategorySuggestionsUseCase({ aiService: mockAIService });
+        const dto: GetCategorySuggestionsDto = { productName: 'Leche', userId: 'user-1' };
+        mockAIService.suggestCategories.mockResolvedValue([{ category: 'Lácteos', confidence: 0.9 }]);
+
+        const result = await useCaseSinRepos.execute(dto);
+
+        expect(result.isSuccess).toBe(true);
+        expect(mockAIService.suggestCategories).toHaveBeenCalledWith('Leche', undefined, undefined, [], undefined);
+        if (result.isSuccess) {
+          expect(result.value.personalized).toBe(false);
+          expect(result.value.examplesUsed).toBe(0);
+        }
+      });
+
       it('mantiene y prioriza las sugerencias que ya son categorías del usuario', async () => {
         const dto: GetCategorySuggestionsDto = {
           productName: 'Leche',

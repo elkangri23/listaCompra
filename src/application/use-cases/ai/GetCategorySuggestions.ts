@@ -17,8 +17,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 interface GetCategorySuggestionsUseCaseDeps {
   aiService: IAIService;
-  productoRepository: IProductoRepository;
-  categoriaRepository: ICategoriaRepository;
+  // Opcionales: sin ellos la sugerencia es genérica (sin historial). El
+  // e2e ai-features-flow construye el caso de uso solo con aiService.
+  productoRepository?: IProductoRepository;
+  categoriaRepository?: ICategoriaRepository;
 }
 
 export class GetCategorySuggestionsUseCase {
@@ -147,8 +149,13 @@ export class GetCategorySuggestionsUseCase {
    * Best-effort: cualquier fallo devuelve [] y la sugerencia sigue siendo genérica.
    */
   private async loadPastExamples(userId: string, productName: string): Promise<PastCategoryExample[]> {
+    const productoRepository = this.deps.productoRepository;
+    const categoriaRepository = this.deps.categoriaRepository;
+    if (!productoRepository || !categoriaRepository) {
+      return [];
+    }
     try {
-      const historyResult = await this.deps.productoRepository.findCategorizedByUser(userId, 200);
+      const historyResult = await productoRepository.findCategorizedByUser(userId, 200);
       if (historyResult.isFailure || historyResult.value.length === 0) {
         return [];
       }
@@ -161,7 +168,7 @@ export class GetCategorySuggestionsUseCase {
       )];
       const namesById = new Map<string, string>();
       await Promise.all(categoryIds.map(async categoryId => {
-        const categoryResult = await this.deps.categoriaRepository.findById(categoryId);
+        const categoryResult = await categoriaRepository.findById(categoryId);
         if (categoryResult.isSuccess && categoryResult.value) {
           namesById.set(categoryId, categoryResult.value.nombre);
         }
