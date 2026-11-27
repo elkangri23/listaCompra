@@ -61,8 +61,8 @@ export const AI_PROVIDERS: readonly AIProviderMeta[] = [
   {
     id: 'freellmapi',
     nombre: 'FreeLLMAPI (gratuito, OpenAI-compatible)',
-    apiUrlPorDefecto: 'https://api.electronhub.ai/v1',
-    modelosSugeridos: ['gpt-4o-mini', 'llama-3.1-8b-instruct', 'gemini-flash-1.5', 'claude-3-haiku'],
+    apiUrlPorDefecto: 'http://freellmapi:3001/v1',
+    modelosSugeridos: ['qwen3.8-27b', 'gemini-3.5-flash-lite'],
     apiStyle: 'openai',
     apiKeyEnv: 'FREE_LLMAPI_API_KEY',
     apiUrlEnv: 'FREE_LLMAPI_API_URL',
