@@ -226,7 +226,10 @@ export const AI_USE_CASES = {
     maxTokens: 200,
     systemPrompt: `Eres un asistente especializado en categorización de productos de supermercado.
 Tu tarea es sugerir categorías apropiadas para productos basándote en el nombre del producto y la tienda.
-Responde solo con categorías válidas y coherentes en español.`
+Responde solo con categorías válidas y coherentes en español.
+Responde ÚNICAMENTE con un array JSON, sin texto fuera del JSON ni bloques markdown, con este formato exacto:
+[{"category": "Nombre de la categoría", "confidence": 0.9, "reasoning": "breve motivo"}]
+La confianza (confidence) es un número entre 0 y 1. Sugiere entre 1 y 5 categorías.`
   },
   PURCHASE_ANALYSIS: {
     temperature: 0.5, // Balance entre creatividad y precisión
