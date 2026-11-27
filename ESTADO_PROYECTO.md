@@ -2,8 +2,8 @@
 
 **Última actualización**: 29 de Noviembre, 2025
 **Versión API**: 2.0.0
-**Tests**: 1255 tests (12 skipped por diseño - email real) 🟢
-**Coverage**: 66.72% statements / 69.35% functions (baseline pre-MFA) 📈
+**Tests**: 1877 tests (12 skipped por diseño - email real) 🟢
+**Coverage**: 80.15% statements / 83.04% functions 📈
 **Estado general**: 🟢 Suite completa en verde con PostgreSQL + Redis + RabbitMQ (docker-compose up)
 
 ---
