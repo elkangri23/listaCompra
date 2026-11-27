@@ -1,4 +1,4 @@
-import { ProductoPlantilla } from '../../../domain/entities/Blueprint';
+import type { ProductoPlantilla } from '../../../domain/entities/Blueprint';
 
 export interface CreateBlueprintDto {
   nombre: string;

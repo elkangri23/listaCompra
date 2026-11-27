@@ -3,8 +3,8 @@
  */
 
 import { DeclineInvitation } from '../../../../../src/application/use-cases/invitations/DeclineInvitation';
-import { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
-import { IInvitacionRepository } from '../../../../../src/application/ports/repositories/IInvitacionRepository';
+import type { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
+import type { IInvitacionRepository } from '../../../../../src/application/ports/repositories/IInvitacionRepository';
 import { Usuario } from '../../../../../src/domain/entities/Usuario';
 import { Invitacion } from '../../../../../src/domain/entities/Invitacion';
 import { Email } from '../../../../../src/domain/value-objects/Email';

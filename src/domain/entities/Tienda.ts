@@ -4,7 +4,8 @@
 
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
+import type { BusinessRuleViolationError } from '@domain/errors/DomainError';
+import { InvalidValueError } from '@domain/errors/DomainError';
 import { generateUUID, createDate } from '@shared/utils';
 
 export interface TiendaProps {
@@ -106,8 +107,8 @@ export class Tienda {
     if (props.telefono) {
       telefonoSanitizado = props.telefono.trim();
       // Validar formato de teléfono
-      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$|^[\+]?[(]?[\d\s\-\(\)]{10,20}$/;
-      const cleanPhone = telefonoSanitizado.replace(/[\s\-\(\)]/g, '');
+      const phoneRegex = /^[+]?[1-9][\d]{0,15}$|^[+]?[(]?[\d\s\-()]{10,20}$/;
+      const cleanPhone = telefonoSanitizado.replace(/[\s\-()]/g, '');
       
       if (!phoneRegex.test(cleanPhone) || cleanPhone.length < 7 || cleanPhone.length > 15) {
         return failure(new InvalidValueError(
@@ -224,8 +225,8 @@ export class Tienda {
     
     if (nuevoTelefono) {
       telefonoSanitizado = nuevoTelefono.trim();
-      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$|^[\+]?[(]?[\d\s\-\(\)]{10,20}$/;
-      const cleanPhone = telefonoSanitizado.replace(/[\s\-\(\)]/g, '');
+      const phoneRegex = /^[+]?[1-9][\d]{0,15}$|^[+]?[(]?[\d\s\-()]{10,20}$/;
+      const cleanPhone = telefonoSanitizado.replace(/[\s\-()]/g, '');
       
       if (!phoneRegex.test(cleanPhone) || cleanPhone.length < 7 || cleanPhone.length > 15) {
         return failure(new InvalidValueError(

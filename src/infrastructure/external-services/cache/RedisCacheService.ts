@@ -3,8 +3,10 @@
  * Optimiza costos de API almacenando respuestas de IA
  */
 
-import { createClient, RedisClientType } from 'redis';
-import { RedisConfig, CACHE_TTL, CACHE_KEYS } from '../../config/redis.config';
+import type { RedisClientType } from 'redis';
+import { createClient } from 'redis';
+import type { RedisConfig} from '../../config/redis.config';
+import { CACHE_TTL, CACHE_KEYS } from '../../config/redis.config';
 import { Logger } from '../../observability/logger/Logger';
 
 export interface CacheService {

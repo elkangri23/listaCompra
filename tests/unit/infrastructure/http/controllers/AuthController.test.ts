@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { AuthController } from '../../../../../src/infrastructure/http/controllers/AuthController';
-import { RegisterUser } from '../../../../../src/application/use-cases/auth/RegisterUser';
-import { AuthenticateUser } from '../../../../../src/application/use-cases/auth/AuthenticateUser';
+import type { RegisterUser } from '../../../../../src/application/use-cases/auth/RegisterUser';
+import type { AuthenticateUser } from '../../../../../src/application/use-cases/auth/AuthenticateUser';
 import { success, failure } from '../../../../../src/shared/result';
 import { UnauthorizedError } from '../../../../../src/application/errors/UnauthorizedError';
 

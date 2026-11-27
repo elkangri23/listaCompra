@@ -117,7 +117,7 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction):
 
     if (!headerCsrf || headerCsrf !== cookieCsrf) {
       console.warn(
-        `🛡️ [CSRF] Token double-submit inválido o ausente ` +
+        '🛡️ [CSRF] Token double-submit inválido o ausente ' +
         `(IP: ${req.ip ?? 'unknown'}, ${req.method} ${req.path})`
       );
       res.status(403).json({

@@ -45,7 +45,7 @@ jest.mock('../../../src/infrastructure/external-services/ai/PerplexityService', 
       }
 
       return [
-        { category: `General`, confidence: 0.6 },
+        { category: 'General', confidence: 0.6 },
       ];
     }
 

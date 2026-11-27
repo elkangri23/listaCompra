@@ -10,7 +10,8 @@
  * migración; se documenta como mejora futura.
  */
 
-import { AIConfig, AIProviderId, PerplexityConfig, getAIProviderMeta, getDefaultModelForProvider } from './ai.config';
+import type { AIConfig, AIProviderId, PerplexityConfig} from './ai.config';
+import { getAIProviderMeta, getDefaultModelForProvider } from './ai.config';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 import { persistEnvVars } from './EnvFileWriter';
 

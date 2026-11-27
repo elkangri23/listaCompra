@@ -85,24 +85,24 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
     // Política de Seguridad de Contenido estricta
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Para Swagger UI
-        scriptSrc: ["'self'", "'unsafe-inline'"], // Para Swagger UI
-        imgSrc: ["'self'", "data:", "https:"],
-        fontSrc: ["'self'"],
-        connectSrc: ["'self'"],
-        frameSrc: ["'none'"],
-        objectSrc: ["'none'"],
-        baseUri: ["'self'"],
-        formAction: ["'self'"],
+        defaultSrc: ['\'self\''],
+        styleSrc: ['\'self\'', '\'unsafe-inline\'', '\'unsafe-eval\''], // Para Swagger UI
+        scriptSrc: ['\'self\'', '\'unsafe-inline\''], // Para Swagger UI
+        imgSrc: ['\'self\'', 'data:', 'https:'],
+        fontSrc: ['\'self\''],
+        connectSrc: ['\'self\''],
+        frameSrc: ['\'none\''],
+        objectSrc: ['\'none\''],
+        baseUri: ['\'self\''],
+        formAction: ['\'self\''],
       },
     },
     // Política de referrer estricta
-    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     // Headers adicionales de seguridad
     crossOriginEmbedderPolicy: true,
-    crossOriginOpenerPolicy: { policy: "same-origin" },
-    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: 'same-origin' },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
     dnsPrefetchControl: true,
     frameguard: { action: 'deny' },
     hidePoweredBy: true,

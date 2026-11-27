@@ -3,7 +3,7 @@
  * Tests automatizados de seguridad y vulnerabilidades
  */
 
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
 // Patrones de ataque comunes para testing
 const ATTACK_PATTERNS = {
@@ -17,22 +17,22 @@ const ATTACK_PATTERNS = {
   ],
   
   SQL_INJECTION: [
-    "' OR 1=1 --",
-    "'; DROP TABLE users; --",
-    "' UNION SELECT * FROM users --",
-    "admin' --",
-    "' OR 'a'='a",
-    "1' AND 1=1 --",
-    "1' UNION SELECT null, username, password FROM users --",
+    '\' OR 1=1 --',
+    '\'; DROP TABLE users; --',
+    '\' UNION SELECT * FROM users --',
+    'admin\' --',
+    '\' OR \'a\'=\'a',
+    '1\' AND 1=1 --',
+    '1\' UNION SELECT null, username, password FROM users --',
   ],
   
   COMMAND_INJECTION: [
-    "; cat /etc/passwd",
-    "| ls -la",
-    "`whoami`",
-    "$(id)",
-    "; ping -c 10 127.0.0.1",
-    "&& rm -rf /",
+    '; cat /etc/passwd',
+    '| ls -la',
+    '`whoami`',
+    '$(id)',
+    '; ping -c 10 127.0.0.1',
+    '&& rm -rf /',
   ]
 } as const;
 
@@ -408,7 +408,7 @@ export const securityTestEndpoint = (_req: Request, res: Response): void => {
       passedTests: scanResult.passedTests,
       failedTests: scanResult.failedTests,
       summary: scanResult.summary,
-      report: report,
+      report,
       results: scanResult.results.filter(r => !r.passed), // Solo mostrar fallos
       timestamp: new Date().toISOString()
     });

@@ -10,7 +10,7 @@ import type { IListaRepository } from '@application/ports/repositories/IListaRep
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IInvitacionRepository } from '@application/ports/repositories/IInvitacionRepository';
 import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
-import { Permiso } from '@domain/entities/Permiso';
+import type { Permiso } from '@domain/entities/Permiso';
 
 export interface CancelInvitationDto {
   invitacionId: string;

@@ -3,11 +3,11 @@
  */
 
 import type { Request, Response } from 'express';
-import { CreateList } from '@application/use-cases/lists/CreateList';
-import { GetUserLists } from '@application/use-cases/lists/GetUserLists';
-import { UpdateList } from '@application/use-cases/lists/UpdateList';
-import { DeleteList } from '@application/use-cases/lists/DeleteList';
-import { GetListById } from '@application/use-cases/lists/GetListById';
+import type { CreateList } from '@application/use-cases/lists/CreateList';
+import type { GetUserLists } from '@application/use-cases/lists/GetUserLists';
+import type { UpdateList } from '@application/use-cases/lists/UpdateList';
+import type { DeleteList } from '@application/use-cases/lists/DeleteList';
+import type { GetListById } from '@application/use-cases/lists/GetListById';
 import type { CreateListDto } from '@application/dto/lists/CreateListDto';
 import type { UpdateListDto } from '@application/dto/lists/UpdateListDto';
 import type { DeleteListDto } from '@application/dto/lists/DeleteListDto';
@@ -15,7 +15,7 @@ import type { GetUserListsDto } from '@application/dto/lists/GetUserListsDto';
 import { ValidationError } from '@application/errors/ValidationError';
 import { NotFoundError } from '@application/errors/NotFoundError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
-import { RealTimeGateway } from '@infrastructure/realtime/RealTimeGateway';
+import type { RealTimeGateway } from '@infrastructure/realtime/RealTimeGateway';
 
 interface AuthenticatedRequest extends Request {
   user?: {

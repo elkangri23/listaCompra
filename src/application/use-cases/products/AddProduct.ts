@@ -211,7 +211,7 @@ export class AddProduct {
       ...(dto.precio !== undefined && { precio: dto.precio }),
       ...(dto.urgente !== undefined && { urgente: dto.urgente }),
       listaId: dto.listaId,
-      ...(categoriaId && { categoriaId: categoriaId }),
+      ...(categoriaId && { categoriaId }),
       creadoPorId: usuarioId,
     });
 

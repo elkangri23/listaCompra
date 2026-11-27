@@ -1,6 +1,7 @@
-import { Result, success, failure } from '@shared/result';
-import { IAuditRepository, AuditEntryQuery } from '@application/ports/repositories/IAuditRepository';
-import { AuditEntry } from '@domain/entities/AuditEntry';
+import type { Result} from '@shared/result';
+import { success, failure } from '@shared/result';
+import type { IAuditRepository, AuditEntryQuery } from '@application/ports/repositories/IAuditRepository';
+import type { AuditEntry } from '@domain/entities/AuditEntry';
 import { ValidationError } from '@application/errors/ValidationError';
 
 export interface GetAuditHistoryForProductDto {

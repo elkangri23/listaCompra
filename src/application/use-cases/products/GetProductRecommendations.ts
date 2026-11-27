@@ -8,20 +8,22 @@
  * basándose en los productos actuales de la lista del usuario.
  */
 
-import { Result, success, failure } from '../../../shared/result';
-import { 
+import type { Result} from '../../../shared/result';
+import { success, failure } from '../../../shared/result';
+import type { 
   GetProductRecommendationsDto, 
   GetProductRecommendationsResponseDto,
-  ProductRecommendationDto,
+  ProductRecommendationDto} from '../../dto/products/GetProductRecommendationsDto';
+import {
   validateGetProductRecommendationsDto,
   applyRecommendationsDefaults
 } from '../../dto/products/GetProductRecommendationsDto';
-import { IListaRepository } from '../../ports/repositories/IListaRepository';
-import { IProductoRepository } from '../../ports/repositories/IProductoRepository';
-import { ICategoriaRepository } from '../../ports/repositories/ICategoriaRepository';
-import { IAIService, ProductInList } from '../../ports/external/IAIService';
+import type { IListaRepository } from '../../ports/repositories/IListaRepository';
+import type { IProductoRepository } from '../../ports/repositories/IProductoRepository';
+import type { ICategoriaRepository } from '../../ports/repositories/ICategoriaRepository';
+import type { IAIService, ProductInList } from '../../ports/external/IAIService';
 import { Logger } from '../../../infrastructure/observability/logger/Logger';
-import { Producto } from '../../../domain/entities/Producto';
+import type { Producto } from '../../../domain/entities/Producto';
 
 export class GetProductRecommendations {
   private readonly logger = new Logger('GetProductRecommendations');
@@ -200,7 +202,7 @@ export class GetProductRecommendations {
       // 13. Construir respuesta
       const response: GetProductRecommendationsResponseDto = {
         listId: normalizedDto.listId,
-        recommendations: recommendations,
+        recommendations,
         detectedContext: parsedResponse.detectedContext || 'Contexto general',
         productsInList: productsForAI.length,
         metadata: {

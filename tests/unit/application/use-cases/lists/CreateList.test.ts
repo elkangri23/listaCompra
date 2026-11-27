@@ -1,6 +1,6 @@
 import { CreateList } from '../../../../../src/application/use-cases/lists/CreateList';
-import { IListaRepository } from '../../../../../src/application/ports/repositories/IListaRepository';
-import { Lista } from '../../../../../src/domain/entities/Lista';
+import type { IListaRepository } from '../../../../../src/application/ports/repositories/IListaRepository';
+import type { Lista } from '../../../../../src/domain/entities/Lista';
 import { success, failure } from '../../../../../src/shared/result';
 
 describe('CreateList', () => {

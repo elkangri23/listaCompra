@@ -9,7 +9,7 @@ import { success, failure } from '@shared/result';
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IMfaRepository } from '@application/ports/repositories/IMfaRepository';
 import type { ITokenService, TokenPayload } from '@application/ports/auth/ITokenService';
-import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { UnauthorizedError } from '@application/errors/UnauthorizedError';
 import {
   MfaChallengeExpiredError,
   MfaTooManyAttemptsError,

@@ -2,8 +2,9 @@
  * Tests unitarios para CreateBlueprint use case
  */
 
-import { CreateBlueprint, CreateBlueprintDto } from '../../../../../src/application/use-cases/blueprints/CreateBlueprint';
-import { IBlueprintRepository } from '../../../../../src/application/ports/repositories/IBlueprintRepository';
+import type { CreateBlueprintDto } from '../../../../../src/application/use-cases/blueprints/CreateBlueprint';
+import { CreateBlueprint } from '../../../../../src/application/use-cases/blueprints/CreateBlueprint';
+import type { IBlueprintRepository } from '../../../../../src/application/ports/repositories/IBlueprintRepository';
 
 import { ValidationError } from '../../../../../src/application/errors/ValidationError';
 import { BusinessRuleViolationError } from '../../../../../src/domain/errors/DomainError';

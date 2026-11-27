@@ -8,7 +8,7 @@
  */
 
 import rateLimit from 'express-rate-limit';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { Logger } from '../../observability/logger/Logger';
 
 const logger = new Logger();
@@ -73,7 +73,7 @@ export const adminRateLimit = rateLimit({
     
     logger.error('Límite de rate de admin alcanzado', {
       ip: clientId,
-      userId: userId,
+      userId,
       userAgent: req.get('User-Agent'),
       endpoint: req.originalUrl,
       method: req.method,
@@ -119,7 +119,7 @@ export const impersonationRateLimit = rateLimit({
     
     logger.error('Límite de rate de impersonación alcanzado', {
       ip: clientId,
-      userId: userId,
+      userId,
       userAgent: req.get('User-Agent'),
       endpoint: req.originalUrl,
       method: req.method,
@@ -165,7 +165,7 @@ export const auditRateLimit = rateLimit({
     
     logger.error('Límite de rate de auditoría alcanzado', {
       ip: clientId,
-      userId: userId,
+      userId,
       userAgent: req.get('User-Agent'),
       endpoint: req.originalUrl,
       method: req.method,

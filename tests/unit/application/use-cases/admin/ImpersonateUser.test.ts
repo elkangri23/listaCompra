@@ -3,9 +3,10 @@
  */
 
 import { ImpersonateUser } from '../../../../../src/application/use-cases/admin/ImpersonateUser';
-import { Usuario, RolUsuario } from '../../../../../src/domain/entities/Usuario';
-import { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
-import { ITokenService } from '../../../../../src/application/ports/auth/ITokenService';
+import type { Usuario} from '../../../../../src/domain/entities/Usuario';
+import { RolUsuario } from '../../../../../src/domain/entities/Usuario';
+import type { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
+import type { ITokenService } from '../../../../../src/application/ports/auth/ITokenService';
 import { success, failure } from '../../../../../src/shared/result';
 import { NotFoundError } from '../../../../../src/application/errors/NotFoundError';
 import { UnauthorizedError } from '../../../../../src/application/errors/UnauthorizedError';

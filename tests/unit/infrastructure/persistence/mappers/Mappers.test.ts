@@ -20,7 +20,7 @@ const makeUsuario = (): Usuario => {
   const usuario = unwrapEntity(Usuario.create({ email: Email.createUnsafe('mapper@test.local'), password: 'hashedPassword123', nombre: 'María' }));
   Object.defineProperty(usuario, '_id', { value: 'u1', writable: false });
   return usuario;
-}
+};
 
 const makeLista = (): Lista =>
   unwrapEntity(Lista.create({ id: 'l1', nombre: 'Compras semanales', propietarioId: 'user-1' }));

@@ -4,7 +4,7 @@
  */
 
 import request from 'supertest';
-import { Application } from 'express';
+import type { Application } from 'express';
 import { Container } from '../../../src/composition/container';
 import { markTestUserEmailVerified } from '../../helpers/verify-test-user';
 import { createServer } from '../../../src/infrastructure/http/server';
@@ -13,7 +13,7 @@ describe('Invitation Endpoints Integration', () => {
   let app: Application;
   let container: Container;
   let authToken: string;
-  let userCredentials = {
+  const userCredentials = {
     email: 'test-invitations@test.com',
     password: 'Password123!'
   };

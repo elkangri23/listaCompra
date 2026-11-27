@@ -3,7 +3,7 @@
  * Convierte entre entidades de dominio y modelos de Prisma
  */
 
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import type { IInvitacionRepository } from '@application/ports/repositories/IInvitacionRepository';
 import { Invitacion } from '@domain/entities/Invitacion';
 import { Hash } from '@domain/value-objects/Hash';

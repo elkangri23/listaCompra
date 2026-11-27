@@ -2,8 +2,8 @@
  * Middleware de validación usando Zod
  */
 
-import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
+import type { Request, Response, NextFunction } from 'express';
+import type { z } from 'zod';
 
 export interface ValidationSchema {
   body?: z.ZodSchema;

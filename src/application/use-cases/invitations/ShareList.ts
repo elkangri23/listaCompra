@@ -11,12 +11,12 @@ import type { IUsuarioRepository } from '@application/ports/repositories/IUsuari
 import type { IInvitacionRepository } from '@application/ports/repositories/IInvitacionRepository';
 import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
 import type { IOutboxService } from '@application/ports/messaging/IOutboxService';
-import { Lista } from '@domain/entities/Lista';
-import { Usuario } from '@domain/entities/Usuario';
+import type { Lista } from '@domain/entities/Lista';
+import type { Usuario } from '@domain/entities/Usuario';
 import { Invitacion } from '@domain/entities/Invitacion';
-import { Permiso } from '@domain/entities/Permiso';
+import type { Permiso } from '@domain/entities/Permiso';
 import { PermissionType } from '@domain/value-objects/PermissionType';
-import { IInvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
+import type { IInvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import { ListaCompartida } from '@domain/events/ListaCompartida';
 
 export interface ShareListDto {

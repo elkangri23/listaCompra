@@ -12,7 +12,7 @@ import type {
   PaginatedResult,
   ListaSortOption
 } from '@application/ports/repositories/IListaRepository';
-import { Lista } from '@domain/entities/Lista';
+import type { Lista } from '@domain/entities/Lista';
 import { ListaMapper } from '@infrastructure/persistence/mappers/ListaMapper';
 
 export class PrismaListaRepository implements IListaRepository {
@@ -75,10 +75,10 @@ export class PrismaListaRepository implements IListaRepository {
 
   async findByIdAndOwner(id: string, propietarioId: string): Promise<Result<Lista | null, Error>> {
     try {
-    const lista = await this.prisma.lista.findFirst({
+      const lista = await this.prisma.lista.findFirst({
         where: { 
           id,
-          propietarioId: propietarioId
+          propietarioId
         },
       });
 
@@ -195,20 +195,20 @@ export class PrismaListaRepository implements IListaRepository {
 
     for (const option of sort) {
       switch (option.field) {
-        case 'nombre':
-          orderBy.push({ nombre: option.direction });
-          break;
-        case 'fechaCreacion':
-          orderBy.push({ fechaCreacion: option.direction });
-          break;
-        case 'fechaActualizacion':
-          orderBy.push({ fechaActualizacion: option.direction });
-          break;
-        case 'activa':
-          orderBy.push({ activa: option.direction });
-          break;
-        default:
-          break;
+      case 'nombre':
+        orderBy.push({ nombre: option.direction });
+        break;
+      case 'fechaCreacion':
+        orderBy.push({ fechaCreacion: option.direction });
+        break;
+      case 'fechaActualizacion':
+        orderBy.push({ fechaActualizacion: option.direction });
+        break;
+      case 'activa':
+        orderBy.push({ activa: option.direction });
+        break;
+      default:
+        break;
       }
     }
 
@@ -224,7 +224,7 @@ export class PrismaListaRepository implements IListaRepository {
       const lista = await this.prisma.lista.findFirst({
         where: { 
           nombre,
-          propietarioId: propietarioId
+          propietarioId
         },
       });
 
@@ -289,7 +289,7 @@ export class PrismaListaRepository implements IListaRepository {
       const count = await this.prisma.lista.count({
         where: { 
           nombre,
-          propietarioId: propietarioId
+          propietarioId
         },
       });
 
@@ -303,7 +303,7 @@ export class PrismaListaRepository implements IListaRepository {
     try {
       const count = await this.prisma.lista.count({
         where: { 
-          propietarioId: propietarioId,
+          propietarioId,
           activa: true // Solo contar listas activas
         },
       });

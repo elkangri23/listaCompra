@@ -1,1 +1,0 @@
-{"exclude":["node_modules","dist","coverage"],"extends":"./tsconfig.json","include":["src/**/*.ts","tests/**/*.ts","mcp-server.ts","scripts/**/*.ts"]}

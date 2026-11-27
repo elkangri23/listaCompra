@@ -3,7 +3,7 @@
  * Registra eventos críticos para compliance y análisis de seguridad
  */
 
-import { Logger } from '@infrastructure/observability/logger/Logger';
+import type { Logger } from '@infrastructure/observability/logger/Logger';
 
 export interface AuditEvent {
   id: string;
@@ -495,22 +495,22 @@ export class InMemoryAuditRepository implements AuditRepository {
   }
 
   async findByUserId(userId: string, options?: AuditQueryOptions): Promise<AuditEvent[]> {
-    let filtered = this.events.filter(e => e.userId === userId);
+    const filtered = this.events.filter(e => e.userId === userId);
     return this.applyOptions(filtered, options);
   }
 
   async findByEventType(eventType: AuditEventType, options?: AuditQueryOptions): Promise<AuditEvent[]> {
-    let filtered = this.events.filter(e => e.eventType === eventType);
+    const filtered = this.events.filter(e => e.eventType === eventType);
     return this.applyOptions(filtered, options);
   }
 
   async findByRiskLevel(riskLevel: string, options?: AuditQueryOptions): Promise<AuditEvent[]> {
-    let filtered = this.events.filter(e => e.riskLevel === riskLevel);
+    const filtered = this.events.filter(e => e.riskLevel === riskLevel);
     return this.applyOptions(filtered, options);
   }
 
   async findByDateRange(startDate: Date, endDate: Date, options?: AuditQueryOptions): Promise<AuditEvent[]> {
-    let filtered = this.events.filter(e => 
+    const filtered = this.events.filter(e => 
       e.timestamp >= startDate && e.timestamp <= endDate
     );
     return this.applyOptions(filtered, options);
@@ -578,18 +578,18 @@ export class InMemoryAuditRepository implements AuditRepository {
     const start = new Date(now);
     
     switch (timeframe) {
-      case 'hour':
-        start.setHours(start.getHours() - 1);
-        break;
-      case 'day':
-        start.setDate(start.getDate() - 1);
-        break;
-      case 'week':
-        start.setDate(start.getDate() - 7);
-        break;
-      case 'month':
-        start.setMonth(start.getMonth() - 1);
-        break;
+    case 'hour':
+      start.setHours(start.getHours() - 1);
+      break;
+    case 'day':
+      start.setDate(start.getDate() - 1);
+      break;
+    case 'week':
+      start.setDate(start.getDate() - 7);
+      break;
+    case 'month':
+      start.setMonth(start.getMonth() - 1);
+      break;
     }
 
     return start;

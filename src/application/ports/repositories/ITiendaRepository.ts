@@ -6,7 +6,7 @@
 import type { Result } from '@shared/result';
 import type { Tienda } from '@domain/entities/Tienda';
 import type { Categoria } from '@domain/entities/Categoria';
-import { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
+import type { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
 
 export interface ITiendaRepository {
   /**

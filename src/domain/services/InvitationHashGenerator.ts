@@ -5,7 +5,8 @@
 
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import { DomainError, InvalidValueError } from '@domain/errors/DomainError';
+import type { DomainError} from '@domain/errors/DomainError';
+import { InvalidValueError } from '@domain/errors/DomainError';
 import { Hash } from '@domain/value-objects/Hash';
 
 export interface IInvitationHashGenerator {

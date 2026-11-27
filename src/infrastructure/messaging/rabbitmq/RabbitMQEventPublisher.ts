@@ -7,7 +7,7 @@ import type { IEventPublisher } from '@application/ports/messaging/IEventPublish
 import type { DomainEvent } from '@domain/events/DomainEvent';
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import { RabbitMQConnection } from './RabbitMQConnection';
+import type { RabbitMQConnection } from './RabbitMQConnection';
 
 /**
  * Configuración del publisher

@@ -6,9 +6,9 @@
  *   POST /api/v1/ai/admin/config/test   - Verificar conectividad con el proveedor
  */
 
-import { Request, Response } from 'express';
-import { AIConfigService } from '@infrastructure/config/AIConfigService';
-import { PerplexityService } from '@infrastructure/external-services/ai/PerplexityService';
+import type { Request, Response } from 'express';
+import type { AIConfigService } from '@infrastructure/config/AIConfigService';
+import type { PerplexityService } from '@infrastructure/external-services/ai/PerplexityService';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 
 export class AIConfigController {

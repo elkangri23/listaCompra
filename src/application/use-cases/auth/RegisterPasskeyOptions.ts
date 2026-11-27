@@ -11,7 +11,8 @@ import type { IMfaRepository } from '@application/ports/repositories/IMfaReposit
 import type { IPasskeyRepository } from '@application/ports/repositories/IPasskeyRepository';
 import type { StepUpPasswordVerifier } from './StepUpPasswordVerifier';
 import { PasskeyLimitReachedError } from '@domain/errors/MfaError';
-import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { NotFoundError } from '@application/errors/NotFoundError';
 import {
   generateRegistrationOptions,
   type PublicKeyCredentialCreationOptionsJSON,
@@ -39,7 +40,7 @@ export class RegisterPasskeyOptions {
     private readonly passkeyRepository: IPasskeyRepository
   ) {}
 
-  async execute(dto: RegisterPasskeyOptionsDto): Promise<Result<RegisterPasskeyOptionsResultDto, PasskeyLimitReachedError | UnauthorizedError | import('@application/errors/NotFoundError').NotFoundError | Error>> {
+  async execute(dto: RegisterPasskeyOptionsDto): Promise<Result<RegisterPasskeyOptionsResultDto, PasskeyLimitReachedError | UnauthorizedError | NotFoundError | Error>> {
     // 1. Step-up
     const stepUpResult = await this.stepUp.verify(dto.usuarioId, dto.password);
     if (stepUpResult.isFailure) {

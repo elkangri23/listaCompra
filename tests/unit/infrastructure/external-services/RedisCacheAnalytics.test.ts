@@ -3,8 +3,9 @@
  * Verifica la funcionalidad del sistema de métricas de cache
  */
 
-import { RedisCacheAnalytics, CacheOperation } from '../../../../src/infrastructure/external-services/cache/RedisCacheAnalytics';
-import { CacheService } from '../../../../src/infrastructure/external-services/cache/RedisCacheService';
+import type { CacheOperation } from '../../../../src/infrastructure/external-services/cache/RedisCacheAnalytics';
+import { RedisCacheAnalytics } from '../../../../src/infrastructure/external-services/cache/RedisCacheAnalytics';
+import type { CacheService } from '../../../../src/infrastructure/external-services/cache/RedisCacheService';
 
 // Mock del CacheService
 const mockCacheService: CacheService = {

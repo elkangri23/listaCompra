@@ -3,14 +3,14 @@
  * Simplificado para funcionar con las firmas correctas de los casos de uso
  */
 
-import { Response } from 'express';
-import { AuthenticatedRequest } from '../types/express';
-import { AddProduct } from '../../../application/use-cases/products/AddProduct';
-import { UpdateProduct } from '../../../application/use-cases/products/UpdateProduct';
-import { MarkProductAsPurchased } from '../../../application/use-cases/products/MarkProductAsPurchased';
-import { DeleteProduct } from '../../../application/use-cases/products/DeleteProduct';
-import { GetProducts } from '../../../application/use-cases/products/GetProducts';
-import {
+import type { Response } from 'express';
+import type { AuthenticatedRequest } from '../types/express';
+import type { AddProduct } from '../../../application/use-cases/products/AddProduct';
+import type { UpdateProduct } from '../../../application/use-cases/products/UpdateProduct';
+import type { MarkProductAsPurchased } from '../../../application/use-cases/products/MarkProductAsPurchased';
+import type { DeleteProduct } from '../../../application/use-cases/products/DeleteProduct';
+import type { GetProducts } from '../../../application/use-cases/products/GetProducts';
+import type {
   AddProductDto,
   UpdateProductDto,
   MarkAsPurchasedDto,
@@ -20,7 +20,7 @@ import {
 import { ValidationError } from '../../../application/errors/ValidationError';
 import { UnauthorizedError } from '../../../application/errors/UnauthorizedError';
 import { NotFoundError } from '../../../application/errors/NotFoundError';
-import { RealTimeGateway } from '../../realtime/RealTimeGateway';
+import type { RealTimeGateway } from '../../realtime/RealTimeGateway';
 
 export class ProductController {
   constructor(

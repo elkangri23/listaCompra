@@ -74,8 +74,8 @@ export class DeleteProduct {
 
     // 5. Crear y guardar evento de auditoría
     const auditEvent = new ProductoDeletedEvent({
-      productoId: productoId,
-      listaId: listaId,
+      productoId,
+      listaId,
       deletedByUserId: usuarioId,
       deletedValue,
     });
@@ -87,7 +87,7 @@ export class DeleteProduct {
       id: productoId,
       listaId,
       eliminado: true,
-      permanente: permanente,
+      permanente,
       fechaEliminacion: new Date().toISOString(),
       mensaje: 'Producto eliminado exitosamente',
     };

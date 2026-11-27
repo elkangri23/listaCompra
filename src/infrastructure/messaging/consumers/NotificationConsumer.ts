@@ -3,12 +3,12 @@
  * Procesa eventos de invitaciones, cambios en listas, registros, etc.
  */
 
-import { MessageHandler } from '../rabbitmq/RabbitMQConsumer';
+import type { MessageHandler } from '../rabbitmq/RabbitMQConsumer';
 import type { IEmailService } from '../../../application/ports/external/IEmailService';
 import type { IUsuarioRepository } from '../../../application/ports/repositories/IUsuarioRepository';
 import type { IListaRepository } from '../../../application/ports/repositories/IListaRepository';
 import type { IPermisoRepository } from '../../../application/ports/repositories/IPermisoRepository';
-import amqp from 'amqplib';
+import type amqp from 'amqplib';
 
 // Tipos de eventos que maneja este consumer
 export interface BaseNotificationEvent {
@@ -81,24 +81,24 @@ export class NotificationConsumer implements MessageHandler<NotificationEvent> {
 
     try {
       switch (event.eventType) {
-        case 'ListaCompartida':
-          await this.handleListaCompartida(event as ListaCompartidaEvent);
-          break;
+      case 'ListaCompartida':
+        await this.handleListaCompartida(event as ListaCompartidaEvent);
+        break;
         
-        case 'UsuarioRegistrado':
-          await this.handleUsuarioRegistrado(event as UsuarioRegistradoEvent);
-          break;
+      case 'UsuarioRegistrado':
+        await this.handleUsuarioRegistrado(event as UsuarioRegistradoEvent);
+        break;
         
-        case 'ProductoAnadido':
-          await this.handleProductoAnadido(event as ProductoAnadidoEvent);
-          break;
+      case 'ProductoAnadido':
+        await this.handleProductoAnadido(event as ProductoAnadidoEvent);
+        break;
         
-        case 'ListaActualizada':
-          await this.handleListaActualizada(event as ListaActualizadaEvent);
-          break;
+      case 'ListaActualizada':
+        await this.handleListaActualizada(event as ListaActualizadaEvent);
+        break;
         
-        default:
-          console.warn(`Tipo de evento no manejado: ${(event as any).eventType}`);
+      default:
+        console.warn(`Tipo de evento no manejado: ${(event as any).eventType}`);
       }
 
       console.log(`Evento procesado exitosamente: ${event.eventType} (ID: ${event.eventId})`);

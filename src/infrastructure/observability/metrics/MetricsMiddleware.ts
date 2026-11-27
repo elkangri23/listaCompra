@@ -3,7 +3,7 @@
  * Se aplica a todas las rutas para trackear performance
  */
 
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { MetricsCollector } from './MetricsCollector';
 
 // Instancia singleton del collector

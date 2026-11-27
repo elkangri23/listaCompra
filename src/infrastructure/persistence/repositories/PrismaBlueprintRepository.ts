@@ -1,7 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-import { IBlueprintRepository, PaginationOptions, BlueprintFilters, PaginatedResult } from '../../../application/ports/repositories/IBlueprintRepository';
+import type { PrismaClient } from '@prisma/client';
+import type { IBlueprintRepository, PaginationOptions, BlueprintFilters, PaginatedResult } from '../../../application/ports/repositories/IBlueprintRepository';
 import { Blueprint } from '../../../domain/entities/Blueprint';
-import { Result, success, failure } from '../../../shared/result';
+import type { Result} from '../../../shared/result';
+import { success, failure } from '../../../shared/result';
 import { Logger } from '../../observability/logger/Logger';
 
 const logger = new Logger('PrismaBlueprintRepository');

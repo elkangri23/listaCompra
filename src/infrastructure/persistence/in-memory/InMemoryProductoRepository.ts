@@ -1,5 +1,5 @@
 import type { IProductoRepository, ProductoFilters, PaginationOptions, PaginatedResult, ProductoResumen } from '@application/ports/repositories/IProductoRepository';
-import { Producto } from '@domain/entities/Producto';
+import type { Producto } from '@domain/entities/Producto';
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 

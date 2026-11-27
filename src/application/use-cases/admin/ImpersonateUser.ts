@@ -7,17 +7,18 @@
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 import type { UUID } from '@shared/types';
-import { Usuario, RolUsuario } from '@domain/entities/Usuario';
+import type { Usuario} from '@domain/entities/Usuario';
+import { RolUsuario } from '@domain/entities/Usuario';
 import { Email } from '@domain/value-objects/Email';
-import { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
-import { ITokenService, TokenPayload } from '@application/ports/auth/ITokenService';
+import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
+import type { ITokenService, TokenPayload } from '@application/ports/auth/ITokenService';
 import type { IAuditRepository } from '@application/ports/repositories/IAuditRepository';
 import { AuditEntry } from '@domain/entities/AuditEntry';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 import { ValidationError } from '@application/errors/ValidationError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
 import { NotFoundError } from '@application/errors/NotFoundError';
-import {
+import type {
   ImpersonateUserDto,
   ImpersonationResponseDto
 } from '@application/dto/admin/ImpersonateUserDto';

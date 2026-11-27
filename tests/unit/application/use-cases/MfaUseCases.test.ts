@@ -9,7 +9,7 @@ process.env['MFA_ENCRYPTION_KEY'] = Buffer.alloc(32, 7).toString('base64');
 
 import { Usuario } from '@domain/entities/Usuario';
 import { Email } from '@domain/value-objects/Email';
-import { Password } from '@domain/value-objects/Password';
+import type { Password } from '@domain/value-objects/Password';
 import {
   MfaChallengeExpiredError,
   MfaTooManyAttemptsError,

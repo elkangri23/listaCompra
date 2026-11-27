@@ -17,7 +17,7 @@ export { ListaDeletedEvent } from './ListaDeletedEvent';
 export { ProductoDeletedEvent } from './ProductoDeletedEvent';
 
 // Importaciones para el factory
-import { DomainEvent } from './DomainEvent';
+import type { DomainEvent } from './DomainEvent';
 import { UsuarioRegistrado } from './UsuarioRegistrado';
 import { ListaCreada } from './ListaCreada';
 import { ListaCompartida } from './ListaCompartida';
@@ -34,26 +34,26 @@ export class DomainEventFactory {
     const eventType = json['eventType'];
     
     switch (eventType) {
-      case 'UsuarioRegistrado':
-        return UsuarioRegistrado.fromJSON(json);
-      case 'ListaCreada':
-        return ListaCreada.fromJSON(json);
-      case 'ListaCompartida':
-        return ListaCompartida.fromJSON(json);
-      case 'ProductoAnadido':
-        return ProductoAnadido.fromJSON(json);
-      case 'InvitacionEnviada':
-        return InvitacionEnviada.fromJSON(json);
-      case 'lista.updated':
-        return new ListaUpdatedEvent(json['payload']);
-      case 'producto.updated':
-        return new ProductoUpdatedEvent(json['payload']);
-      case 'lista.deleted':
-        return new ListaDeletedEvent(json['payload']);
-      case 'producto.deleted':
-        return new ProductoDeletedEvent(json['payload']);
-      default:
-        throw new Error(`Unknown event type: ${eventType}`);
+    case 'UsuarioRegistrado':
+      return UsuarioRegistrado.fromJSON(json);
+    case 'ListaCreada':
+      return ListaCreada.fromJSON(json);
+    case 'ListaCompartida':
+      return ListaCompartida.fromJSON(json);
+    case 'ProductoAnadido':
+      return ProductoAnadido.fromJSON(json);
+    case 'InvitacionEnviada':
+      return InvitacionEnviada.fromJSON(json);
+    case 'lista.updated':
+      return new ListaUpdatedEvent(json['payload']);
+    case 'producto.updated':
+      return new ProductoUpdatedEvent(json['payload']);
+    case 'lista.deleted':
+      return new ListaDeletedEvent(json['payload']);
+    case 'producto.deleted':
+      return new ProductoDeletedEvent(json['payload']);
+    default:
+      throw new Error(`Unknown event type: ${eventType}`);
     }
   }
 

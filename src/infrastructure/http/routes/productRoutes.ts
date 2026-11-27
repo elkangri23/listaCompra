@@ -2,8 +2,9 @@
  * Rutas para la gestión de productos
  */
 
-import { Router, RequestHandler } from 'express';
-import { ProductController } from '../controllers/ProductController';
+import type { RequestHandler } from 'express';
+import { Router } from 'express';
+import type { ProductController } from '../controllers/ProductController';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { z } from 'zod';
 

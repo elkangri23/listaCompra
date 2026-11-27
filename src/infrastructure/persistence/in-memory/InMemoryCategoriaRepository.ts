@@ -2,7 +2,7 @@ import type { ICategoriaRepository } from '@application/ports/repositories/ICate
 import type { Categoria } from '@domain/entities/Categoria';
 import type { Result } from '@shared/result';
 import { success } from '@shared/result';
-import { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
+import type { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
 
 export class InMemoryCategoriaRepository implements ICategoriaRepository {
   private readonly categorias = new Map<string, Categoria>();

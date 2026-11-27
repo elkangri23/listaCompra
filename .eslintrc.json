@@ -6,14 +6,12 @@
   },
   "extends": [
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    "plugin:@typescript-eslint/recommended"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": "latest",
-    "sourceType": "module",
-    "project": "./tsconfig.eslint.json"
+    "sourceType": "module"
   },
   "plugins": [
     "@typescript-eslint"
@@ -22,10 +20,6 @@
     "indent": [
       "error",
       2
-    ],
-    "linebreak-style": [
-      "error",
-      "unix"
     ],
     "quotes": [
       "error",
@@ -42,14 +36,8 @@
         "argsIgnorePattern": "^_"
       }
     ],
-    "@typescript-eslint/explicit-function-return-type": "warn",
-    "@typescript-eslint/explicit-module-boundary-types": "warn",
-    "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/no-non-null-assertion": "error",
-    "@typescript-eslint/prefer-nullish-coalescing": "error",
-    "@typescript-eslint/prefer-optional-chain": "error",
-    "@typescript-eslint/strict-boolean-expressions": "error",
-    "@typescript-eslint/switch-exhaustiveness-check": "error",
+    "@typescript-eslint/prefer-optional-chain": "off",
+    "@typescript-eslint/switch-exhaustiveness-check": "off",
     "@typescript-eslint/consistent-type-definitions": [
       "error",
       "interface"
@@ -73,7 +61,40 @@
     "prefer-const": "error",
     "no-var": "error",
     "object-shorthand": "error",
-    "prefer-arrow-callback": "error"
+    "prefer-arrow-callback": "error",
+    // Reglas relajadas el 2026-11-27 por decisión de Antonio: el código nunca
+    // las cumplió y mantenerlas en error generaba ~60.000 avisos, con lo que
+    // el lint se ignoraba por completo. Si alguna se quiere recuperar, que sea
+    // regla a regla y arreglando el código primero.
+    // - linebreak-style: gran parte del repo usa CRLF (edición en Windows).
+    // - no-unsafe-* y resto de reglas con tipos: el código usa `any` y
+    //   valores sin tipar estricto por todas partes; exigirlas ahora obligaría
+    //   a reescribir cientos de firmas. También se quita el extends
+    //   recommended-requiring-type-checking y el `project` de parserOptions.
+    // - no-explicit-any, strict-boolean-expressions, prefer-nullish-coalescing
+    //   (el `||` se usa a conciencia en el código), no-non-null-assertion.
+    // - prefer-optional-chain y switch-exhaustiveness-check: necesitan el
+    //   lint con tipos (parserOptions.project); sin las demás reglas con
+    //   tipos no compensa mantenerlo, y apenas tenían avisos (4 y <10).
+    "linebreak-style": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/strict-boolean-expressions": "off",
+    "@typescript-eslint/prefer-nullish-coalescing": "off",
+    "@typescript-eslint/require-await": "off",
+    "@typescript-eslint/no-misused-promises": "off",
+    "@typescript-eslint/no-floating-promises": "off",
+    "@typescript-eslint/unbound-method": "off",
+    "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/no-unnecessary-type-assertion": "off",
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off"
   },
   "ignorePatterns": [
     "dist/",

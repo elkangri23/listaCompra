@@ -4,7 +4,7 @@
  */
 
 import { CreateOccasionListUseCase } from '../../../../../src/application/use-cases/lists/CreateOccasionList';
-import { CreateOccasionListDto } from '../../../../../src/application/dto/lists/CreateOccasionListDto';
+import type { CreateOccasionListDto } from '../../../../../src/application/dto/lists/CreateOccasionListDto';
 import { success, failure } from '../../../../../src/shared/result';
 import { ValidationError } from '../../../../../src/application/errors/ValidationError';
 import { NotFoundError } from '../../../../../src/application/errors/NotFoundError';
@@ -218,7 +218,7 @@ describe('CreateOccasionListUseCase', () => {
         nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
+      if (!lista.isSuccess) throw new Error('Test setup failed');
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -226,7 +226,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
-      if (!producto.isSuccess) throw new Error("Test setup failed");
+      if (!producto.isSuccess) throw new Error('Test setup failed');
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -246,7 +246,7 @@ describe('CreateOccasionListUseCase', () => {
       const tienda = Tienda.create({
         nombre: 'Supermercado Test'
       });
-      if (!tienda.isSuccess) throw new Error("Test setup failed");
+      if (!tienda.isSuccess) throw new Error('Test setup failed');
       mockTiendaRepository.findById.mockResolvedValue(success(tienda.value));
       mockCategoriaRepository.findByTienda.mockResolvedValue(success([]));
       mockAIService.generateOccasionList.mockResolvedValue('{"products":[]}');
@@ -255,7 +255,7 @@ describe('CreateOccasionListUseCase', () => {
         nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
+      if (!lista.isSuccess) throw new Error('Test setup failed');
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       await useCase.execute(dto, 'user-123');
@@ -289,7 +289,7 @@ describe('CreateOccasionListUseCase', () => {
       const tienda = Tienda.create({
         nombre: 'Tienda Default'
       });
-      if (!tienda.isSuccess) throw new Error("Test setup failed");
+      if (!tienda.isSuccess) throw new Error('Test setup failed');
       mockTiendaRepository.findAll.mockResolvedValue(success([tienda.value]));
       mockCategoriaRepository.findByTienda.mockResolvedValue(success([]));
       mockAIService.generateOccasionList.mockResolvedValue('{"products":[]}');
@@ -298,7 +298,7 @@ describe('CreateOccasionListUseCase', () => {
         nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
+      if (!lista.isSuccess) throw new Error('Test setup failed');
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       await useCase.execute(dto, 'user-123');
@@ -328,7 +328,7 @@ describe('CreateOccasionListUseCase', () => {
         nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
+      if (!lista.isSuccess) throw new Error('Test setup failed');
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       await useCase.execute(dto, 'user-123');
@@ -382,7 +382,7 @@ describe('CreateOccasionListUseCase', () => {
         nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
+      if (!lista.isSuccess) throw new Error('Test setup failed');
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -390,7 +390,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
-      if (!producto.isSuccess) throw new Error("Test setup failed");
+      if (!producto.isSuccess) throw new Error('Test setup failed');
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -416,7 +416,7 @@ describe('CreateOccasionListUseCase', () => {
         nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
+      if (!lista.isSuccess) throw new Error('Test setup failed');
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -424,7 +424,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
-      if (!producto.isSuccess) throw new Error("Test setup failed");
+      if (!producto.isSuccess) throw new Error('Test setup failed');
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -468,7 +468,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
-      if (!producto.isSuccess) throw new Error("Test setup failed");
+      if (!producto.isSuccess) throw new Error('Test setup failed');
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -493,7 +493,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
-      if (!producto.isSuccess) throw new Error("Test setup failed");
+      if (!producto.isSuccess) throw new Error('Test setup failed');
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -537,7 +537,7 @@ describe('CreateOccasionListUseCase', () => {
         nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
+      if (!lista.isSuccess) throw new Error('Test setup failed');
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -545,7 +545,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
-      if (!producto.isSuccess) throw new Error("Test setup failed");
+      if (!producto.isSuccess) throw new Error('Test setup failed');
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -580,7 +580,7 @@ describe('CreateOccasionListUseCase', () => {
         nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
+      if (!lista.isSuccess) throw new Error('Test setup failed');
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -588,7 +588,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
-      if (!producto.isSuccess) throw new Error("Test setup failed");
+      if (!producto.isSuccess) throw new Error('Test setup failed');
       mockProductoRepository.save.mockResolvedValue(success(producto.value));
 
       const result = await useCase.execute(dto, 'user-123');
@@ -658,7 +658,7 @@ describe('CreateOccasionListUseCase', () => {
         nombre: 'Lista temporal',
         propietarioId: 'user-123'
       });
-      if (!lista.isSuccess) throw new Error("Test setup failed");
+      if (!lista.isSuccess) throw new Error('Test setup failed');
       mockListaRepository.save.mockResolvedValue(success(lista.value));
 
       const producto = Producto.create({
@@ -666,7 +666,7 @@ describe('CreateOccasionListUseCase', () => {
         listaId: 'lista-123',
         creadoPorId: 'user-123'
       });
-      if (!producto.isSuccess) throw new Error("Test setup failed");
+      if (!producto.isSuccess) throw new Error('Test setup failed');
       
       // Mock: primer producto válido, segundo falla
       mockProductoRepository.save

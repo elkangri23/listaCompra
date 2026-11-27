@@ -5,7 +5,7 @@ import type {
   PaginatedResult,
   ListaSortOption
 } from '@application/ports/repositories/IListaRepository';
-import { Lista } from '@domain/entities/Lista';
+import type { Lista } from '@domain/entities/Lista';
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 
@@ -79,30 +79,30 @@ export class InMemoryListaRepository implements IListaRepository {
         let comparison = 0;
 
         switch (criterio.field) {
-          case 'nombre': {
-            const nombreA = a.nombre.toLowerCase();
-            const nombreB = b.nombre.toLowerCase();
-            if (nombreA < nombreB) comparison = -1;
-            else if (nombreA > nombreB) comparison = 1;
-            break;
-          }
-          case 'fechaCreacion': {
-            const diff = a.fechaCreacion.getTime() - b.fechaCreacion.getTime();
-            comparison = diff === 0 ? 0 : diff > 0 ? 1 : -1;
-            break;
-          }
-          case 'fechaActualizacion': {
-            const diff = a.fechaActualizacion.getTime() - b.fechaActualizacion.getTime();
-            comparison = diff === 0 ? 0 : diff > 0 ? 1 : -1;
-            break;
-          }
-          case 'activa': {
-            comparison = Number(a.activa) - Number(b.activa);
-            break;
-          }
-          default:
-            comparison = 0;
-            break;
+        case 'nombre': {
+          const nombreA = a.nombre.toLowerCase();
+          const nombreB = b.nombre.toLowerCase();
+          if (nombreA < nombreB) comparison = -1;
+          else if (nombreA > nombreB) comparison = 1;
+          break;
+        }
+        case 'fechaCreacion': {
+          const diff = a.fechaCreacion.getTime() - b.fechaCreacion.getTime();
+          comparison = diff === 0 ? 0 : diff > 0 ? 1 : -1;
+          break;
+        }
+        case 'fechaActualizacion': {
+          const diff = a.fechaActualizacion.getTime() - b.fechaActualizacion.getTime();
+          comparison = diff === 0 ? 0 : diff > 0 ? 1 : -1;
+          break;
+        }
+        case 'activa': {
+          comparison = Number(a.activa) - Number(b.activa);
+          break;
+        }
+        default:
+          comparison = 0;
+          break;
         }
 
         if (comparison !== 0) {

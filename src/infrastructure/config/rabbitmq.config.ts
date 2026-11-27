@@ -138,13 +138,13 @@ export function getRabbitMQConfig(): AppRabbitMQConfig {
   const env = process.env['NODE_ENV'] as keyof typeof RABBITMQ_CONFIGS;
   
   switch (env) {
-    case 'test':
-      return RABBITMQ_CONFIGS.test;
-    case 'production':
-      return RABBITMQ_CONFIGS.production;
-    case 'development':
-    default:
-      return RABBITMQ_CONFIGS.development;
+  case 'test':
+    return RABBITMQ_CONFIGS.test;
+  case 'production':
+    return RABBITMQ_CONFIGS.production;
+  case 'development':
+  default:
+    return RABBITMQ_CONFIGS.development;
   }
 }
 

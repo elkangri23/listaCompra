@@ -9,7 +9,7 @@ import { createServer } from '../../../src/infrastructure/http/server';
 import { Container } from '../../../src/composition/container';
 import { Email } from '../../../src/domain/value-objects/Email';
 import { hmacVerificationCode } from '../../../src/infrastructure/security/email-verification-crypto';
-import { InMemoryEmailVerificationCodeRepository } from '../../../src/infrastructure/persistence/in-memory/InMemoryEmailVerificationCodeRepository';
+import type { InMemoryEmailVerificationCodeRepository } from '../../../src/infrastructure/persistence/in-memory/InMemoryEmailVerificationCodeRepository';
 
 describe('E2E: User Registration Flow', () => {
   let app: Application;

@@ -1,8 +1,8 @@
 import { GetCategoriesByStore } from '../../../../../src/application/use-cases/categories/GetCategoriesByStore';
-import { ICategoriaRepository } from '../../../../../src/application/ports/repositories/ICategoriaRepository';
-import { ITiendaRepository } from '../../../../../src/application/ports/repositories/ITiendaRepository';
-import { Categoria } from '../../../../../src/domain/entities/Categoria';
-import { Tienda } from '../../../../../src/domain/entities/Tienda';
+import type { ICategoriaRepository } from '../../../../../src/application/ports/repositories/ICategoriaRepository';
+import type { ITiendaRepository } from '../../../../../src/application/ports/repositories/ITiendaRepository';
+import type { Categoria } from '../../../../../src/domain/entities/Categoria';
+import type { Tienda } from '../../../../../src/domain/entities/Tienda';
 import { InvalidValueError } from '../../../../../src/domain/errors/DomainError';
 import { success, failure } from '../../../../../src/shared/result';
 

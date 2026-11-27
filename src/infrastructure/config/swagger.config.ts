@@ -1,5 +1,5 @@
 import * as swaggerJSDoc from 'swagger-jsdoc';
-import { Express } from 'express';
+import type { Express } from 'express';
 import * as swaggerUi from 'swagger-ui-express';
 
 /**

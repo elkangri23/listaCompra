@@ -3,7 +3,7 @@
  * Protección XSS, SQL Injection y validación de entrada enterprise-grade
  */
 
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import DOMPurify from 'isomorphic-dompurify';
 import validator from 'validator';
 
@@ -22,7 +22,7 @@ const SANITIZATION_CONFIG = {
   SQL_INJECTION_PATTERNS: [
     /('|(\\x27)|(\\x2D){2})|((;|\\x3B)(\\s)*(drop|alter|create|insert|update|delete|select|union|exec))/i,
     /(\\x27)|(')|(\\x2D){2}|((\\x3B)(\\s)*(drop|alter|create|insert|update|delete|select|union|exec))/i,
-    /(\%27)|(')|(\\x2D){2}|((\%3B)(\\s)*(drop|alter|create|insert|update|delete|select|union|exec))/i,
+    /(%27)|(')|(\\x2D){2}|((%3B)(\\s)*(drop|alter|create|insert|update|delete|select|union|exec))/i,
     /(or|and)\\s+(1=1|1=0|true|false)/i,
     /union\\s+(all\\s+)?select/i,
     /<script[^>]*>.*?<\/script>/gi,
@@ -41,6 +41,7 @@ const SANITIZATION_CONFIG = {
   // Path Traversal patterns
   PATH_TRAVERSAL_PATTERNS: [
     /\.\.[\\/\\\\]/g,
+    // eslint-disable-next-line no-control-regex -- la clase busca caracteres de control a proposito para eliminarlos de las rutas
     /[\x00-\x1f\x7f-\x9f]/g,
     /\\.\\.%2f/gi,
     /\\.\\.%5c/gi
@@ -260,7 +261,7 @@ export class InputSanitizationService {
       return { value: null, valid: false, warnings: ['Invalid URL'] };
     }
     
-    let sanitized = validator.trim(url);
+    const sanitized = validator.trim(url);
     
     // Validación básica de URL
     if (!validator.isURL(sanitized, { 
@@ -334,7 +335,7 @@ export const inputSanitizationMiddleware = (options: SanitizationOptions = {}) =
       
       // Logging de actividad sospechosa
       if (allBlocked.length > 0) {
-        console.warn(`🚨 [INPUT_SANITIZATION] Blocked content detected:`, {
+        console.warn('🚨 [INPUT_SANITIZATION] Blocked content detected:', {
           ip: req.ip,
           userAgent: req.get('User-Agent'),
           path: req.path,
@@ -345,7 +346,7 @@ export const inputSanitizationMiddleware = (options: SanitizationOptions = {}) =
       }
       
       if (allWarnings.length > 0) {
-        console.warn(`⚠️ [INPUT_SANITIZATION] Warnings:`, {
+        console.warn('⚠️ [INPUT_SANITIZATION] Warnings:', {
           ip: req.ip,
           path: req.path,
           warnings: allWarnings,

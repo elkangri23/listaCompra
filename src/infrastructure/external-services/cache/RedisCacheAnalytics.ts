@@ -3,7 +3,7 @@
  * Monitorea hit ratios, performance y eficiencia del cache
  */
 
-import { CacheService } from './RedisCacheService';
+import type { CacheService } from './RedisCacheService';
 import { Logger } from '../../observability/logger/Logger';
 
 export interface CacheAnalytics {
@@ -69,8 +69,8 @@ export class RedisCacheAnalytics {
   recordOperation(operation: CacheOperation): void {
     // Actualizar contadores
     this.counters[operation.type === 'hit' ? 'hits' : 
-                   operation.type === 'miss' ? 'misses' :
-                   operation.type === 'set' ? 'sets' : 'deletes']++;
+      operation.type === 'miss' ? 'misses' :
+        operation.type === 'set' ? 'sets' : 'deletes']++;
     
     if (operation.type === 'hit') {
       this.counters.cacheResponseTime += operation.responseTime;

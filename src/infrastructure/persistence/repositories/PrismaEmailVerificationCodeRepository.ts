@@ -3,7 +3,7 @@
  * usando Prisma. Sigue los patrones de PrismaMfaRepository.
  */
 
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 import type { UUID } from '@shared/types';

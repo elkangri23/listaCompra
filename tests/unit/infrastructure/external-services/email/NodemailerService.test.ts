@@ -3,7 +3,8 @@
  * Mockea el SDK de Resend: éxito, reintentos con backoff y stats.
  */
 
-import { NodemailerService, EmailConfig } from '../../../../../src/infrastructure/external-services/email/NodemailerService';
+import type { EmailConfig } from '../../../../../src/infrastructure/external-services/email/NodemailerService';
+import { NodemailerService } from '../../../../../src/infrastructure/external-services/email/NodemailerService';
 import { Resend } from 'resend';
 
 const sendMock = jest.fn();

@@ -21,7 +21,8 @@ import {
   PasskeyLimitReachedError,
   PasskeyVerificationError,
 } from '@domain/errors/MfaError';
-import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { NotFoundError } from '@application/errors/NotFoundError';
 import { getWebauthnConfig } from '@infrastructure/security/webauthn-config';
 import { MAX_PASSKEYS } from './RegisterPasskeyOptions';
 
@@ -45,7 +46,7 @@ export class RegisterPasskeyVerify {
     private readonly passkeyRepository: IPasskeyRepository
   ) {}
 
-  async execute(dto: RegisterPasskeyVerifyDto): Promise<Result<RegisterPasskeyVerifyResultDto, MfaChallengeExpiredError | PasskeyLimitReachedError | PasskeyVerificationError | UnauthorizedError | import('@application/errors/NotFoundError').NotFoundError | Error>> {
+  async execute(dto: RegisterPasskeyVerifyDto): Promise<Result<RegisterPasskeyVerifyResultDto, MfaChallengeExpiredError | PasskeyLimitReachedError | PasskeyVerificationError | UnauthorizedError | NotFoundError | Error>> {
     // 1. Step-up
     const stepUpResult = await this.stepUp.verify(dto.usuarioId, dto.password);
     if (stepUpResult.isFailure) {

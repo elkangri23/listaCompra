@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { Logger } from '../../observability/logger/Logger';
-import { SecurityAuditService } from '../../observability/audit/SecurityAuditService';
+import type { Request, Response, NextFunction } from 'express';
+import type { Logger } from '../../observability/logger/Logger';
+import type { SecurityAuditService } from '../../observability/audit/SecurityAuditService';
 
 /**
  * Tipos de datos que pueden ser sanitizados
@@ -86,10 +86,10 @@ export class InputSanitizationService {
 
     this.sqlInjectionPatterns = [
       /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b)/gi,
-      /((\%27)|(\')|(--)|(\%23)|(#))/gi,
-      /((\%3D)|(=))[^\n]*((\%27)|(\')|(--)|(\%23)|(#))/gi,
-      /\w*((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))/gi,
-      /((\%27)|(\'))union/gi
+      /((%27)|(')|(--)|(%23)|(#))/gi,
+      /((%3D)|(=))[^\n]*((%27)|(')|(--)|(%23)|(#))/gi,
+      /\w*((%27)|('))((%6F)|o|(%4F))((%72)|r|(%52))/gi,
+      /((%27)|('))union/gi
     ];
 
     this.pathTraversalPatterns = [
@@ -238,87 +238,87 @@ export class InputSanitizationService {
    */
   private sanitizeByType(value: string, type: SanitizableFieldType): string {
     switch (type) {
-      case 'html':
-        // Sanitización básica HTML (remover tags peligrosos)
-        return value
-          .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-          .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, '')
-          .replace(/javascript:/gi, '')
-          .replace(/on\w+\s*=/gi, '')
-          .replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, '')
-          .replace(/<embed[\s\S]*?>/gi, '')
-          .replace(/vbscript:/gi, '');
+    case 'html':
+      // Sanitización básica HTML (remover tags peligrosos)
+      return value
+        .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+        .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, '')
+        .replace(/javascript:/gi, '')
+        .replace(/on\w+\s*=/gi, '')
+        .replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, '')
+        .replace(/<embed[\s\S]*?>/gi, '')
+        .replace(/vbscript:/gi, '');
 
-      case 'text':
-        return value.replace(/[<>\"'&]/g, (match) => {
-          const entities: Record<string, string> = {
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#x27;',
-            '&': '&amp;'
-          };
-          return entities[match] || match;
-        });
+    case 'text':
+      return value.replace(/[<>"'&]/g, (match) => {
+        const entities: Record<string, string> = {
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          '\'': '&#x27;',
+          '&': '&amp;'
+        };
+        return entities[match] || match;
+      });
 
-      case 'email':
-        return value.toLowerCase()
-          .replace(/[^a-z0-9@._-]/g, '')
-          .substring(0, 254);
+    case 'email':
+      return value.toLowerCase()
+        .replace(/[^a-z0-9@._-]/g, '')
+        .substring(0, 254);
 
-      case 'url':
-        try {
-          const url = new URL(value);
-          if (!['http:', 'https:'].includes(url.protocol)) {
-            return '';
-          }
-          return url.toString();
-        } catch {
+    case 'url':
+      try {
+        const url = new URL(value);
+        if (!['http:', 'https:'].includes(url.protocol)) {
           return '';
         }
+        return url.toString();
+      } catch {
+        return '';
+      }
 
-      case 'filename':
-        return value
-          .replace(/[^a-zA-Z0-9._-]/g, '')
-          .replace(/\.{2,}/g, '.')
-          .substring(0, 255);
+    case 'filename':
+      return value
+        .replace(/[^a-zA-Z0-9._-]/g, '')
+        .replace(/\.{2,}/g, '.')
+        .substring(0, 255);
 
-      case 'sql_identifier':
-        return value
-          .replace(/[^a-zA-Z0-9_]/g, '')
-          .substring(0, 64);
+    case 'sql_identifier':
+      return value
+        .replace(/[^a-zA-Z0-9_]/g, '')
+        .substring(0, 64);
 
-      case 'json':
-        try {
-          JSON.parse(value);
-          return value.replace(/[<>\"'&]/g, (match) => {
-            const entities: Record<string, string> = {
-              '<': '&lt;',
-              '>': '&gt;',
-              '"': '&quot;',
-              "'": '&#x27;',
-              '&': '&amp;'
-            };
-            return entities[match] || match;
-          });
-        } catch {
-          return '{}';
-        }
-
-      case 'alphanumeric':
-        return value.replace(/[^a-zA-Z0-9]/g, '');
-
-      default:
-        return value.replace(/[<>\"'&]/g, (match) => {
+    case 'json':
+      try {
+        JSON.parse(value);
+        return value.replace(/[<>"'&]/g, (match) => {
           const entities: Record<string, string> = {
             '<': '&lt;',
             '>': '&gt;',
             '"': '&quot;',
-            "'": '&#x27;',
+            '\'': '&#x27;',
             '&': '&amp;'
           };
           return entities[match] || match;
         });
+      } catch {
+        return '{}';
+      }
+
+    case 'alphanumeric':
+      return value.replace(/[^a-zA-Z0-9]/g, '');
+
+    default:
+      return value.replace(/[<>"'&]/g, (match) => {
+        const entities: Record<string, string> = {
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          '\'': '&#x27;',
+          '&': '&amp;'
+        };
+        return entities[match] || match;
+      });
     }
   }
 

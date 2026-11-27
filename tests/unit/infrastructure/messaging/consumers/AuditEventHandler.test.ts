@@ -1,9 +1,9 @@
 import { AuditEventHandler } from '@infrastructure/messaging/consumers/AuditEventHandler';
-import { IAuditRepository } from '@application/ports/repositories/IAuditRepository';
-import { Logger } from '@infrastructure/observability/logger/Logger';
+import type { IAuditRepository } from '@application/ports/repositories/IAuditRepository';
+import type { Logger } from '@infrastructure/observability/logger/Logger';
 import { ListaUpdatedEvent } from '@domain/events/ListaUpdatedEvent';
 import { ProductoDeletedEvent } from '@domain/events/ProductoDeletedEvent';
-import { AuditEntry } from '@domain/entities/AuditEntry';
+import type { AuditEntry } from '@domain/entities/AuditEntry';
 import { success } from '@shared/result';
 import { BaseDomainEvent } from '@domain/events/DomainEvent';
 

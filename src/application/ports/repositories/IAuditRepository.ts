@@ -1,5 +1,5 @@
-import { AuditEntry } from '@domain/entities/AuditEntry';
-import { Result } from '@shared/result';
+import type { AuditEntry } from '@domain/entities/AuditEntry';
+import type { Result } from '@shared/result';
 
 export interface AuditEntryQuery {
   entityType?: string;

@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { CreateBlueprint } from '@application/use-cases/blueprints/CreateBlueprint';
+import type { Request, Response } from 'express';
+import type { CreateBlueprint } from '@application/use-cases/blueprints/CreateBlueprint';
 import type { CreateListFromBlueprint } from '@application/use-cases/blueprints/CreateListFromBlueprint';
 import type { IBlueprintRepository } from '@application/ports/repositories/IBlueprintRepository';
 import { ValidationError } from '@application/errors/ValidationError';
@@ -101,14 +101,14 @@ export class BlueprintController {
 
       const result = soloPublicos
         ? await this.blueprintRepository.findAll(
-            { page, limit },
-            { publico: true, ...nombreFilter }
-          )
+          { page, limit },
+          { publico: true, ...nombreFilter }
+        )
         : await this.blueprintRepository.findByUsuarioId(
-            userId,
-            { page, limit },
-            nombreFilter
-          );
+          userId,
+          { page, limit },
+          nombreFilter
+        );
 
       if (!result.isSuccess) {
         res.status(500).json({ error: 'Error obteniendo blueprints' });
@@ -188,7 +188,7 @@ export class BlueprintController {
    */
   async obtenerPorId(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params; if (!id) { res.status(400).json({ error: "ID requerido" }); return; }
+      const { id } = req.params; if (!id) { res.status(400).json({ error: 'ID requerido' }); return; }
       const authReq = req as AuthenticatedRequest; const userId = authReq.user?.id;
 
       const result = await this.blueprintRepository.findById(id);
@@ -285,7 +285,7 @@ export class BlueprintController {
    */
   async crearListaDesdeBlueprint(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params; if (!id) { res.status(400).json({ error: "ID requerido" }); return; }
+      const { id } = req.params; if (!id) { res.status(400).json({ error: 'ID requerido' }); return; }
       const authReq = req as AuthenticatedRequest; const userId = authReq.user?.id;
 
       if (!userId) {
@@ -340,7 +340,7 @@ export class BlueprintController {
    */
   async actualizar(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params; if (!id) { res.status(400).json({ error: "ID requerido" }); return; }
+      const { id } = req.params; if (!id) { res.status(400).json({ error: 'ID requerido' }); return; }
       const authReq = req as AuthenticatedRequest; const userId = authReq.user?.id;
 
       if (!userId) {
@@ -416,7 +416,7 @@ export class BlueprintController {
    */
   async eliminar(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params; if (!id) { res.status(400).json({ error: "ID requerido" }); return; }
+      const { id } = req.params; if (!id) { res.status(400).json({ error: 'ID requerido' }); return; }
       const authReq = req as AuthenticatedRequest; const userId = authReq.user?.id;
 
       if (!userId) {

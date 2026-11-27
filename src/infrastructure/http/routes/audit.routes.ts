@@ -10,9 +10,9 @@ const authMiddleware = container.authMiddleware;
 
 const listAuditHandler = auditController.getListAuditHistory.bind(auditController);
 const productAuditHandler = auditController.getProductAuditHistory.bind(auditController);
-  const globalAuditHandler = auditController.getGlobalAuditHistoryRoute.bind(auditController);
+const globalAuditHandler = auditController.getGlobalAuditHistoryRoute.bind(auditController);
 
-  /**
+/**
    * @swagger
    * /api/v1/audit/lists/{listId}:
    *   get:
@@ -82,9 +82,9 @@ const productAuditHandler = auditController.getProductAuditHistory.bind(auditCon
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  router.get('/audit/lists/:listId', authMiddleware, listAuditHandler);
+router.get('/audit/lists/:listId', authMiddleware, listAuditHandler);
 
-  /**
+/**
    * @swagger
    * /api/v1/audit/products/{productId}:
    *   get:
@@ -154,9 +154,9 @@ const productAuditHandler = auditController.getProductAuditHistory.bind(auditCon
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  router.get('/audit/products/:productId', authMiddleware, productAuditHandler);
+router.get('/audit/products/:productId', authMiddleware, productAuditHandler);
 
-  /**
+/**
    * @swagger
    * /api/v1/admin/audit:
    *   get:
@@ -233,11 +233,11 @@ const productAuditHandler = auditController.getProductAuditHistory.bind(auditCon
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  router.get(
-    '/admin/audit',
-    authMiddleware,
-    requireRole([RolUsuario.ADMIN]),
-    globalAuditHandler
-  );
+router.get(
+  '/admin/audit',
+  authMiddleware,
+  requireRole([RolUsuario.ADMIN]),
+  globalAuditHandler
+);
 
 export const auditRoutes: Router = router;

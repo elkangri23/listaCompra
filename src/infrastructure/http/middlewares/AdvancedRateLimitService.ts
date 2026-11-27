@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { Logger } from '../../observability/logger/Logger';
-import { SecurityAuditService } from '../../observability/audit/SecurityAuditService';
+import type { Request, Response, NextFunction } from 'express';
+import type { Logger } from '../../observability/logger/Logger';
+import type { SecurityAuditService } from '../../observability/audit/SecurityAuditService';
 
 /**
  * Configuración de rate limiting por endpoint
@@ -355,7 +355,7 @@ export class AdvancedRateLimitService {
       method: req.method
     });
 
-      this.auditService.logSecurityViolation(
+    this.auditService.logSecurityViolation(
       'rate_limit_exceeded',
       {
         key,
@@ -564,7 +564,7 @@ export class AdvancedRateLimitService {
     blockedKeys: number;
     trackedUsers: number;
     topBlockedReasons: { reason: string; count: number }[];
-  } {
+    } {
     const blockedReasons = new Map<string, number>();
     
     for (const blocked of this.blockedIPs.values()) {

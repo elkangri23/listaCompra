@@ -1,7 +1,9 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { AuditEntry } from '@domain/entities/AuditEntry';
-import { IAuditRepository, AuditEntryQuery } from '@application/ports/repositories/IAuditRepository';
-import { Result, success, failure } from '@shared/result';
+import type { IAuditRepository, AuditEntryQuery } from '@application/ports/repositories/IAuditRepository';
+import type { Result} from '@shared/result';
+import { success, failure } from '@shared/result';
 
 export class PrismaAuditRepository implements IAuditRepository {
   constructor(private readonly prisma: PrismaClient) {}

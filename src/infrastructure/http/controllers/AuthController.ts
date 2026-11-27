@@ -3,7 +3,7 @@
  * Maneja las operaciones HTTP relacionadas con autenticación de usuarios
  */
 
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import type { RegisterUser } from '@application/use-cases/auth/RegisterUser';
 import type { AuthenticateUser } from '@application/use-cases/auth/AuthenticateUser';
 import type { RefreshTokens } from '@application/use-cases/auth/RefreshTokens';
@@ -174,18 +174,18 @@ export class AuthController {
         data: 'mfaRequired' in result.value
           ? { mfaRequired: true, mfa: result.value.mfa }
           : {
-              user: {
-                id: result.value.user.id,
-                email: result.value.user.email,
-                nombre: result.value.user.nombre,
-                apellidos: result.value.user.apellidos,
-                nombreCompleto: result.value.user.nombreCompleto,
-                rol: result.value.user.rol,
-                activo: result.value.user.activo,
-                emailVerificado: result.value.user.emailVerificado,
-              },
-              tokens: result.value.tokens,
+            user: {
+              id: result.value.user.id,
+              email: result.value.user.email,
+              nombre: result.value.user.nombre,
+              apellidos: result.value.user.apellidos,
+              nombreCompleto: result.value.user.nombreCompleto,
+              rol: result.value.user.rol,
+              activo: result.value.user.activo,
+              emailVerificado: result.value.user.emailVerificado,
             },
+            tokens: result.value.tokens,
+          },
         message: 'Autenticación exitosa',
         timestamp: new Date().toISOString(),
       });

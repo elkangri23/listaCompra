@@ -9,7 +9,8 @@ import type { UUID } from '@shared/types';
 import type { IPasskeyRepository, PasskeyCredentialData } from '@application/ports/repositories/IPasskeyRepository';
 import type { StepUpPasswordVerifier } from './StepUpPasswordVerifier';
 import { PasskeyNotFoundError } from '@domain/errors/MfaError';
-import { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { UnauthorizedError } from '@application/errors/UnauthorizedError';
+import type { NotFoundError } from '@application/errors/NotFoundError';
 
 // ============================================================================
 // ListPasskeys
@@ -109,7 +110,7 @@ export class DeletePasskey {
     private readonly passkeyRepository: IPasskeyRepository
   ) {}
 
-  async execute(dto: DeletePasskeyDto): Promise<Result<{ deleted: true }, PasskeyNotFoundError | UnauthorizedError | import('@application/errors/NotFoundError').NotFoundError | Error>> {
+  async execute(dto: DeletePasskeyDto): Promise<Result<{ deleted: true }, PasskeyNotFoundError | UnauthorizedError | NotFoundError | Error>> {
     // 1. Step-up: contraseña OBLIGATORIA (la alternativa "passkey vigente" es ambigua)
     const stepUpResult = await this.stepUp.verify(dto.usuarioId, dto.password);
     if (stepUpResult.isFailure) {

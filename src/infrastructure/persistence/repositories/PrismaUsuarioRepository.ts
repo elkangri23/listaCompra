@@ -2,7 +2,7 @@
  * Implementación del repositorio de usuarios usando Prisma
  */
 
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { Usuario } from '@domain/entities/Usuario';
 import type { Email } from '@domain/value-objects/Email';

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { ListController } from '../../../../../src/infrastructure/http/controllers/ListController';
 import { success } from '../../../../../src/shared/result';
 import { ValidationError } from '../../../../../src/application/errors/ValidationError';

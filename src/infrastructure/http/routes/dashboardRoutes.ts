@@ -4,7 +4,7 @@
  */
 
 import { Router, type RequestHandler } from 'express';
-import { DashboardController } from '../controllers/DashboardController';
+import type { DashboardController } from '../controllers/DashboardController';
 
 interface DashboardRouteDependencies {
   dashboardController: DashboardController;

@@ -4,8 +4,8 @@
  */
 
 import * as cron from 'node-cron';
-import { PrismaClient } from '@prisma/client';
-import { Logger } from '../observability/logger/Logger';
+import type { PrismaClient } from '@prisma/client';
+import type { Logger } from '../observability/logger/Logger';
 import { DIAS_GRACIA_ELIMINACION } from '@application/use-cases/gdpr/RequestAccountDeletion';
 
 export class SecurityScheduler {
@@ -197,7 +197,7 @@ export class SecurityScheduler {
   /**
    * Helper para logging de métricas de seguridad
    */
-    /**
+  /**
    * Job 3: Cleanup de challenges MFA expirados (borra expiraAt < now - 1d)
    */
   private scheduleMfaChallengeCleanup(): void {

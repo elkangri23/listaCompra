@@ -18,7 +18,7 @@ import type {
 import type { DomainEvent } from '@domain/events/DomainEvent';
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 
 export class PrismaOutboxService implements IOutboxService {
   constructor(private readonly prisma: PrismaClient) {}
@@ -378,10 +378,10 @@ export class PrismaOutboxService implements IOutboxService {
 
       const oldestPending = pendingEvents > 0
         ? await this.prisma.outboxEvent.findFirst({
-            where: { processed: false },
-            orderBy: { createdAt: 'asc' },
-            select: { createdAt: true }
-          })
+          where: { processed: false },
+          orderBy: { createdAt: 'asc' },
+          select: { createdAt: true }
+        })
         : null;
 
       const eventTypeDistribution: Record<string, number> = {};
@@ -443,10 +443,10 @@ export class PrismaOutboxService implements IOutboxService {
 
       const oldestPending = pendingCount > 0
         ? await this.prisma.outboxEvent.findFirst({
-            where: { processed: false },
-            orderBy: { createdAt: 'asc' },
-            select: { createdAt: true }
-          })
+          where: { processed: false },
+          orderBy: { createdAt: 'asc' },
+          select: { createdAt: true }
+        })
         : null;
 
       // Salud: sin pendientes = healthy; pendientes recientes = healthy;
@@ -456,8 +456,8 @@ export class PrismaOutboxService implements IOutboxService {
 
       const status: 'healthy' | 'warning' | 'error' =
         pendingCount === 0 ? 'healthy'
-        : oldestAge < fiveMinutesMs ? 'healthy'
-        : 'warning';
+          : oldestAge < fiveMinutesMs ? 'healthy'
+            : 'warning';
 
       return success({
         status,

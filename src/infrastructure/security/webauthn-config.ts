@@ -28,9 +28,9 @@ export function getWebauthnConfig(): WebauthnConfig {
   const originsRaw = process.env['WEBAUTHN_ORIGIN']?.trim();
   const origins = originsRaw
     ? originsRaw
-        .split(',')
-        .map((origin) => origin.trim())
-        .filter(Boolean)
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean)
     : DEV_DEFAULTS.origins;
 
   cached = { rpID: rpID ?? DEV_DEFAULTS.rpID, rpName: rpName ?? DEV_DEFAULTS.rpName, origins };

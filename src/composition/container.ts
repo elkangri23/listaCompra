@@ -3,7 +3,7 @@
  * Compone e inyecta todas las dependencias de la aplicación
  */
 
-import express from 'express';
+import type express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { success } from '@shared/result';
 
@@ -82,7 +82,8 @@ import { OutboxWorker, DEFAULT_WORKER_CONFIG } from '@infrastructure/messaging/o
 import { InvitationHashGenerator } from '@domain/services/InvitationHashGenerator';
 import { NodemailerService } from '@infrastructure/external-services/email/NodemailerService';
 import { PerplexityService } from '@infrastructure/external-services/ai/PerplexityService';
-import { PerplexityConfig, getAIProviderMeta } from '@infrastructure/config/ai.config';
+import type { PerplexityConfig} from '@infrastructure/config/ai.config';
+import { getAIProviderMeta } from '@infrastructure/config/ai.config';
 import { WorkerService } from '@infrastructure/messaging/WorkerService';
 import { InMemoryOutboxService } from '@infrastructure/messaging/outbox/InMemoryOutboxService';
 
@@ -381,28 +382,28 @@ export class Container {
         deactivateAllByUsuarioId: async () => success(undefined)
       } as unknown as IBlueprintRepository;
       this._analyticsRepository = {        getCollaborativeDashboard: async () => success({
-          summary: {
-            totalLists: 0,
-            activeLists: 0,
-            sharedLists: 0,
-            totalCollaborators: 0,
-            totalProducts: 0,
-            purchasedProducts: 0,
-            pendingProducts: 0,
-            urgentProducts: 0,
-            completionRate: 0,
-            averagePurchaseTimeHours: null
-          },
-          collaboration: {
-            activeCollaborators: 0,
-            leaderboard: [],
-            sharedLists: []
-          },
-          patterns: {
-            topCategories: [],
-            weeklyActivity: []
-          }
-        })
+        summary: {
+          totalLists: 0,
+          activeLists: 0,
+          sharedLists: 0,
+          totalCollaborators: 0,
+          totalProducts: 0,
+          purchasedProducts: 0,
+          pendingProducts: 0,
+          urgentProducts: 0,
+          completionRate: 0,
+          averagePurchaseTimeHours: null
+        },
+        collaboration: {
+          activeCollaborators: 0,
+          leaderboard: [],
+          sharedLists: []
+        },
+        patterns: {
+          topCategories: [],
+          weeklyActivity: []
+        }
+      })
       } as IAnalyticsRepository;
       return;
     }

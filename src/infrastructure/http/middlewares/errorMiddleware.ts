@@ -3,7 +3,7 @@
  * Proporciona respuestas consistentes y logging de errores
  */
 
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { Logger } from '../../observability/logger/Logger';
 import { ValidationError } from '../../../application/errors/ValidationError';

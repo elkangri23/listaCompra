@@ -6,11 +6,11 @@
 import { PerplexityService } from './PerplexityService';
 import { RedisCacheService } from '../cache/RedisCacheService';
 import { RedisCacheAnalytics } from '../cache/RedisCacheAnalytics';
-import { PerplexityConfig } from '../../config/ai.config';
-import { RedisConfig } from '../../config/redis.config';
+import type { PerplexityConfig } from '../../config/ai.config';
+import type { RedisConfig } from '../../config/redis.config';
 import type { RedisClientType } from 'redis';
 import { Logger } from '../../observability/logger/Logger';
-import {
+import type {
   IAIService,
   CategorySuggestion,
   PurchaseInsight,

@@ -1,12 +1,12 @@
 import { traceContextMiddleware } from '../../../../../src/infrastructure/http/middlewares/tracingMiddleware';
 import type { Request, Response, NextFunction } from 'express';
 
-type MutableHeaders = { [key: string]: string | string[] | undefined };
+interface MutableHeaders { [key: string]: string | string[] | undefined }
 
-type SpanLike = {
+interface SpanLike {
   spanContext: jest.Mock<{ traceId: string; spanId: string }>;
   setAttribute: jest.Mock<void, [string, unknown]>;
-};
+}
 
 jest.mock('@opentelemetry/api', () => {
   const active = jest.fn();

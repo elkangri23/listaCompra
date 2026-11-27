@@ -3,9 +3,10 @@
  * Implementa CU-32: Listas Inteligentes por Ocasión
  */
 
-import { Request, Response } from 'express';
-import { CreateOccasionListUseCase } from '../../../application/use-cases/lists/CreateOccasionList';
-import { CreateOccasionListDto, validateCreateOccasionListDto, PREDEFINED_OCCASIONS } from '../../../application/dto/lists/CreateOccasionListDto';
+import type { Request, Response } from 'express';
+import type { CreateOccasionListUseCase } from '../../../application/use-cases/lists/CreateOccasionList';
+import type { CreateOccasionListDto} from '../../../application/dto/lists/CreateOccasionListDto';
+import { validateCreateOccasionListDto, PREDEFINED_OCCASIONS } from '../../../application/dto/lists/CreateOccasionListDto';
 import { Logger } from '../../observability/logger/Logger';
 import { ValidationError } from '../../../application/errors/ValidationError';
 import { NotFoundError } from '../../../application/errors/NotFoundError';

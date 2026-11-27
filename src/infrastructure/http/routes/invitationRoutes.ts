@@ -1,8 +1,9 @@
-import { Router, RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
+import { Router } from 'express';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { sensitiveRateLimit } from '../middlewares/rateLimitMiddleware';
 import { z } from 'zod';
-import { InvitationController } from '../controllers/InvitationController';
+import type { InvitationController } from '../controllers/InvitationController';
 
 // Schemas de validación para los endpoints de invitaciones
 const shareListSchema = z.object({

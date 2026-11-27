@@ -63,7 +63,7 @@ describe('PrismaProductoRepository Integration Tests', () => {
         unidad: 'litros',
         precio: 1.50,
         urgente: false,
-        listaId: listaId,
+        listaId,
         creadoPorId: usuarioId,
       };
 
@@ -91,7 +91,7 @@ describe('PrismaProductoRepository Integration Tests', () => {
       const productoData = {
         nombre: 'Pan Integral',
         cantidad: 1,
-        listaId: listaId,
+        listaId,
         creadoPorId: usuarioId,
       };
 
@@ -128,7 +128,7 @@ describe('PrismaProductoRepository Integration Tests', () => {
       const productoData = {
         nombre: 'Yogur Natural',
         cantidad: 4,
-        listaId: listaId,
+        listaId,
         creadoPorId: usuarioId,
       };
 
@@ -173,7 +173,7 @@ describe('PrismaProductoRepository Integration Tests', () => {
       for (const data of productos) {
         const productoResult = Producto.create({
           ...data,
-          listaId: listaId,
+          listaId,
           creadoPorId: usuarioId,
         });
 
@@ -200,7 +200,7 @@ describe('PrismaProductoRepository Integration Tests', () => {
       const productoData = {
         nombre: 'Producto a Eliminar',
         cantidad: 1,
-        listaId: listaId,
+        listaId,
         creadoPorId: usuarioId,
       };
 
@@ -238,7 +238,7 @@ describe('PrismaProductoRepository Integration Tests', () => {
       const productoData = {
         nombre: 'Producto Existe',
         cantidad: 1,
-        listaId: listaId,
+        listaId,
         creadoPorId: usuarioId,
       };
 
@@ -274,7 +274,7 @@ describe('PrismaProductoRepository Integration Tests', () => {
         const productoResult = Producto.create({
           nombre: `Producto ${i}`,
           cantidad: 1,
-          listaId: listaId,
+          listaId,
           creadoPorId: usuarioId,
         });
 
@@ -307,7 +307,7 @@ describe('PrismaProductoRepository Integration Tests', () => {
       for (const data of productos) {
         const productoResult = Producto.create({
           ...data,
-          listaId: listaId,
+          listaId,
           creadoPorId: usuarioId,
         });
 

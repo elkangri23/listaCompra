@@ -3,7 +3,7 @@
  */
 
 import { UpdateProfile } from '../../../../../src/application/use-cases/auth/UpdateProfile';
-import { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
+import type { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
 import { Usuario } from '../../../../../src/domain/entities/Usuario';
 import { Email } from '../../../../../src/domain/value-objects/Email';
 import { success } from '../../../../../src/shared/result';

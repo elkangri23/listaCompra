@@ -3,8 +3,8 @@
  */
 
 import { ChangePassword } from '../../../../../src/application/use-cases/auth/ChangePassword';
-import { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
-import { IPasswordHasher } from '../../../../../src/application/ports/auth/IPasswordHasher';
+import type { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
+import type { IPasswordHasher } from '../../../../../src/application/ports/auth/IPasswordHasher';
 import { Usuario } from '../../../../../src/domain/entities/Usuario';
 import { Email } from '../../../../../src/domain/value-objects/Email';
 import { success } from '../../../../../src/shared/result';

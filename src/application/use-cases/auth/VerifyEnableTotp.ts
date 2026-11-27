@@ -11,6 +11,7 @@ import type { IUsuarioRepository } from '@application/ports/repositories/IUsuari
 import type { IMfaRepository } from '@application/ports/repositories/IMfaRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { IEmailService } from '@application/ports/external/IEmailService';
+import type { Usuario } from '@domain/entities/Usuario';
 import { Password } from '@domain/value-objects/Password';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
 import { NotFoundError } from '@application/errors/NotFoundError';
@@ -113,7 +114,7 @@ export class VerifyEnableTotp {
   private async verifyPassword(
     usuarioId: UUID,
     plainPassword: string
-  ): Promise<Result<import('@domain/entities/Usuario').Usuario, UnauthorizedError | NotFoundError | Error>> {
+  ): Promise<Result<Usuario, UnauthorizedError | NotFoundError | Error>> {
     const userResult = await this.usuarioRepository.findById(usuarioId);
     if (userResult.isFailure) {
       return failure(userResult.error);

@@ -99,7 +99,7 @@ export class DeleteList {
 
     // 6. Crear y guardar evento de auditoría
     const auditEvent = new ListaDeletedEvent({
-      listaId: listaId,
+      listaId,
       deletedByUserId: propietarioId,
       deletedValue,
     });

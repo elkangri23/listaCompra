@@ -7,7 +7,7 @@
 import axios from 'axios';
 import { createChatAdapter } from './providers/LLMProviderAdapter';
 import type { ILLMChatAdapter, ChatResult } from './providers/LLMProviderAdapter';
-import { 
+import type { 
   IAIService, 
   CategorySuggestion, 
   PurchaseInsight, 
@@ -20,9 +20,11 @@ import {
   UserPreferences,
   APIUsageInfo
 } from '../../../application/ports/external/IAIService';
-import { PerplexityConfig, AI_USE_CASES } from '../../config/ai.config';
+import type { PerplexityConfig} from '../../config/ai.config';
+import { AI_USE_CASES } from '../../config/ai.config';
 import { Logger } from '../../observability/logger/Logger';
-import { CacheService, CacheKeyBuilder, CACHE_TTL } from '../cache/RedisCacheService';
+import type { CacheService} from '../cache/RedisCacheService';
+import { CacheKeyBuilder, CACHE_TTL } from '../cache/RedisCacheService';
 import { AISecurityUtils } from './AISecurityUtils';
 
 export class PerplexityService implements IAIService {
@@ -367,8 +369,8 @@ REGLAS ESTRICTAS:
    */
   async isAvailable(): Promise<boolean> {
     try {
-      const testSystemPrompt = "Eres un asistente de prueba.";
-      const testUserPrompt = "Responde únicamente 'OK'.";
+      const testSystemPrompt = 'Eres un asistente de prueba.';
+      const testUserPrompt = 'Responde únicamente \'OK\'.';
       await this.callPerplexityAPI(testSystemPrompt, testUserPrompt, 0.1, 50);
       return true;
     } catch {
@@ -853,30 +855,30 @@ Responde SOLO con el JSON, sin texto adicional.`;
     // Regla 1: Si hay pasta, sugerir salsa de tomate
     if (productNames.some(name => name.includes('pasta') || name.includes('espagueti'))) {
       recommendations.push({
-        name: "Salsa de tomate",
-        reason: "Complementa perfectamente con la pasta",
+        name: 'Salsa de tomate',
+        reason: 'Complementa perfectamente con la pasta',
         confidenceScore: 90,
         suggestedQuantity: 1,
-        suggestedUnit: "bote",
-        suggestedCategory: "Salsas",
+        suggestedUnit: 'bote',
+        suggestedCategory: 'Salsas',
         estimatedPrice: 2.50,
-        relatedProducts: ["Pasta"],
-        tags: ["italiano"],
-        recommendationType: "complement"
+        relatedProducts: ['Pasta'],
+        tags: ['italiano'],
+        recommendationType: 'complement'
       });
 
       if (recommendations.length < maxRecommendations) {
         recommendations.push({
-          name: "Queso parmesano rallado",
-          reason: "Ingrediente esencial para pasta italiana",
+          name: 'Queso parmesano rallado',
+          reason: 'Ingrediente esencial para pasta italiana',
           confidenceScore: 85,
           suggestedQuantity: 1,
-          suggestedUnit: "paquete",
-          suggestedCategory: "Lácteos",
+          suggestedUnit: 'paquete',
+          suggestedCategory: 'Lácteos',
           estimatedPrice: 3.00,
-          relatedProducts: ["Pasta"],
-          tags: ["italiano", "lácteo"],
-          recommendationType: "complement"
+          relatedProducts: ['Pasta'],
+          tags: ['italiano', 'lácteo'],
+          recommendationType: 'complement'
         });
       }
     }
@@ -885,16 +887,16 @@ Responde SOLO con el JSON, sin texto adicional.`;
     if (productNames.some(name => name.includes('carne') || name.includes('pollo') || name.includes('ternera'))) {
       if (recommendations.length < maxRecommendations) {
         recommendations.push({
-          name: "Patatas",
-          reason: "Acompañamiento clásico para carnes",
+          name: 'Patatas',
+          reason: 'Acompañamiento clásico para carnes',
           confidenceScore: 80,
           suggestedQuantity: 1,
-          unit: "kg",
-          suggestedCategory: "Verduras",
+          unit: 'kg',
+          suggestedCategory: 'Verduras',
           estimatedPrice: 1.50,
-          relatedProducts: ["Carne"],
-          tags: ["acompañamiento"],
-          recommendationType: "frequently_together"
+          relatedProducts: ['Carne'],
+          tags: ['acompañamiento'],
+          recommendationType: 'frequently_together'
         });
       }
     }
@@ -903,16 +905,16 @@ Responde SOLO con el JSON, sin texto adicional.`;
     if (productNames.some(name => name.includes('pan'))) {
       if (recommendations.length < maxRecommendations) {
         recommendations.push({
-          name: "Mantequilla",
-          reason: "Complemento perfecto para el pan",
+          name: 'Mantequilla',
+          reason: 'Complemento perfecto para el pan',
           confidenceScore: 75,
           suggestedQuantity: 1,
-          suggestedUnit: "paquete",
-          suggestedCategory: "Lácteos",
+          suggestedUnit: 'paquete',
+          suggestedCategory: 'Lácteos',
           estimatedPrice: 2.00,
-          relatedProducts: ["Pan"],
-          tags: ["lácteo"],
-          recommendationType: "complement"
+          relatedProducts: ['Pan'],
+          tags: ['lácteo'],
+          recommendationType: 'complement'
         });
       }
     }
@@ -920,40 +922,40 @@ Responde SOLO con el JSON, sin texto adicional.`;
     // Regla 4: Sugerencias genéricas si no hay suficientes
     const genericSuggestions = [
       {
-        name: "Aceite de oliva",
-        reason: "Ingrediente versátil para múltiples preparaciones",
+        name: 'Aceite de oliva',
+        reason: 'Ingrediente versátil para múltiples preparaciones',
         confidenceScore: 60,
         suggestedQuantity: 1,
-        suggestedUnit: "botella",
-        suggestedCategory: "Aceites",
+        suggestedUnit: 'botella',
+        suggestedCategory: 'Aceites',
         estimatedPrice: 4.50,
         relatedProducts: [],
-        tags: ["básico", "versátil"],
-        recommendationType: "category_match"
+        tags: ['básico', 'versátil'],
+        recommendationType: 'category_match'
       },
       {
-        name: "Sal",
-        reason: "Condimento esencial para cualquier cocina",
+        name: 'Sal',
+        reason: 'Condimento esencial para cualquier cocina',
         confidenceScore: 55,
         suggestedQuantity: 1,
-        suggestedUnit: "paquete",
-        suggestedCategory: "Condimentos",
+        suggestedUnit: 'paquete',
+        suggestedCategory: 'Condimentos',
         estimatedPrice: 0.80,
         relatedProducts: [],
-        tags: ["básico"],
-        recommendationType: "category_match"
+        tags: ['básico'],
+        recommendationType: 'category_match'
       },
       {
-        name: "Ajo",
-        reason: "Ingrediente base para múltiples recetas",
+        name: 'Ajo',
+        reason: 'Ingrediente base para múltiples recetas',
         confidenceScore: 50,
         suggestedQuantity: 1,
-        suggestedUnit: "cabeza",
-        suggestedCategory: "Verduras",
+        suggestedUnit: 'cabeza',
+        suggestedCategory: 'Verduras',
         estimatedPrice: 0.50,
         relatedProducts: [],
-        tags: ["básico", "aromático"],
-        recommendationType: "category_match"
+        tags: ['básico', 'aromático'],
+        recommendationType: 'category_match'
       }
     ];
 
@@ -962,7 +964,7 @@ Responde SOLO con el JSON, sin texto adicional.`;
     }
 
     return JSON.stringify({
-      detectedContext: "Contexto general (IA no disponible)",
+      detectedContext: 'Contexto general (IA no disponible)',
       recommendations: recommendations.slice(0, maxRecommendations)
     });
   }
@@ -1226,34 +1228,34 @@ IMPORTANTE:
     return JSON.stringify({
       products: [
         {
-          name: "Pan",
+          name: 'Pan',
           quantity: 1,
-          unit: "unidades",
-          category: "Panadería",
+          unit: 'unidades',
+          category: 'Panadería',
           estimatedPrice: 1.5,
           priority: 1,
-          reason: "Producto básico para cualquier ocasión",
-          alternatives: ["Pan integral", "Pan de molde"]
+          reason: 'Producto básico para cualquier ocasión',
+          alternatives: ['Pan integral', 'Pan de molde']
         },
         {
-          name: "Agua",
+          name: 'Agua',
           quantity: 2,
-          unit: "litros",
-          category: "Bebidas",
+          unit: 'litros',
+          category: 'Bebidas',
           estimatedPrice: 1.0,
           priority: 1,
-          reason: "Hidratación esencial",
-          alternatives: ["Agua con gas", "Agua mineral"]
+          reason: 'Hidratación esencial',
+          alternatives: ['Agua con gas', 'Agua mineral']
         },
         {
-          name: "Fruta variada",
+          name: 'Fruta variada',
           quantity: 1,
-          unit: "kg",
-          category: "Frutas",
+          unit: 'kg',
+          category: 'Frutas',
           estimatedPrice: 3.0,
           priority: 2,
-          reason: "Opción saludable y versátil",
-          alternatives: ["Manzanas", "Plátanos", "Naranjas"]
+          reason: 'Opción saludable y versátil',
+          alternatives: ['Manzanas', 'Plátanos', 'Naranjas']
         }
       ]
     });

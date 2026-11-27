@@ -3,7 +3,7 @@
  */
 
 import request from 'supertest';
-import { Application } from 'express';
+import type { Application } from 'express';
 import { Container } from '../../../src/composition/container';
 import { markTestUserEmailVerified } from '../../helpers/verify-test-user';
 import { createServer } from '../../../src/infrastructure/http/server';

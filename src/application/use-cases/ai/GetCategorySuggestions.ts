@@ -3,9 +3,10 @@
  * Categorización automática de productos usando IA
  */
 
-import { Result, success, failure } from '../../../shared/result';
-import { IAIService, CategorySuggestion } from '../../ports/external/IAIService';
-import { GetCategorySuggestionsDto, CategorySuggestionResponseDto } from '../../dto/ai/AIDto';
+import type { Result} from '../../../shared/result';
+import { success, failure } from '../../../shared/result';
+import type { IAIService, CategorySuggestion } from '../../ports/external/IAIService';
+import type { GetCategorySuggestionsDto, CategorySuggestionResponseDto } from '../../dto/ai/AIDto';
 import { Logger } from '../../../infrastructure/observability/logger/Logger';
 import { ValidationError } from '../../errors/ValidationError';
 import { v4 as uuidv4 } from 'uuid';
@@ -59,7 +60,7 @@ export class GetCategorySuggestionsUseCase {
         timestamp: new Date().toISOString()
       };
 
-      this.logger.ai(`Sugerencias generadas exitosamente`, {
+      this.logger.ai('Sugerencias generadas exitosamente', {
         requestId,
         suggestionsCount: processedSuggestions.length,
         cached: response.cached,
@@ -91,7 +92,7 @@ export class GetCategorySuggestionsUseCase {
     }
 
     // Validar caracteres especiales o patrones sospechosos
-    const suspiciousPattern = /[<>{}[\]\\\/\|\^\$\*\+\?\(\)]/;
+    const suspiciousPattern = /[<>{}[\]\\/|^$*+?()]/;
     if (suspiciousPattern.test(dto.productName)) {
       return failure(new ValidationError('El nombre del producto contiene caracteres no válidos', 'productName', dto.productName));
     }

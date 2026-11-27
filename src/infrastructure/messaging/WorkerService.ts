@@ -168,7 +168,7 @@ export class WorkerService {
       isConnected: boolean;
       reconnectAttempts: number;
     }>;
-  } {
+    } {
     return {
       isRunning: this.isRunning,
       consumersCount: this.consumers.length,

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
-import { GetAuditHistoryForList } from '@application/use-cases/audit/GetAuditHistoryForList';
-import { GetAuditHistoryForProduct } from '@application/use-cases/audit/GetAuditHistoryForProduct';
-import { GetGlobalAuditHistory } from '@application/use-cases/audit/GetGlobalAuditHistory';
+import type { GetAuditHistoryForList } from '@application/use-cases/audit/GetAuditHistoryForList';
+import type { GetAuditHistoryForProduct } from '@application/use-cases/audit/GetAuditHistoryForProduct';
+import type { GetGlobalAuditHistory } from '@application/use-cases/audit/GetGlobalAuditHistory';
 import { ValidationError } from '@application/errors/ValidationError';
 
 type ChangeType = 'CREATE' | 'UPDATE' | 'DELETE';

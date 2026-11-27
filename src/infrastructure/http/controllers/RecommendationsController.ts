@@ -6,9 +6,9 @@
  * basadas en el contenido actual de las listas del usuario.
  */
 
-import { Request, Response } from 'express';
-import { GetProductRecommendations } from '../../../application/use-cases/products/GetProductRecommendations';
-import { GetProductRecommendationsDto } from '../../../application/dto/products/GetProductRecommendationsDto';
+import type { Request, Response } from 'express';
+import type { GetProductRecommendations } from '../../../application/use-cases/products/GetProductRecommendations';
+import type { GetProductRecommendationsDto } from '../../../application/dto/products/GetProductRecommendationsDto';
 import { Logger } from '../../observability/logger/Logger';
 
 export class RecommendationsController {

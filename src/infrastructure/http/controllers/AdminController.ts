@@ -3,15 +3,15 @@
  * Maneja endpoints relacionados con impersonación y administración de usuarios
  */
 
-import { Request, Response } from 'express';
-import { ImpersonateUser } from '@application/use-cases/admin/ImpersonateUser';
-import { EndImpersonation } from '@application/use-cases/admin/EndImpersonation';
+import type { Request, Response } from 'express';
+import type { ImpersonateUser } from '@application/use-cases/admin/ImpersonateUser';
+import type { EndImpersonation } from '@application/use-cases/admin/EndImpersonation';
 import { Logger } from '@infrastructure/observability/logger/Logger';
-import {
+import type {
   ImpersonateUserDto,
   ImpersonationResponseDto
 } from '@application/dto/admin/ImpersonateUserDto';
-import {
+import type {
   EndImpersonationDto,
   EndImpersonationResponseDto
 } from '@application/dto/admin/EndImpersonationDto';
@@ -354,14 +354,14 @@ export class AdminController {
    */
   private getErrorStatusCode(error: Error): number {
     switch (error.constructor.name) {
-      case 'ValidationError':
-        return 400;
-      case 'UnauthorizedError':
-        return 401;
-      case 'NotFoundError':
-        return 404;
-      default:
-        return 500;
+    case 'ValidationError':
+      return 400;
+    case 'UnauthorizedError':
+      return 401;
+    case 'NotFoundError':
+      return 404;
+    default:
+      return 500;
     }
   }
 }

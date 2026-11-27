@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import request from 'supertest';
-import { Application } from 'express';
+import type { Application } from 'express';
 import { Container } from '../../../src/composition/container';
 import { createServer } from '../../../src/infrastructure/http/server';
 

@@ -8,9 +8,10 @@ process.env['NODE_ENV'] = 'development';
 
 import express from 'express';
 import request from 'supertest';
+import type * as RateLimitMiddlewareModule from '../../../../../src/infrastructure/http/middlewares/rateLimitMiddleware';
 
 describe('rateLimitMiddleware (comportamiento con NODE_ENV=development)', () => {
-  let rateLimitMiddleware: typeof import('../../../../../src/infrastructure/http/middlewares/rateLimitMiddleware');
+  let rateLimitMiddleware: typeof RateLimitMiddlewareModule;
 
   beforeAll(async () => {
     rateLimitMiddleware = await import('../../../../../src/infrastructure/http/middlewares/rateLimitMiddleware');

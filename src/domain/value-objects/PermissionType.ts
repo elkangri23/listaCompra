@@ -100,14 +100,14 @@ export class PermissionType {
   // Obtener descripción amigable
   getDescription(): string {
     switch (this._level) {
-      case PermissionLevel.LECTURA:
-        return 'Solo lectura - Puede ver el contenido pero no modificarlo';
-      case PermissionLevel.ESCRITURA:
-        return 'Lectura y escritura - Puede ver y modificar el contenido';
-      case PermissionLevel.ADMIN:
-        return 'Administrador - Control total sobre el contenido y permisos';
-      default:
-        return 'Permiso desconocido';
+    case PermissionLevel.LECTURA:
+      return 'Solo lectura - Puede ver el contenido pero no modificarlo';
+    case PermissionLevel.ESCRITURA:
+      return 'Lectura y escritura - Puede ver y modificar el contenido';
+    case PermissionLevel.ADMIN:
+      return 'Administrador - Control total sobre el contenido y permisos';
+    default:
+      return 'Permiso desconocido';
     }
   }
 }

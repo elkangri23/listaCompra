@@ -97,7 +97,7 @@ describe('OutboxWorker', () => {
 
   it('procesa un evento pendiente: publica y marca como procesado', async () => {
     outboxService.getPendingEvents.mockResolvedValue(success({
-        items: [makeOutboxEvent()], total: 1, page: 1, limit: 50, totalPages: 1, hasNext: false, hasPrevious: false
+      items: [makeOutboxEvent()], total: 1, page: 1, limit: 50, totalPages: 1, hasNext: false, hasPrevious: false
     }));
 
     worker = makeWorker();
@@ -119,7 +119,7 @@ describe('OutboxWorker', () => {
 
   it('si el publisher devuelve failure incrementa intentos y NO marca procesado', async () => {
     outboxService.getPendingEvents.mockResolvedValue(success({
-        items: [makeOutboxEvent()], total: 1, page: 1, limit: 50, totalPages: 1, hasNext: false, hasPrevious: false
+      items: [makeOutboxEvent()], total: 1, page: 1, limit: 50, totalPages: 1, hasNext: false, hasPrevious: false
     }));
     eventPublisher.publish.mockResolvedValue(failure(new Error('RabbitMQ caído')));
 
@@ -135,7 +135,7 @@ describe('OutboxWorker', () => {
 
   it('si publish lanza excepción se registra el fallo sin romper el worker', async () => {
     outboxService.getPendingEvents.mockResolvedValue(success({
-        items: [makeOutboxEvent()], total: 1, page: 1, limit: 50, totalPages: 1, hasNext: false, hasPrevious: false
+      items: [makeOutboxEvent()], total: 1, page: 1, limit: 50, totalPages: 1, hasNext: false, hasPrevious: false
     }));
     eventPublisher.publish.mockRejectedValue(new Error('timeout'));
 

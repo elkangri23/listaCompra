@@ -4,7 +4,7 @@
  */
 
 import { Router } from 'express';
-import { AdminController } from '@infrastructure/http/controllers/AdminController';
+import type { AdminController } from '@infrastructure/http/controllers/AdminController';
 import { validationMiddleware } from '@infrastructure/http/middlewares/validationMiddleware';
 import { createAdminRateLimitMiddleware } from '@infrastructure/http/middlewares/adminRateLimitMiddleware';
 import { securityTestEndpoint } from '../../security/SecurityTestingService';
@@ -17,7 +17,7 @@ const impersonateUserSchema = z.object({
   reason: z.string().min(3).max(500).optional(),
   durationMinutes: z.number().int().min(1).max(480).optional()
 }).refine((data) => data.targetUserId || data.targetUserEmail, {
-  message: "Debe especificar targetUserId o targetUserEmail"
+  message: 'Debe especificar targetUserId o targetUserEmail'
 });
 
 const endImpersonationSchema = z.object({

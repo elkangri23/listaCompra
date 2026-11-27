@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { CacheIntegrityController } from '../controllers/CacheIntegrityController';
+import type { CacheIntegrityController } from '../controllers/CacheIntegrityController';
 import { apiRateLimit } from '../middlewares/rateLimitMiddleware';
 
 /**

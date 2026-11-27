@@ -176,7 +176,7 @@ export class RabbitMQConsumer<T = any> {
       // Ack manual si no está en auto-ack
       if (!this.options.autoAck && this.channel) {
         this.channel.ack(msg);
-        console.log(`✅ Mensaje procesado y confirmado`);
+        console.log('✅ Mensaje procesado y confirmado');
       }
 
     } catch (error) {
@@ -187,10 +187,10 @@ export class RabbitMQConsumer<T = any> {
         // Rechazar mensaje y enviar a dead letter queue si está configurada
         if (this.options.deadLetterQueue) {
           this.channel.reject(msg, false); // No requeue
-          console.log(`💀 Mensaje enviado a dead letter queue`);
+          console.log('💀 Mensaje enviado a dead letter queue');
         } else {
           this.channel.nack(msg, false, true); // Requeue para retry
-          console.log(`🔄 Mensaje reencolarizado para retry`);
+          console.log('🔄 Mensaje reencolarizado para retry');
         }
       }
     }

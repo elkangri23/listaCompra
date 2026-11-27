@@ -6,25 +6,28 @@
  * optimización.
  */
 
-import { Result, success, failure } from '../../../shared/result';
-import {
+import type { Result} from '../../../shared/result';
+import { success, failure } from '../../../shared/result';
+import type {
   AnalyzePurchaseHabitsDto,
   PurchaseHabitsResponse,
-  PRESET_DAYS,
   TimeRangePreset
 } from '../../dto/ai/AnalyzePurchaseHabitsDto';
-import { IUsuarioRepository } from '../../ports/repositories/IUsuarioRepository';
-import { IListaRepository } from '../../ports/repositories/IListaRepository';
-import { IProductoRepository } from '../../ports/repositories/IProductoRepository';
-import { ICategoriaRepository } from '../../ports/repositories/ICategoriaRepository';
-import { ITiendaRepository } from '../../ports/repositories/ITiendaRepository';
-import { IAIService, PurchaseHistoryData, PurchaseInsight } from '../../ports/external/IAIService';
-import { ValidationError } from '../../errors/ValidationError';
+import {
+  PRESET_DAYS
+} from '../../dto/ai/AnalyzePurchaseHabitsDto';
+import type { IUsuarioRepository } from '../../ports/repositories/IUsuarioRepository';
+import type { IListaRepository } from '../../ports/repositories/IListaRepository';
+import type { IProductoRepository } from '../../ports/repositories/IProductoRepository';
+import type { ICategoriaRepository } from '../../ports/repositories/ICategoriaRepository';
+import type { ITiendaRepository } from '../../ports/repositories/ITiendaRepository';
+import type { IAIService, PurchaseHistoryData, PurchaseInsight } from '../../ports/external/IAIService';
+import type { ValidationError } from '../../errors/ValidationError';
 import { UnauthorizedError } from '../../errors/UnauthorizedError';
 import { NotFoundError } from '../../errors/NotFoundError';
 import { Logger } from '../../../infrastructure/observability/logger/Logger';
-import { Producto } from '../../../domain/entities/Producto';
-import { Lista } from '../../../domain/entities/Lista';
+import type { Producto } from '../../../domain/entities/Producto';
+import type { Lista } from '../../../domain/entities/Lista';
 
 export class AnalyzePurchaseHabitsUseCase {
   private readonly logger = new Logger('AnalyzePurchaseHabits');

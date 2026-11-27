@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { Container } from '../../../composition/container';
 import { RabbitMQEventPublisher } from '../../messaging/RabbitMQEventPublisher';
 
@@ -92,7 +92,7 @@ export class DevController {
       // Crear un evento de dominio para la nueva interfaz
       const testEvent = {
         eventId: `test-${Date.now()}`,
-        eventType: eventType,
+        eventType,
         aggregateId: 'dev-test',
         aggregateType: 'Test',
         eventData: testData,

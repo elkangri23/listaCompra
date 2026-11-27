@@ -9,6 +9,7 @@ import { success, failure } from '@shared/result';
 import type { UUID } from '@shared/types';
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
+import type { Usuario } from '@domain/entities/Usuario';
 import { Password } from '@domain/value-objects/Password';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
 import { NotFoundError } from '@application/errors/NotFoundError';
@@ -66,7 +67,7 @@ export class SetupTotp {
   private async verifyPassword(
     usuarioId: UUID,
     plainPassword: string
-  ): Promise<Result<import('@domain/entities/Usuario').Usuario, UnauthorizedError | NotFoundError | Error>> {
+  ): Promise<Result<Usuario, UnauthorizedError | NotFoundError | Error>> {
     const userResult = await this.usuarioRepository.findById(usuarioId);
     if (userResult.isFailure) {
       return failure(userResult.error);

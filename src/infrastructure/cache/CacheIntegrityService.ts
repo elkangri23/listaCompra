@@ -1,7 +1,8 @@
 import { createHash } from 'crypto';
-import { Result, success, failure } from '../../shared/result';
-import { Logger } from '../observability/logger/Logger';
-import { SecurityAuditService } from '../observability/audit/SecurityAuditService';
+import type { Result} from '../../shared/result';
+import { success, failure } from '../../shared/result';
+import type { Logger } from '../observability/logger/Logger';
+import type { SecurityAuditService } from '../observability/audit/SecurityAuditService';
 
 /**
  * Tipos de datos que pueden ser validados

@@ -4,7 +4,8 @@
 
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import { DomainError, InvalidValueError } from '@domain/errors/DomainError';
+import type { DomainError} from '@domain/errors/DomainError';
+import { InvalidValueError } from '@domain/errors/DomainError';
 import { Hash } from '@domain/value-objects/Hash';
 import { PermissionType } from '@domain/value-objects/PermissionType';
 
@@ -238,7 +239,7 @@ export class Invitacion {
     expiraEn: Date;
     activa: boolean;
     emailInvitado: string | null;
-  } {
+    } {
     return {
       id: this.props.id,
       listaId: this.props.listaId,

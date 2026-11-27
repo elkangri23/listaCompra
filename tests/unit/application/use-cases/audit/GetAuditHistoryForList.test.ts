@@ -1,5 +1,5 @@
 import { GetAuditHistoryForList } from '@application/use-cases/audit/GetAuditHistoryForList';
-import { IAuditRepository } from '@application/ports/repositories/IAuditRepository';
+import type { IAuditRepository } from '@application/ports/repositories/IAuditRepository';
 import { AuditEntry } from '@domain/entities/AuditEntry';
 import { success } from '@shared/result';
 

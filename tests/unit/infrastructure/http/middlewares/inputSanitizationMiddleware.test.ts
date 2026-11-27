@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { InputSanitizationService, inputSanitizationMiddleware } from '@infrastructure/http/middlewares/inputSanitizationMiddleware';
 
 jest.mock('isomorphic-dompurify', () => ({
@@ -46,7 +46,7 @@ describe('InputSanitizationService', () => {
       expect(Object.keys(result.sanitized)).toHaveLength(1);
       expect(JSON.stringify(result.sanitized)).not.toContain('DROP TABLE');
       expect(result.blocked).toEqual(
-        expect.arrayContaining(["Field 'malicioso' not in allowed list"])
+        expect.arrayContaining(['Field \'malicioso\' not in allowed list'])
       );
     });
   });

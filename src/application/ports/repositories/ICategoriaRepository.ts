@@ -5,7 +5,7 @@
 
 import type { Result } from '@shared/result';
 import type { Categoria } from '@domain/entities/Categoria';
-import { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
+import type { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
 
 export interface ICategoriaRepository {
   /**

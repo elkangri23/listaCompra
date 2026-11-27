@@ -3,7 +3,8 @@
  * Security Enhancement: Production-ready rate limiting para prevenir abuse
  */
 
-import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
+import type { RateLimitRequestHandler } from 'express-rate-limit';
+import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import Redis from 'ioredis';
 import type { Request, Response } from 'express';
@@ -278,13 +279,13 @@ export const dynamicRoleBasedRateLimit = rateLimit({
     const userReq = req as AuthenticatedRequest;
     
     switch (userReq.user?.rol) {
-      case 'admin':
-        return 200; // Admins: 200 requests
-      case 'premium':
-        return 150; // Premium users: 150 requests
-      case 'user':
-      default:
-        return 100; // Usuarios normales: 100 requests
+    case 'admin':
+      return 200; // Admins: 200 requests
+    case 'premium':
+      return 150; // Premium users: 150 requests
+    case 'user':
+    default:
+      return 100; // Usuarios normales: 100 requests
     }
   },
   

@@ -1,7 +1,7 @@
 import { RegisterUser } from '../../../../../src/application/use-cases/auth/RegisterUser';
 import type { ITurnstileVerifier } from '../../../../../src/application/ports/auth/ITurnstileVerifier';
-import { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
-import { IPasswordHasher } from '../../../../../src/application/ports/auth/IPasswordHasher';
+import type { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
+import type { IPasswordHasher } from '../../../../../src/application/ports/auth/IPasswordHasher';
 import { Usuario } from '../../../../../src/domain/entities/Usuario';
 import { Email } from '../../../../../src/domain/value-objects/Email';
 import { success, failure } from '../../../../../src/shared/result';

@@ -4,7 +4,8 @@
  */
 
 import { Router, type RequestHandler } from 'express';
-import { OccasionListController, OccasionListSchemas } from '../controllers/OccasionListController';
+import type { OccasionListController} from '../controllers/OccasionListController';
+import { OccasionListSchemas } from '../controllers/OccasionListController';
 
 /**
  * Configura las rutas para listas por ocasión

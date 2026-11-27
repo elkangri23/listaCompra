@@ -46,17 +46,19 @@ const makeConfig = (overrides: any = {}) => ({
   ...overrides
 });
 
-const redisHandlers = new Map<string, Function>();
+type RedisEventHandler = (...args: unknown[]) => void;
+
+const redisHandlers = new Map<string, RedisEventHandler>();
 
 function flushRedisEvents() {
   // los listeners registrados en client.on capturan handlers por evento
   redisHandlers.clear();
-  createClientMock.on.mockImplementation((event: string, fn: Function) => {
+  createClientMock.on.mockImplementation((event: string, fn: RedisEventHandler) => {
     redisHandlers.set(event, fn);
   });
 }
 
-function redisEvent(event: string): Function | undefined {
+function redisEvent(event: string): RedisEventHandler | undefined {
   return redisHandlers.get(event);
 }
 

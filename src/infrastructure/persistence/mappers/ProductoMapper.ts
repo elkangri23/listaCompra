@@ -5,7 +5,8 @@
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 import { Producto } from '@domain/entities/Producto';
-import { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
+import type { BusinessRuleViolationError } from '@domain/errors/DomainError';
+import { InvalidValueError } from '@domain/errors/DomainError';
 
 export class ProductoMapper {
   /**

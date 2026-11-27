@@ -5,7 +5,8 @@
 
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
+import type { BusinessRuleViolationError } from '@domain/errors/DomainError';
+import { InvalidValueError } from '@domain/errors/DomainError';
 import { createDate, generateUUID } from '@shared/utils';
 
 export interface ListaProps {

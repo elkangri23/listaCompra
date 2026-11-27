@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
-import { CacheIntegrityService, ValidatableDataType, IntegrityCheckResult } from '../../cache/CacheIntegrityService';
-import { Logger } from '../../observability/logger/Logger';
+import type { Request, Response } from 'express';
+import type { CacheIntegrityService, ValidatableDataType, IntegrityCheckResult } from '../../cache/CacheIntegrityService';
+import type { Logger } from '../../observability/logger/Logger';
 
 /**
  * Controlador para monitoreo y gestión de integridad de cache

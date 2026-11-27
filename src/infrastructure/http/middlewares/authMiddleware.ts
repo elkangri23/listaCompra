@@ -3,7 +3,7 @@
  * Verifica tokens JWT y añade información del usuario a la request
  */
 
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
 
 export interface AuthMiddlewareDependencies {

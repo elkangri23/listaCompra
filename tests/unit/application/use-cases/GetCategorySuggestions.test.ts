@@ -4,8 +4,8 @@
  */
 
 import { GetCategorySuggestionsUseCase } from '../../../../src/application/use-cases/ai/GetCategorySuggestions';
-import { IAIService, CategorySuggestion } from '../../../../src/application/ports/external/IAIService';
-import { GetCategorySuggestionsDto } from '../../../../src/application/dto/ai/AIDto';
+import type { IAIService, CategorySuggestion } from '../../../../src/application/ports/external/IAIService';
+import type { GetCategorySuggestionsDto } from '../../../../src/application/dto/ai/AIDto';
 import { ValidationError } from '../../../../src/application/errors/ValidationError';
 
 // Mock del servicio de IA

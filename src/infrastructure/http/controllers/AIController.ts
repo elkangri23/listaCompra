@@ -3,18 +3,18 @@
  * Maneja endpoints relacionados con categorización automática y análisis IA
  */
 
-import { Response } from 'express';
-import { AuthenticatedRequest } from '../types/express';
-import { GetCategorySuggestionsUseCase } from '../../../application/use-cases/ai/GetCategorySuggestions';
-import { BulkCategorizeProducts } from '../../../application/use-cases/ai/BulkCategorizeProducts';
-import {
+import type { Response } from 'express';
+import type { AuthenticatedRequest } from '../types/express';
+import type { GetCategorySuggestionsUseCase } from '../../../application/use-cases/ai/GetCategorySuggestions';
+import type { BulkCategorizeProducts } from '../../../application/use-cases/ai/BulkCategorizeProducts';
+import type {
   AnalyzePurchaseHabitsUseCase
 } from '../../../application/use-cases/ai/AnalyzePurchaseHabits';
 import {
   validateAnalyzePurchaseHabitsDto,
   TIME_RANGE_PRESETS
 } from '../../../application/dto/ai/AnalyzePurchaseHabitsDto';
-import { GetCategorySuggestionsDto } from '../../../application/dto/ai/AIDto';
+import type { GetCategorySuggestionsDto } from '../../../application/dto/ai/AIDto';
 import { 
   BulkCategorizeProductsDtoFactory 
 } from '../../../application/dto/ai/BulkCategorizeProductsDto';
@@ -83,8 +83,8 @@ export class AIController {
         const error = result.error;
         const status = error.constructor.name === 'NotFoundError' ? 404
           : error.constructor.name === 'UnauthorizedError' ? 403
-          : error.constructor.name === 'ValidationError' ? 400
-          : 500;
+            : error.constructor.name === 'ValidationError' ? 400
+              : 500;
         this.logger.error('Error en análisis de hábitos', {
           requesterId,
           targetUserId: dto.userId,

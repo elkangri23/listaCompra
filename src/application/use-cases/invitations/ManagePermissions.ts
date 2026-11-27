@@ -9,7 +9,7 @@ import { NotFoundError, UnauthorizedError, ValidationError } from '@application/
 import type { IListaRepository } from '@application/ports/repositories/IListaRepository';
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
 import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
-import { Permiso } from '@domain/entities/Permiso';
+import type { Permiso } from '@domain/entities/Permiso';
 import { PermissionType } from '@domain/value-objects/PermissionType';
 
 export interface ManagePermissionsDto {
@@ -92,16 +92,16 @@ export class ManagePermissions {
 
     // 8. Ejecutar acción solicitada
     switch (dto.accion) {
-      case 'cambiar':
-        return await this.cambiarPermiso(permisoActual, dto.nuevoTipoPermiso!);
-      case 'eliminar':
-        return await this.eliminarPermiso(permisoActual);
-      default:
-        return failure(new ValidationError(
-          'Acción no válida',
-          'accion',
-          dto.accion
-        ));
+    case 'cambiar':
+      return await this.cambiarPermiso(permisoActual, dto.nuevoTipoPermiso!);
+    case 'eliminar':
+      return await this.eliminarPermiso(permisoActual);
+    default:
+      return failure(new ValidationError(
+        'Acción no válida',
+        'accion',
+        dto.accion
+      ));
     }
   }
 

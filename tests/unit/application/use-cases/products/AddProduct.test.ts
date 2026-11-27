@@ -97,9 +97,9 @@ describe('AddProduct', () => {
       categoriaRepository: mockCategoriaRepository,
       tiendaRepository: mockTiendaRepository,
       permisoRepository: {
-      findUniqueByUsuarioAndLista: jest.fn().mockResolvedValue(null),
-      hasPermission: jest.fn().mockResolvedValue(success(true))
-    } as any,
+        findUniqueByUsuarioAndLista: jest.fn().mockResolvedValue(null),
+        hasPermission: jest.fn().mockResolvedValue(success(true))
+      } as any,
       aiService: mockAIService
     });
   });

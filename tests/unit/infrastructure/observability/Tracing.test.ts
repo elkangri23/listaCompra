@@ -1,9 +1,11 @@
+import type * as TracingModule from '../../../../src/infrastructure/observability/tracing/Tracing';
+
 type AsyncMock = jest.Mock<Promise<void>, []>;
 
-type NodeSdkInstance = {
+interface NodeSdkInstance {
   start: AsyncMock;
   shutdown: AsyncMock;
-};
+}
 
 const startMock: AsyncMock = jest.fn();
 const shutdownMock: AsyncMock = jest.fn();
@@ -77,7 +79,7 @@ describe('Tracing bootstrap', () => {
   });
 
   function importTracing() {
-    let tracingModule: typeof import('../../../../src/infrastructure/observability/tracing/Tracing') | undefined;
+    let tracingModule: typeof TracingModule | undefined;
     jest.isolateModules(() => {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       tracingModule = require('../../../../src/infrastructure/observability/tracing/Tracing');

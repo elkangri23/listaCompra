@@ -1,7 +1,7 @@
 import { AuthenticateUser } from '../../../../../src/application/use-cases/auth/AuthenticateUser';
-import { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
-import { IPasswordHasher } from '../../../../../src/application/ports/auth/IPasswordHasher';
-import { ITokenService } from '../../../../../src/application/ports/auth/ITokenService';
+import type { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
+import type { IPasswordHasher } from '../../../../../src/application/ports/auth/IPasswordHasher';
+import type { ITokenService } from '../../../../../src/application/ports/auth/ITokenService';
 import { Usuario } from '../../../../../src/domain/entities/Usuario';
 import { Email } from '../../../../../src/domain/value-objects/Email';
 import { success, failure } from '../../../../../src/shared/result';

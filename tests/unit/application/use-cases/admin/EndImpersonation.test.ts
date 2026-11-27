@@ -5,8 +5,8 @@
 import { EndImpersonation } from '../../../../../src/application/use-cases/admin/EndImpersonation';
 import { Usuario, RolUsuario } from '../../../../../src/domain/entities/Usuario';
 import { Email } from '../../../../../src/domain/value-objects/Email';
-import { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
-import { ITokenService, TokenPayload } from '../../../../../src/application/ports/auth/ITokenService';
+import type { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
+import type { ITokenService, TokenPayload } from '../../../../../src/application/ports/auth/ITokenService';
 import { success, failure } from '../../../../../src/shared/result';
 import { NotFoundError } from '../../../../../src/application/errors/NotFoundError';
 import { UnauthorizedError } from '../../../../../src/application/errors/UnauthorizedError';

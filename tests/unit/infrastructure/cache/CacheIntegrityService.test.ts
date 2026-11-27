@@ -4,7 +4,8 @@
  * almacenamiento con checksum, recuperación, validación, escaneo y limpieza.
  */
 
-import { CacheIntegrityService, IntegrityCheckResult } from '../../../../src/infrastructure/cache/CacheIntegrityService';
+import type { IntegrityCheckResult } from '../../../../src/infrastructure/cache/CacheIntegrityService';
+import { CacheIntegrityService } from '../../../../src/infrastructure/cache/CacheIntegrityService';
 
 const makePipeline = (stored: Record<string, string> = {}) => {
   const commands: Array<{ op: string; args: any[] }> = [];

@@ -32,7 +32,7 @@ function serializeLine(key: string, value: string): string {
     value === '' ||
     /[\s"'#,]/.test(value) ||
     value !== value.trim();
-  const escaped = value.replace(/'/g, "\\'");
+  const escaped = value.replace(/'/g, '\\\'');
   return needsQuotes ? `${key}='${escaped}'` : `${key}=${escaped}`;
 }
 

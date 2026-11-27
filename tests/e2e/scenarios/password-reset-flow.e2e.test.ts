@@ -12,7 +12,7 @@ import { createServer } from '../../../src/infrastructure/http/server';
 import { Container } from '../../../src/composition/container';
 import { Email } from '../../../src/domain/value-objects/Email';
 import { hmacResetCode } from '../../../src/infrastructure/security/password-reset-crypto';
-import { InMemoryPasswordResetCodeRepository } from '../../../src/infrastructure/persistence/in-memory/InMemoryPasswordResetCodeRepository';
+import type { InMemoryPasswordResetCodeRepository } from '../../../src/infrastructure/persistence/in-memory/InMemoryPasswordResetCodeRepository';
 
 describe('E2E: Password Reset Flow (item 9c)', () => {
   let app: Application;

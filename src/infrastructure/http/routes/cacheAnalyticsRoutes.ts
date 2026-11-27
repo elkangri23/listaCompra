@@ -3,8 +3,9 @@
  * Expone métricas de performance y eficiencia del cache
  */
 
-import { Router, Request, Response } from 'express';
-import { CachedAIService } from '../../external-services/ai/CachedAIService';
+import type { Request, Response } from 'express';
+import { Router } from 'express';
+import type { CachedAIService } from '../../external-services/ai/CachedAIService';
 import { Logger } from '../../observability/logger/Logger';
 
 const logger = new Logger('CacheAnalyticsRoutes');

@@ -3,45 +3,46 @@
  * Enterprise-grade security headers para protección completa
  */
 
-import helmet, { HelmetOptions } from 'helmet';
-import { Request, Response, NextFunction } from 'express';
+import type { HelmetOptions } from 'helmet';
+import helmet from 'helmet';
+import type { Request, Response, NextFunction } from 'express';
 
 // Configuración de CSP por environment
 const CSP_CONFIGS = {
   production: {
-    defaultSrc: ["'self'"],
-    styleSrc: ["'self'", "'unsafe-inline'"],
-    scriptSrc: ["'self'"],
-    imgSrc: ["'self'", "data:", "https:"],
-    fontSrc: ["'self'", "https://fonts.gstatic.com"],
-    connectSrc: ["'self'", "https://api.perplexity.ai"],
-    frameSrc: ["'none'"],
-    objectSrc: ["'none'"],
-    baseUri: ["'self'"],
-    formAction: ["'self'"],
+    defaultSrc: ['\'self\''],
+    styleSrc: ['\'self\'', '\'unsafe-inline\''],
+    scriptSrc: ['\'self\''],
+    imgSrc: ['\'self\'', 'data:', 'https:'],
+    fontSrc: ['\'self\'', 'https://fonts.gstatic.com'],
+    connectSrc: ['\'self\'', 'https://api.perplexity.ai'],
+    frameSrc: ['\'none\''],
+    objectSrc: ['\'none\''],
+    baseUri: ['\'self\''],
+    formAction: ['\'self\''],
     upgradeInsecureRequests: [],
   },
   development: {
-    defaultSrc: ["'self'"],
-    styleSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Para hot reload
-    scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Para development tools
-    imgSrc: ["'self'", "data:", "https:", "http:"],
-    fontSrc: ["'self'", "https://fonts.gstatic.com"],
-    connectSrc: ["'self'", "ws:", "wss:", "https://api.perplexity.ai"],
-    frameSrc: ["'none'"],
-    objectSrc: ["'none'"],
-    baseUri: ["'self'"],
-    formAction: ["'self'"],
+    defaultSrc: ['\'self\''],
+    styleSrc: ['\'self\'', '\'unsafe-inline\'', '\'unsafe-eval\''], // Para hot reload
+    scriptSrc: ['\'self\'', '\'unsafe-inline\'', '\'unsafe-eval\''], // Para development tools
+    imgSrc: ['\'self\'', 'data:', 'https:', 'http:'],
+    fontSrc: ['\'self\'', 'https://fonts.gstatic.com'],
+    connectSrc: ['\'self\'', 'ws:', 'wss:', 'https://api.perplexity.ai'],
+    frameSrc: ['\'none\''],
+    objectSrc: ['\'none\''],
+    baseUri: ['\'self\''],
+    formAction: ['\'self\''],
   },
   test: {
-    defaultSrc: ["'self'"],
-    styleSrc: ["'self'", "'unsafe-inline'"],
-    scriptSrc: ["'self'", "'unsafe-inline'"],
-    imgSrc: ["'self'", "data:"],
-    fontSrc: ["'self'"],
-    connectSrc: ["'self'"],
-    frameSrc: ["'none'"],
-    objectSrc: ["'none'"],
+    defaultSrc: ['\'self\''],
+    styleSrc: ['\'self\'', '\'unsafe-inline\''],
+    scriptSrc: ['\'self\'', '\'unsafe-inline\''],
+    imgSrc: ['\'self\'', 'data:'],
+    fontSrc: ['\'self\''],
+    connectSrc: ['\'self\''],
+    frameSrc: ['\'none\''],
+    objectSrc: ['\'none\''],
   }
 } as const;
 

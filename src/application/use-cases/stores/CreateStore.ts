@@ -5,7 +5,8 @@
 
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
+import type { InvalidValueError} from '@domain/errors/DomainError';
+import { BusinessRuleViolationError } from '@domain/errors/DomainError';
 import { Tienda } from '@domain/entities/Tienda';
 import type { ITiendaRepository } from '@application/ports/repositories/ITiendaRepository';
 import type { CreateStoreDto, StoreResponseDto } from '@application/dto/stores';

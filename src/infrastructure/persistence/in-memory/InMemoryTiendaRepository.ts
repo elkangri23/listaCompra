@@ -3,7 +3,7 @@ import type { Tienda } from '@domain/entities/Tienda';
 import type { Categoria } from '@domain/entities/Categoria';
 import type { Result } from '@shared/result';
 import { success } from '@shared/result';
-import { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
+import type { InvalidValueError, BusinessRuleViolationError } from '@domain/errors/DomainError';
 
 export class InMemoryTiendaRepository implements ITiendaRepository {
   private readonly tiendas = new Map<string, Tienda>();

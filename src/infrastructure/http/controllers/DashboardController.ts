@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import { MetricsCollector } from '../../observability/metrics/MetricsCollector';
-import { CachedAIService } from '../../external-services/ai/CachedAIService';
-import { GetCollaborativeDashboard } from '../../../application/use-cases/analytics/GetCollaborativeDashboard';
+import type { Request, Response } from 'express';
+import type { MetricsCollector } from '../../observability/metrics/MetricsCollector';
+import type { CachedAIService } from '../../external-services/ai/CachedAIService';
+import type { GetCollaborativeDashboard } from '../../../application/use-cases/analytics/GetCollaborativeDashboard';
 import type { DashboardAnalyticsOptions } from '../../../application/ports/repositories/IAnalyticsRepository';
 import { ValidationError } from '../../../application/errors/ValidationError';
 
@@ -67,7 +67,7 @@ export class DashboardController {
       
       // Determine API health based on success rate
       const apiHealth = systemMetrics.globalSuccessRate >= 0.9 ? 'healthy' : 
-                       systemMetrics.globalSuccessRate >= 0.8 ? 'degraded' : 'unhealthy';
+        systemMetrics.globalSuccessRate >= 0.8 ? 'degraded' : 'unhealthy';
 
       // Determine cache health
       let cacheHealth = 'healthy';
@@ -82,7 +82,7 @@ export class DashboardController {
 
       // Overall health
       const overall = apiHealth === 'unhealthy' ? 'unhealthy' :
-                     (apiHealth === 'degraded' || cacheHealth === 'degraded') ? 'degraded' : 'healthy';
+        (apiHealth === 'degraded' || cacheHealth === 'degraded') ? 'degraded' : 'healthy';
 
       return res.json({
         status: 'success',

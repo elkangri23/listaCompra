@@ -2,11 +2,11 @@
  * Implementación del repositorio de productos usando Prisma
  */
 
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import { Producto } from '@domain/entities/Producto';
-import { 
+import type { Producto } from '@domain/entities/Producto';
+import type { 
   IProductoRepository, 
   ProductoFilters, 
   PaginationOptions, 
@@ -28,12 +28,12 @@ export class PrismaProductoRepository implements IProductoRepository {
 
       const savedData = exists
         ? await this.prisma.producto.update({
-            where: { id: producto.id },
-            data
-          })
+          where: { id: producto.id },
+          data
+        })
         : await this.prisma.producto.create({
-            data
-          });
+          data
+        });
 
       const productoResult = ProductoMapper.toDomain(savedData);
       if (productoResult.isFailure) {

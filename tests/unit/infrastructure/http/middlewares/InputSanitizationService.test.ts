@@ -217,7 +217,7 @@ describe('InputSanitizationService', () => {
     it('sql_identifier: solo [a-zA-Z0-9_] y máximo 64', () => {
       const { service } = makeService();
       const result = service.sanitizeData(
-        { v: "nombre'; DROP TABLE usuarios; --" },
+        { v: 'nombre\'; DROP TABLE usuarios; --' },
         { v: { type: 'sql_identifier' } },
         'test'
       );
@@ -275,7 +275,7 @@ describe('InputSanitizationService', () => {
     it('detecta SQL injection CRITICAL', () => {
       const { service } = makeService();
       const result = service.sanitizeData(
-        { v: "1' UNION SELECT * FROM usuarios--" },
+        { v: '1\' UNION SELECT * FROM usuarios--' },
         { v: { type: 'text' } },
         'test'
       );

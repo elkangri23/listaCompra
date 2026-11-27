@@ -290,17 +290,17 @@ export class CategoryController {
 
       // Mapear códigos específicos de reglas de negocio
       switch (error.rule) {
-        case 'CATEGORIA_DUPLICADA':
-          statusCode = 409; // Conflict
-          break;
-        case 'TIENDA_INACTIVA':
-          statusCode = 422; // Unprocessable Entity
-          break;
-        case 'CATEGORIA_CON_PRODUCTOS':
-          statusCode = 422; // Unprocessable Entity
-          break;
-        default:
-          statusCode = 400; // Bad Request por defecto
+      case 'CATEGORIA_DUPLICADA':
+        statusCode = 409; // Conflict
+        break;
+      case 'TIENDA_INACTIVA':
+        statusCode = 422; // Unprocessable Entity
+        break;
+      case 'CATEGORIA_CON_PRODUCTOS':
+        statusCode = 422; // Unprocessable Entity
+        break;
+      default:
+        statusCode = 400; // Bad Request por defecto
       }
 
       res.status(statusCode).json({

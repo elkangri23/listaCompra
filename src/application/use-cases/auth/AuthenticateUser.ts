@@ -15,7 +15,7 @@ import { Email } from '@domain/value-objects/Email';
 import { Password } from '@domain/value-objects/Password';
 import { ValidationError } from '@application/errors/ValidationError';
 import { UnauthorizedError } from '@application/errors/UnauthorizedError';
-import { NotFoundError } from '@application/errors/NotFoundError';
+import type { NotFoundError } from '@application/errors/NotFoundError';
 
 export class AuthenticateUser {
   constructor(

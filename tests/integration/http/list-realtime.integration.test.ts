@@ -93,7 +93,6 @@ describe('List realtime streaming (SSE)', () => {
 
     await new Promise<void>((resolve, reject) => {
       let closedManually = false;
-      let clientRequest: http.ClientRequest;
       const timeout = setTimeout(() => {
         if (!closedManually) {
           closedManually = true;
@@ -102,7 +101,7 @@ describe('List realtime streaming (SSE)', () => {
         }
       }, 8000);
 
-      clientRequest = http.request(
+      const clientRequest = http.request(
         `${baseUrl}/api/v1/lists/${listaId}/stream`,
         {
           method: 'GET',

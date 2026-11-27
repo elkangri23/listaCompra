@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import type * as AdvancedRateLimitMiddlewareModule from '../../../../../src/infrastructure/http/middlewares/advancedRateLimitMiddleware';
 
 const rateLimitMock = jest.fn((options) => {
   const handler = jest.fn((_req: Request, _res: Response, next?: () => void) => {
@@ -44,7 +45,7 @@ jest.mock('ioredis', () => {
 
 describe('advancedRateLimitMiddleware', () => {
   const originalEnv = process.env['NODE_ENV'];
-  let middlewareModule: typeof import('../../../../../src/infrastructure/http/middlewares/advancedRateLimitMiddleware');
+  let middlewareModule: typeof AdvancedRateLimitMiddlewareModule;
 
   beforeAll(async () => {
     // El middleware decide si crea el cliente Redis en el momento del import,

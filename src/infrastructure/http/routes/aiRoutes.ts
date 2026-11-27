@@ -3,12 +3,13 @@
  * Define los endpoints para categorización automática y análisis IA
  */
 
-import { Router, RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
+import { Router } from 'express';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { aiStandardAdvancedRateLimit, aiPremiumAdvancedRateLimit } from '../middlewares/advancedRateLimitMiddleware';
 import { requireAdmin } from '../middlewares/roleMiddleware';
-import { AIController } from '../controllers/AIController';
-import { AIConfigController } from '../controllers/AIConfigController';
+import type { AIController } from '../controllers/AIController';
+import type { AIConfigController } from '../controllers/AIConfigController';
 import { z } from 'zod';
 
 // Schema de validación para actualizar la configuración IA (admin)

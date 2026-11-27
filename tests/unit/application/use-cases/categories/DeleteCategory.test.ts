@@ -1,7 +1,7 @@
 import { DeleteCategory } from '../../../../../src/application/use-cases/categories/DeleteCategory';
-import { ICategoriaRepository } from '../../../../../src/application/ports/repositories/ICategoriaRepository';
-import { IProductoRepository } from '../../../../../src/application/ports/repositories/IProductoRepository';
-import { Categoria } from '../../../../../src/domain/entities/Categoria';
+import type { ICategoriaRepository } from '../../../../../src/application/ports/repositories/ICategoriaRepository';
+import type { IProductoRepository } from '../../../../../src/application/ports/repositories/IProductoRepository';
+import type { Categoria } from '../../../../../src/domain/entities/Categoria';
 import { InvalidValueError, BusinessRuleViolationError } from '../../../../../src/domain/errors/DomainError';
 import { success, failure } from '../../../../../src/shared/result';
 

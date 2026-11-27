@@ -64,13 +64,13 @@ export class Hash {
   // Validar si el hash parece ser de un algoritmo específico por su longitud
   getLikelyAlgorithm(): string {
     switch (this._value.length) {
-      case 32: return 'MD5';
-      case 40: return 'SHA-1';
-      case 56: return 'SHA-224';
-      case 64: return 'SHA-256';
-      case 96: return 'SHA-384';
-      case 128: return 'SHA-512';
-      default: return 'Unknown';
+    case 32: return 'MD5';
+    case 40: return 'SHA-1';
+    case 56: return 'SHA-224';
+    case 64: return 'SHA-256';
+    case 96: return 'SHA-384';
+    case 128: return 'SHA-512';
+    default: return 'Unknown';
     }
   }
 }

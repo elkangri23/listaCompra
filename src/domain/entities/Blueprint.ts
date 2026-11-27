@@ -3,7 +3,8 @@
  * Representa una plantilla reutilizable de lista de compra
  */
 
-import { Result, success, failure } from '@shared/result';
+import type { Result} from '@shared/result';
+import { success, failure } from '@shared/result';
 import { InvalidValueError } from '@domain/errors/DomainError';
 import { generateUUID } from '@shared/utils';
 

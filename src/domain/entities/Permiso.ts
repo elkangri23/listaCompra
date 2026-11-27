@@ -4,7 +4,8 @@
 
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
-import { DomainError, InvalidValueError } from '@domain/errors/DomainError';
+import type { DomainError} from '@domain/errors/DomainError';
+import { InvalidValueError } from '@domain/errors/DomainError';
 import { PermissionType } from '@domain/value-objects/PermissionType';
 
 export interface PermisoProps {
@@ -201,7 +202,7 @@ export class Permiso {
     listaId: string;
     tipoPermiso: string;
     creadoEn: Date;
-  } {
+    } {
     return {
       id: this.props.id,
       usuarioId: this.props.usuarioId,

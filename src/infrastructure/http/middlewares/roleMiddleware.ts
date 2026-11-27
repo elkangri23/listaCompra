@@ -3,7 +3,8 @@
  * Valida que el usuario tenga el rol requerido para acceder a endpoints protegidos
  */
 
-import { Request, Response, NextFunction, type RequestHandler } from 'express';
+import type { Request, Response, NextFunction} from 'express';
+import type { RequestHandler } from 'express';
 import { RolUsuario } from '@domain/entities/Usuario';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 
@@ -364,7 +365,7 @@ export const requireAdminOrOwner = (getOwnerId: (req: AuthenticatedRequest) => s
       if (!ownerId || typeof ownerId !== 'string' || ownerId.trim() === '') {
         logger.security('ID de propietario inválido o vacío', {
           userId: req.user.id,
-          ownerId: ownerId,
+          ownerId,
           path: req.path,
           method: req.method,
           ip: req.ip

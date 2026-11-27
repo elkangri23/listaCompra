@@ -3,7 +3,7 @@
  * Convierte entre entidades de dominio y modelos de Prisma
  */
 
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
 import { Permiso } from '@domain/entities/Permiso';
 

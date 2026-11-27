@@ -22,7 +22,7 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
-const FONT = "Inter, 'Noto Sans', Arial, sans-serif";
+const FONT = 'Inter, \'Noto Sans\', Arial, sans-serif';
 const PRIMARY = '#4387f4';
 const BRAND_BAND = '#2563eb';
 const TEXT = '#111418';

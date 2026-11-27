@@ -3,7 +3,7 @@
  */
 
 import { Router } from 'express';
-import { ListController } from '@infrastructure/http/controllers/ListController';
+import type { ListController } from '@infrastructure/http/controllers/ListController';
 
 export function createListRoutes(
   listController: ListController, 

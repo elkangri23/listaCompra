@@ -11,17 +11,18 @@
  * - Scoring de confianza por producto
  */
 
-import { IAIService } from '../../ports/external/IAIService';
-import { IUsuarioRepository } from '../../ports/repositories/IUsuarioRepository';
-import { ICategoriaRepository } from '../../ports/repositories/ICategoriaRepository';
-import { 
+import type { IAIService } from '../../ports/external/IAIService';
+import type { IUsuarioRepository } from '../../ports/repositories/IUsuarioRepository';
+import type { ICategoriaRepository } from '../../ports/repositories/ICategoriaRepository';
+import type { 
   BulkCategorizeProductsDto,
   BulkCategorizationResult,
   CategorizedProduct,
   BatchStats,
   ProductInput
 } from '../../dto/ai/BulkCategorizeProductsDto';
-import { Result, success, failure } from '../../../shared/result';
+import type { Result} from '../../../shared/result';
+import { success, failure } from '../../../shared/result';
 import { Logger } from '../../../infrastructure/observability/logger/Logger';
 
 export class BulkCategorizeProducts {

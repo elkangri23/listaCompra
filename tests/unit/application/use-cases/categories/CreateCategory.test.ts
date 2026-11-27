@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from '@jest/globals';
 import { CreateCategory } from '../../../../../src/application/use-cases/categories/CreateCategory';
-import { CreateCategoryDto } from '../../../../../src/application/dto/categories';
+import type { CreateCategoryDto } from '../../../../../src/application/dto/categories';
 import { Categoria } from '../../../../../src/domain/entities/Categoria';
 import { Tienda } from '../../../../../src/domain/entities/Tienda';
 import { success } from '../../../../../src/shared/result';

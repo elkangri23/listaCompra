@@ -7,7 +7,7 @@ import type { UUID } from '@shared/types';
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 import { generateUUID, isValidName, sanitizeString, createDate } from '@shared/utils';
-import { Email } from '@domain/value-objects/Email';
+import type { Email } from '@domain/value-objects/Email';
 import { BusinessRuleViolationError, InvalidValueError } from '@domain/errors/DomainError';
 
 export enum RolUsuario {

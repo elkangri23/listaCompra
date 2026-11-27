@@ -48,13 +48,13 @@ describe('advancedSecurityHeaders', () => {
     const prodConfig = getEnterpriseHelmetConfig();
     const prodCsp = prodConfig.contentSecurityPolicy as any;
     expect(prodCsp.reportOnly).toBe(false);
-    expect(prodCsp.directives.defaultSrc).toContain("'self'");
+    expect(prodCsp.directives.defaultSrc).toContain('\'self\'');
 
     process.env['NODE_ENV'] = 'development';
     const devConfig = getEnterpriseHelmetConfig();
     const devCsp = devConfig.contentSecurityPolicy as any;
     expect(devCsp.reportOnly).toBe(true);
-    expect(devCsp.directives.scriptSrc).toContain("'unsafe-eval'");
+    expect(devCsp.directives.scriptSrc).toContain('\'unsafe-eval\'');
   });
 
   it('añade headers de seguridad adicionales y elimina cabeceras sensibles', () => {

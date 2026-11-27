@@ -7,10 +7,10 @@ import { createAuthMiddleware } from '../middlewares/authMiddleware';
 import { BlueprintController } from '../controllers/BlueprintController';
 import { CreateBlueprint } from '../../../application/use-cases/blueprints/CreateBlueprint';
 import { CreateListFromBlueprint } from '../../../application/use-cases/blueprints/CreateListFromBlueprint';
-import { IBlueprintRepository } from '../../../application/ports/repositories/IBlueprintRepository';
-import { IListaRepository } from '../../../application/ports/repositories/IListaRepository';
-import { IProductoRepository } from '../../../application/ports/repositories/IProductoRepository';
-import { ITokenService } from '../../../application/ports/auth/ITokenService';
+import type { IBlueprintRepository } from '../../../application/ports/repositories/IBlueprintRepository';
+import type { IListaRepository } from '../../../application/ports/repositories/IListaRepository';
+import type { IProductoRepository } from '../../../application/ports/repositories/IProductoRepository';
+import type { ITokenService } from '../../../application/ports/auth/ITokenService';
 
 interface BlueprintRouteDependencies {
   blueprintRepository: IBlueprintRepository;

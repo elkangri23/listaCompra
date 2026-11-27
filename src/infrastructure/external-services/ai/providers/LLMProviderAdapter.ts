@@ -163,12 +163,12 @@ class GoogleGeminiAdapter implements ILLMChatAdapter {
 export function createChatAdapter(config: PerplexityConfig): ILLMChatAdapter {
   const meta = getAIProviderMeta(config.provider);
   switch (meta?.apiStyle) {
-    case 'anthropic':
-      return new AnthropicAdapter(config);
-    case 'google':
-      return new GoogleGeminiAdapter(config);
-    case 'openai':
-    default:
-      return new OpenAICompatibleAdapter(config);
+  case 'anthropic':
+    return new AnthropicAdapter(config);
+  case 'google':
+    return new GoogleGeminiAdapter(config);
+  case 'openai':
+  default:
+    return new OpenAICompatibleAdapter(config);
   }
 }

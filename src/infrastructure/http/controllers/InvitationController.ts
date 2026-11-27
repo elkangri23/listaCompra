@@ -3,13 +3,13 @@
  * Maneja las peticiones HTTP para compartir listas, acceder a listas compartidas y gestionar permisos
  */
 
-import { Response } from 'express';
-import { AuthenticatedRequest } from '../types/express';
-import { ShareList } from '@application/use-cases/invitations/ShareList';
-import { AccessSharedList } from '@application/use-cases/invitations/AccessSharedList';
-import { ManagePermissions } from '@application/use-cases/invitations/ManagePermissions';
-import { CancelInvitation } from '@application/use-cases/invitations/CancelInvitation';
-import { DeclineInvitation } from '@application/use-cases/invitations/DeclineInvitation';
+import type { Response } from 'express';
+import type { AuthenticatedRequest } from '../types/express';
+import type { ShareList } from '@application/use-cases/invitations/ShareList';
+import type { AccessSharedList } from '@application/use-cases/invitations/AccessSharedList';
+import type { ManagePermissions } from '@application/use-cases/invitations/ManagePermissions';
+import type { CancelInvitation } from '@application/use-cases/invitations/CancelInvitation';
+import type { DeclineInvitation } from '@application/use-cases/invitations/DeclineInvitation';
 import { ValidationError, NotFoundError, UnauthorizedError } from '@application/errors';
 import type { IInvitacionRepository } from '@application/ports/repositories/IInvitacionRepository';
 import type { IPermisoRepository } from '@application/ports/repositories/IPermisoRepository';
@@ -174,12 +174,12 @@ export class InvitationController {
 
       const permisoActualizado = result.value.permiso
         ? {
-            ...result.value.permiso,
-            creadoEn: result.value.permiso.creadoEn instanceof Date
-              ? result.value.permiso.creadoEn.toISOString()
-              : result.value.permiso.creadoEn,
-            mensaje: result.value.mensaje
-          }
+          ...result.value.permiso,
+          creadoEn: result.value.permiso.creadoEn instanceof Date
+            ? result.value.permiso.creadoEn.toISOString()
+            : result.value.permiso.creadoEn,
+          mensaje: result.value.mensaje
+        }
         : { mensaje: result.value.mensaje };
 
       res.status(200).json({
@@ -486,7 +486,7 @@ export class InvitationController {
       const permiso = result.value.permiso;
       res.status(200).json({
         id: permiso ? permiso.id : userId,
-        userId: userId,
+        userId,
         userName: userResult.value.nombreCompleto,
         userEmail: userResult.value.email.value,
         role,

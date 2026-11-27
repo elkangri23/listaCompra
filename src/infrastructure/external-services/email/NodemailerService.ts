@@ -173,12 +173,12 @@ Para acceder a la lista, haz clic en el siguiente enlace:
 ${invitationUrl}
 
 Esta invitación expira el ${expiresAt.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })}.
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })}.
 
 ¡Empieza a colaborar ahora!
 

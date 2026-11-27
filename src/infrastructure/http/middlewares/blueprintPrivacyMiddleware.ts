@@ -3,9 +3,9 @@
  * Implementa validaciones adicionales de acceso y privacidad
  */
 
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import type { IBlueprintRepository } from '@application/ports/repositories/IBlueprintRepository';
-import { Logger } from '@infrastructure/observability/logger/Logger';
+import type { Logger } from '@infrastructure/observability/logger/Logger';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -77,7 +77,7 @@ export class BlueprintPrivacyMiddleware {
       const hasAccess = this.checkUserAccess(blueprint, userId, authReq.user.role);
       
       if (!hasAccess) {
-        this.logger.warn(`Intento de acceso no autorizado a blueprint privado`, {
+        this.logger.warn('Intento de acceso no autorizado a blueprint privado', {
           userId,
           blueprintId,
           blueprintOwnerId: blueprint?.creadoPorId,
@@ -101,7 +101,7 @@ export class BlueprintPrivacyMiddleware {
         publico: blueprint!.publico
       };
 
-      this.logger.info(`Acceso autorizado a blueprint`, {
+      this.logger.info('Acceso autorizado a blueprint', {
         userId,
         blueprintId,
         isOwner: blueprint!.creadoPorId === userId,
@@ -144,7 +144,7 @@ export class BlueprintPrivacyMiddleware {
 
       // Solo el propietario puede modificar
       if (blueprint.creadoPorId !== userId && authReq.user.role !== 'ADMIN') {
-        this.logger.warn(`Intento de modificación no autorizada de blueprint`, {
+        this.logger.warn('Intento de modificación no autorizada de blueprint', {
           userId,
           blueprintId: blueprint.id,
           blueprintOwnerId: blueprint.creadoPorId,

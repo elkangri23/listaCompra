@@ -3,15 +3,17 @@
  * Generación de listas inteligentes por ocasión usando IA
  */
 
-import { Result, success, failure } from '../../../shared/result';
-import { IAIService } from '../../ports/external/IAIService';
-import { IListaRepository } from '../../ports/repositories/IListaRepository';
-import { IProductoRepository } from '../../ports/repositories/IProductoRepository';
-import { ITiendaRepository } from '../../ports/repositories/ITiendaRepository';
-import { ICategoriaRepository } from '../../ports/repositories/ICategoriaRepository';
+import type { Result} from '../../../shared/result';
+import { success, failure } from '../../../shared/result';
+import type { IAIService } from '../../ports/external/IAIService';
+import type { IListaRepository } from '../../ports/repositories/IListaRepository';
+import type { IProductoRepository } from '../../ports/repositories/IProductoRepository';
+import type { ITiendaRepository } from '../../ports/repositories/ITiendaRepository';
+import type { ICategoriaRepository } from '../../ports/repositories/ICategoriaRepository';
 import { Lista } from '../../../domain/entities/Lista';
 import { Producto } from '../../../domain/entities/Producto';
-import { CreateOccasionListDto, OccasionListResponseDto, validateCreateOccasionListDto } from '../../dto/lists/CreateOccasionListDto';
+import type { CreateOccasionListDto, OccasionListResponseDto} from '../../dto/lists/CreateOccasionListDto';
+import { validateCreateOccasionListDto } from '../../dto/lists/CreateOccasionListDto';
 import { Logger } from '../../../infrastructure/observability/logger/Logger';
 import { ValidationError } from '../../errors/ValidationError';
 import { NotFoundError } from '../../errors/NotFoundError';
@@ -288,7 +290,7 @@ FORMATO DE RESPUESTA (JSON):
     const products: AIGeneratedProduct[] = [];
     
     for (const line of lines.slice(0, 10)) { // Máximo 10 productos
-      const cleanLine = line.replace(/^[-•\d\.\s]+/, '').trim();
+      const cleanLine = line.replace(/^[-•\d.\s]+/, '').trim();
       if (cleanLine.length > 2) {
         products.push({
           name: cleanLine.substring(0, 50),

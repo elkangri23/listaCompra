@@ -1,6 +1,6 @@
 import { RefreshTokens } from '../../../../../src/application/use-cases/auth/RefreshTokens';
-import { ITokenService } from '../../../../../src/application/ports/auth/ITokenService';
-import { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
+import type { ITokenService } from '../../../../../src/application/ports/auth/ITokenService';
+import type { IUsuarioRepository } from '../../../../../src/application/ports/repositories/IUsuarioRepository';
 import { success, failure } from '../../../../../src/shared/result';
 import { UnauthorizedError } from '../../../../../src/application/errors/UnauthorizedError';
 
