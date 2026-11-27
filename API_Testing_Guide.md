@@ -88,12 +88,20 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 
 ## 📚 Endpoints Disponibles
 
-### 🔐 Autenticación (5 endpoints)
+### 🔐 Autenticación (13 endpoints)
 - ✅ Registrar Usuario (`POST /auth/register`)
-- ✅ Login + guardado de token (`POST /auth/login`)
+- ✅ Login + guardado de token (`POST /auth/login`) — si el usuario tiene MFA responde `mfaRequired` + `challengeId`
+- ✅ Login MFA Paso 2 (`POST /auth/login/mfa`) — ver sección MFA
 - ✅ Refresh Token (`POST /auth/refresh`)
 - ✅ Logout (`POST /auth/logout`)
 - ✅ Perfil actual (`GET /auth/me`)
+- ✅ Verificar Email (`POST /auth/verify-email`) `{email, codigo}`
+- ✅ Reenviar Código de Verificación (`POST /auth/resend-verification-code`) `{email}`
+- ✅ Recuperar Contraseña (`POST /auth/forgot-password`) `{email}` — código válido 15 min
+- ✅ Restablecer Contraseña (`POST /auth/reset-password`) `{email, codigo, nuevaPassword}`
+- ✅ Actualizar Perfil (`PATCH /auth/me`) `{name, email}`
+- ✅ Cambiar Contraseña (`PATCH /auth/me/password`) `{currentPassword, newPassword}`
+- ✅ Eliminar Cuenta (`DELETE /auth/me`) `{password}` · Exportar Datos GDPR (`GET /auth/me/export`)
 
 ### 📝 Listas de Compra (5 endpoints)
 - ✅ Crear Lista (`POST /lists`)
@@ -126,14 +134,22 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 - ✅ Cambiar estado (`PATCH /stores/:id/toggle-status`)
 - ✅ Categorías asociadas (`GET /stores/:id/categories`)
 
-### 📤 Invitaciones y Permisos (7 endpoints)
+### 📤 Invitaciones y Permisos (12 endpoints)
 - ✅ Compartir Lista (`POST /invitations/:listId/share`)
 - ✅ Acceder vía hash (`GET /invitations/:hash/access`)
+- ✅ Invitaciones pendientes del usuario (`GET /invitations/pending`) — 13A
+- ✅ Rechazar invitación (`POST /invitations/:invitacionId/decline`) — 13A
 - ✅ Listar invitaciones activas (`GET /invitations/:listId/list`)
 - ✅ Listar permisos (`GET /invitations/:listId/permissions`)
 - ✅ Cambiar permiso (`PUT /invitations/:listId/permissions/:targetUsuarioId`)
 - ✅ Revocar permiso (`DELETE /invitations/:listId/permissions/:targetUsuarioId`)
 - ✅ Cancelar invitación (`DELETE /invitations/:invitacionId`)
+- ✅ Colaboradores de lista (`GET /lists/:listId/collaborators`) — 13A
+- ✅ Cambiar rol de colaborador (`PATCH /lists/:listId/collaborators/:userId`) — 13A
+- ✅ Quitar colaborador (`DELETE /lists/:listId/collaborators/:userId`) — 13A
+
+### 🔐 MFA & Passkeys (14 endpoints — carpeta 01b)
+Ver sección [MFA & Passkeys](#-nuevo-mfa--passkeys-cu-mfa-fases-1-3) más abajo.
 
 ### 📋 Blueprints/Plantillas (8 endpoints)
 - ✅ Crear Blueprint (`POST /blueprints`)
@@ -778,6 +794,80 @@ Prueba la conectividad sin aplicar la config. Útil antes de usar PUT.
 
 ---
 
+## 🆕 Nuevo: MFA & Passkeys (CU-MFA, fases 1-3)
+
+### Flujo de login con TOTP (2 pasos)
+```bash
+# 1. Login normal → si el usuario tiene TOTP activo:
+# { "mfaRequired": true, "mfa": { "challengeId": "..." } }
+POST {{baseUrl}}/auth/login  { "email": "...", "password": "..." }
+
+# 2. Completar login con el código de 6 dígitos del authenticator
+POST {{baseUrl}}/auth/login/mfa  { "challengeId": "{{mfaChallengeId}}", "code": "123456" }
+# Alternativa: código de respaldo  { "challengeId": "...", "backupCode": "XXXX-YYYY" }
+# → 200 { data: { user, tokens, mfaInfo } } (el script de la colección guarda el token)
+```
+
+### Setup TOTP (usuario autenticado)
+| Endpoint | Body | Notas |
+|---|---|---|
+| `POST /auth/totp/setup` | — | Devuelve secreto + `otpauth://` URL (QR) |
+| `POST /auth/totp/verify-enable` | `{ "code": "123456" }` | Activa TOTP y devuelve backup codes |
+| `POST /auth/totp/disable` | `{ "password": "..." }` | Step-up con contraseña |
+| `GET /auth/mfa/status` | — | Estado de TOTP y passkeys |
+
+### Passkeys (WebAuthn, fases 2-3)
+⚠️ **Los pasos de opciones/verificación requieren un navegador real** (WebAuthn API: `navigator.credentials.create/get()`). Desde Postman solo se pueden listar/renombrar/borrar:
+| Endpoint | Body | Ejecutable en Postman |
+|---|---|---|
+| `GET /auth/passkeys` | — | ✅ |
+| `PATCH /auth/passkeys/:id` | `{ "nombre": "Mi MacBook" }` | ✅ |
+| `DELETE /auth/passkeys/:id` | — | ✅ |
+| `POST /auth/passkeys/register-options` | `{ "password": "..." }` (step-up) | ❌ navegador |
+| `POST /auth/passkeys/register-verify` | `{ password, challengeId, credential }` | ❌ navegador |
+| `POST /auth/passkeys/login-options` | `{ "email": "..." }` | ❌ navegador |
+| `POST /auth/passkeys/login-verify` | `{ email, challengeId, credential }` | ❌ navegador |
+
+### Utilidad de desarrollo
+- `POST /auth/dev/totp-reveal` `{ "email": "..." }` — SOLO dev/test: revela el secreto TOTP para generar códigos en pruebas E2E.
+
+**Variables nuevas**: `mfaChallengeId` (del paso 1 del login) y `passkeyId` (de "Listar Passkeys").
+
+**Códigos**: `200` OK · `400` challengeId o código ausente/duplicado · `401` código incorrecto o expirado · `429` rate limit MFA.
+
+## 🆕 Nuevo: Colaboradores e invitaciones (13A)
+```bash
+# Invitaciones pendientes del usuario (responde array directo)
+GET {{baseUrl}}/invitations/pending
+# → [{ id, listaId, listName, from, createdAt }]
+
+# Rechazar una invitación (solo el destinatario)
+POST {{baseUrl}}/invitations/{{invitationId}}/decline
+
+# Colaboradores de una lista (owner + permisos, con rol owner/editor/viewer)
+GET {{baseUrl}}/lists/{{listId}}/collaborators
+
+# Cambiar rol: "editor" (ESCRITURA) o "viewer" (LECTURA). role "owner" → 400
+PATCH {{baseUrl}}/lists/{{listId}}/collaborators/{{targetUserId}}  { "role": "editor" }
+
+# Quitar colaborador → 204 sin cuerpo
+DELETE {{baseUrl}}/lists/{{listId}}/collaborators/{{targetUserId}}
+```
+
+## 🆕 Nuevo: Auditoría y Dashboard
+```bash
+# Auditoría global paginada (ADMIN): filtros entityType/entityId/changeType/startDate/endDate
+GET {{baseUrl}}/admin/audit?page=1&pageSize=10&entityType=Producto
+
+# Auditoría por recurso
+GET {{baseUrl}}/audit/lists/{{listId}}
+GET {{baseUrl}}/audit/products/{{productId}}   # ?changeType=UPDATE
+
+# Dashboard
+GET {{baseUrl}}/dashboard/summary      # público, para widgets
+GET {{baseUrl}}/dashboard/analytics    # requiere auth
+```
+
 ## 🤝 Contribución
 
 Si encuentras algún endpoint que falta o algún error en la colección:
@@ -790,4 +880,4 @@ Si encuentras algún endpoint que falta o algún error en la colección:
 
 **¡Happy Testing! 🎉**
 
-Última actualización: 30 de octubre de 2025 - CU-27 Security Production-Ready Completado
+Última actualización: Noviembre 2025 - Postman 114 requests (MFA/passkeys CU-MFA, auth 13A, colaboradores, auditoría, dashboard)
