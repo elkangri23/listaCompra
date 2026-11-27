@@ -4,10 +4,12 @@
 
 import {
   metricsMiddleware,
+  createMetricsMiddleware,
   getMetricsHandler,
   getEndpointMetricsHandler,
   resetMetricsHandler,
-  getMetricsCollector
+  getMetricsCollector,
+  createMetricsCollector
 } from '../../../../../src/infrastructure/observability/metrics/MetricsMiddleware';
 
 const makeReq = (overrides: any = {}): any => ({ path: '/api/v1/test', method: 'GET', ...overrides });
@@ -41,6 +43,19 @@ describe('MetricsMiddleware', () => {
     const collector = getMetricsCollector();
     const metrics = collector.getEndpointMetrics('GET', '/api/v1/test');
     expect(metrics).toBeTruthy();
+  });
+
+  it('createMetricsMiddleware registra en el collector dado, no en el singleton', () => {
+    const collector = createMetricsCollector();
+    const middleware = createMetricsMiddleware(collector);
+
+    const req = makeReq();
+    const res = makeRes();
+    middleware(req, res, jest.fn());
+    res.send({ ok: true });
+
+    expect(collector.getEndpointMetrics('GET', '/api/v1/test')).toBeTruthy();
+    expect(getMetricsCollector().getEndpointMetrics('GET', '/api/v1/test')).toBeNull();
   });
 
   it('getMetricsHandler devuelve snapshot con system/endpoints', () => {

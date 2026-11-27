@@ -82,6 +82,7 @@ async function bootstrap(): Promise<void> {
       productController: container.productController,
       categoryController: container.categoryController,
       dashboardController: container.dashboardController,
+      metricsCollector: container.metricsCollector,
       auditController: container.auditController,
       blueprintRepository: container.blueprintRepository,
       listaRepository: container.listaRepository,

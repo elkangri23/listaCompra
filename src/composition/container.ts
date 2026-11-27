@@ -1176,6 +1176,10 @@ export class Container {
     return this._dashboardController;
   }
 
+  public get metricsCollector(): MetricsCollector {
+    return this._metricsCollector;
+  }
+
   public get blueprintRepository(): IBlueprintRepository {
     return this._blueprintRepository;
   }

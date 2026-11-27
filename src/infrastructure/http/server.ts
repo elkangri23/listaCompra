@@ -10,6 +10,8 @@ import { csrfProtection } from './middlewares/csrfProtectionMiddleware';
 import { corsConfig, corsSecurityHeaders } from '../config/cors.config';
 import { errorMiddleware, notFoundMiddleware, requestIdMiddleware, httpLoggerMiddleware } from './middlewares/errorMiddleware';
 import { traceContextMiddleware } from './middlewares/tracingMiddleware';
+import { createMetricsMiddleware } from '../observability/metrics/MetricsMiddleware';
+import type { MetricsCollector } from '../observability/metrics/MetricsCollector';
 import { setupSwagger } from '../config/swagger-simple.config';
 import type { AuthController } from './controllers/AuthController';
 import type { InvitationController } from './controllers/InvitationController';
@@ -59,6 +61,8 @@ export interface ServerDependencies {
   categoryController: CategoryController;
   dashboardController?: DashboardController;
   auditController: AuditController;
+  /** Misma instancia que lee DashboardController; sin ella no se registran métricas */
+  metricsCollector?: MetricsCollector;
 
   // Rutas previamente huérfanas (blueprints, tiendas, occasion lists, cache)
   blueprintRepository: IBlueprintRepository;
@@ -79,6 +83,12 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
 
   // 🔍 Propagar contexto de tracing distribuido
   app.use(traceContextMiddleware);
+
+  // 📊 Métricas de peticiones (antes de las rutas para contarlas todas;
+  // registra en la misma instancia que lee DashboardController)
+  if (dependencies.metricsCollector) {
+    app.use(createMetricsMiddleware(dependencies.metricsCollector));
+  }
 
   // 🔒 Headers de seguridad con Helmet (configuración estricta)
   app.use(helmet({

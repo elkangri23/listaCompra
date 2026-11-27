@@ -14,9 +14,12 @@ export interface RequestWithMetrics extends Request {
 }
 
 /**
- * Middleware para medir tiempo de respuesta y recolectar métricas
+ * Crea un middleware que registra las métricas en el collector dado.
+ * Debe ser LA MISMA instancia que lee DashboardController (la del
+ * container): si cada uno usa una instancia distinta, el dashboard
+ * siempre ve cero peticiones.
  */
-export const metricsMiddleware = (req: RequestWithMetrics, res: Response, next: NextFunction): void => {
+export const createMetricsMiddleware = (collector: MetricsCollector) => (req: RequestWithMetrics, res: Response, next: NextFunction): void => {
   // Marcar inicio de request
   req.startTime = Date.now();
 
@@ -27,7 +30,7 @@ export const metricsMiddleware = (req: RequestWithMetrics, res: Response, next: 
       const responseTime = Date.now() - req.startTime;
       
       // Recopilar métricas
-      metricsCollector.recordRequest(
+      collector.recordRequest(
         req.method,
         req.path || req.url,
         responseTime,
@@ -40,6 +43,13 @@ export const metricsMiddleware = (req: RequestWithMetrics, res: Response, next: 
 
   next();
 };
+
+/**
+ * Middleware con el singleton del módulo (para los handlers de /metrics y
+ * para tests). En producción se monta el creado con
+ * createMetricsMiddleware y el collector del container.
+ */
+export const metricsMiddleware = createMetricsMiddleware(metricsCollector);
 
 /**
  * Endpoint para exponer métricas en formato JSON

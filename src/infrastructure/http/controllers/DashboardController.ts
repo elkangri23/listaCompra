@@ -65,15 +65,19 @@ export class DashboardController {
     try {
       const systemMetrics = this.metricsCollector.getSystemMetrics();
       
-      // Determine API health based on success rate
-      const apiHealth = systemMetrics.globalSuccessRate >= 0.9 ? 'healthy' : 
-        systemMetrics.globalSuccessRate >= 0.8 ? 'degraded' : 'unhealthy';
+      // globalSuccessRate es un PORCENTAJE 0-100 (no un tanto por uno).
+      // Sin peticiones registradas no hay datos: no es un problema.
+      const hasTraffic = systemMetrics.globalRequestCount > 0;
+      let apiHealth: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+      if (hasTraffic && systemMetrics.globalSuccessRate < 90) {
+        apiHealth = systemMetrics.globalSuccessRate >= 80 ? 'degraded' : 'unhealthy';
+      }
 
-      // Determine cache health
+      // Determine cache health (solo si hay operaciones registradas)
       let cacheHealth = 'healthy';
       try {
         const cacheAnalytics = await this.cachedAIService.getCacheAnalytics();
-        if (cacheAnalytics.hitRatio < 0.7) {
+        if (cacheAnalytics.totalOperations > 0 && cacheAnalytics.hitRatio < 0.7) {
           cacheHealth = 'degraded';
         }
       } catch (error) {
@@ -117,20 +121,22 @@ export class DashboardController {
       // Check HTTP metrics
       const systemMetrics = this.metricsCollector.getSystemMetrics();
       
-      // Error rate alert
-      if (systemMetrics.globalSuccessRate < 0.9) {
+      // Error rate alert (solo con tráfico registrado; sin peticiones no
+      // hay tasa de error que medir). globalSuccessRate es un porcentaje.
+      if (systemMetrics.globalRequestCount > 0 && systemMetrics.globalSuccessRate < 90) {
+        const errorRate = 100 - systemMetrics.globalSuccessRate;
         alerts.push({
           type: 'error_rate',
-          severity: systemMetrics.globalSuccessRate < 0.8 ? 'high' : 'medium',
-          message: `Error rate is high: ${((1 - systemMetrics.globalSuccessRate) * 100).toFixed(1)}%`,
-          value: 1 - systemMetrics.globalSuccessRate,
+          severity: systemMetrics.globalSuccessRate < 80 ? 'high' : 'medium',
+          message: `Error rate is high: ${errorRate.toFixed(1)}%`,
+          value: errorRate / 100,
           threshold: 0.1,
           timestamp: new Date().toISOString()
         });
       }
 
       // Response time alert
-      if (systemMetrics.globalAvgResponseTime > 2000) {
+      if (systemMetrics.globalRequestCount > 0 && systemMetrics.globalAvgResponseTime > 2000) {
         alerts.push({
           type: 'response_time',
           severity: systemMetrics.globalAvgResponseTime > 5000 ? 'high' : 'medium',
@@ -144,7 +150,7 @@ export class DashboardController {
       // Check cache metrics
       try {
         const cacheAnalytics = await this.cachedAIService.getCacheAnalytics();
-        if (cacheAnalytics.hitRatio < 0.7) {
+        if (cacheAnalytics.totalOperations > 0 && cacheAnalytics.hitRatio < 0.7) {
           alerts.push({
             type: 'cache_hit_ratio',
             severity: cacheAnalytics.hitRatio < 0.5 ? 'high' : 'medium',

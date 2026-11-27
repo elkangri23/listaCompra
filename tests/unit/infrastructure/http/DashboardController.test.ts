@@ -44,7 +44,7 @@ describe('DashboardController', () => {
     mockMetricsCollector.getSystemMetrics.mockReturnValue({
       totalEndpoints: 10,
       globalRequestCount: 1000,
-      globalSuccessRate: 0.98,
+      globalSuccessRate: 98,
       globalAvgResponseTime: 150,
       uptime: 3600000,
       startTime: new Date('2024-01-01')
@@ -108,7 +108,7 @@ describe('DashboardController', () => {
           systemMetrics: expect.objectContaining({
             totalEndpoints: 10,
             globalRequestCount: 1000,
-            globalSuccessRate: 0.98
+            globalSuccessRate: 98
           }),
           endpointMetrics: expect.arrayContaining([
             expect.objectContaining({
@@ -165,7 +165,7 @@ describe('DashboardController', () => {
       mockMetricsCollector.getSystemMetrics.mockReturnValue({
         totalEndpoints: 10,
         globalRequestCount: 1000,
-        globalSuccessRate: 0.85, // Below threshold
+        globalSuccessRate: 85, // Below threshold (porcentaje 0-100)
         globalAvgResponseTime: 150,
         uptime: 3600000,
         startTime: new Date('2024-01-01')
@@ -187,18 +187,78 @@ describe('DashboardController', () => {
         }
       });
     });
+
+    it('debería estar healthy sin peticiones registradas (sin datos, no es un problema)', async () => {
+      mockMetricsCollector.getSystemMetrics.mockReturnValue({
+        totalEndpoints: 0,
+        globalRequestCount: 0,
+        globalSuccessRate: 0,
+        globalAvgResponseTime: 0,
+        uptime: 960000,
+        startTime: new Date('2024-01-01')
+      });
+      mockCachedAIService.getCacheAnalytics.mockResolvedValue({
+        hitRatio: 0,
+        totalOperations: 0
+      });
+
+      await dashboardController.getHealth(mockRequest, mockResponse);
+
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 'success',
+        data: {
+          overall: 'healthy',
+          services: {
+            api: 'healthy',
+            cache: 'healthy',
+            metrics: 'healthy'
+          },
+          uptime: expect.any(Number),
+          timestamp: expect.any(String)
+        }
+      });
+    });
+
+    it('debería marcar unhealthy con 70% de éxito', async () => {
+      mockMetricsCollector.getSystemMetrics.mockReturnValue({
+        totalEndpoints: 10,
+        globalRequestCount: 1000,
+        globalSuccessRate: 70,
+        globalAvgResponseTime: 150,
+        uptime: 3600000,
+        startTime: new Date('2024-01-01')
+      });
+
+      await dashboardController.getHealth(mockRequest, mockResponse);
+
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 'success',
+        data: {
+          overall: 'unhealthy',
+          services: {
+            api: 'unhealthy',
+            cache: 'healthy',
+            metrics: 'healthy'
+          },
+          uptime: expect.any(Number),
+          timestamp: expect.any(String)
+        }
+      });
+    });
   });
 
   describe('getAlerts', () => {
     it('debería devolver alertas activas', async () => {
       // Setup conditions for alerts
       mockMetricsCollector.getSystemMetrics.mockReturnValue({
-        globalSuccessRate: 0.85, // Low success rate (15% error rate - medium severity)
+        globalRequestCount: 1000,
+        globalSuccessRate: 85, // Low success rate (15% error rate - medium severity)
         globalAvgResponseTime: 3000 // High response time (medium severity)
       });
 
       mockCachedAIService.getCacheAnalytics.mockResolvedValue({
-        hitRatio: 0.5 // Low hit ratio (medium severity)
+        hitRatio: 0.5, // Low hit ratio (medium severity)
+        totalOperations: 100
       });
 
       await dashboardController.getAlerts(mockRequest, mockResponse);
@@ -227,6 +287,58 @@ describe('DashboardController', () => {
     });
 
     it('debería devolver sin alertas cuando todo está bien', async () => {
+      await dashboardController.getAlerts(mockRequest, mockResponse);
+
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 'success',
+        data: {
+          activeAlerts: [],
+          alertCount: 0,
+          timestamp: expect.any(String)
+        }
+      });
+    });
+
+    it('debería no alertar sin peticiones registradas ni operaciones de caché', async () => {
+      mockMetricsCollector.getSystemMetrics.mockReturnValue({
+        totalEndpoints: 0,
+        globalRequestCount: 0,
+        globalSuccessRate: 0,
+        globalAvgResponseTime: 0,
+        uptime: 960000,
+        startTime: new Date('2024-01-01')
+      });
+      mockCachedAIService.getCacheAnalytics.mockResolvedValue({
+        hitRatio: 0,
+        totalOperations: 0
+      });
+
+      await dashboardController.getAlerts(mockRequest, mockResponse);
+
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 'success',
+        data: {
+          activeAlerts: [],
+          alertCount: 0,
+          timestamp: expect.any(String)
+        }
+      });
+    });
+
+    it('debería no alertar de caché con hit ratio bajo pero cero operaciones', async () => {
+      mockMetricsCollector.getSystemMetrics.mockReturnValue({
+        totalEndpoints: 10,
+        globalRequestCount: 1000,
+        globalSuccessRate: 98,
+        globalAvgResponseTime: 150,
+        uptime: 3600000,
+        startTime: new Date('2024-01-01')
+      });
+      mockCachedAIService.getCacheAnalytics.mockResolvedValue({
+        hitRatio: 0.2,
+        totalOperations: 0
+      });
+
       await dashboardController.getAlerts(mockRequest, mockResponse);
 
       expect(mockResponse.json).toHaveBeenCalledWith({
