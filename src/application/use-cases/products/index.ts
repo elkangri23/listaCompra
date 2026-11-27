@@ -7,3 +7,4 @@ export { UpdateProduct } from './UpdateProduct';
 export { MarkProductAsPurchased } from './MarkProductAsPurchased';
 export { DeleteProduct } from './DeleteProduct';
 export { GetProducts } from './GetProducts';
+export { ReorderProducts } from './ReorderProducts';

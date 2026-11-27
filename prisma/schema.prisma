@@ -71,6 +71,7 @@ model Producto {
   precio             Decimal?
   comprado           Boolean    @default(false)
   urgente            Boolean    @default(false)
+  orden              Int        @default(0)
   fechaCreacion      DateTime   @default(now())
   fechaActualizacion DateTime   @updatedAt
   fechaCompra        DateTime?

@@ -27,6 +27,7 @@ import { UpdateProduct } from '@application/use-cases/products/UpdateProduct';
 import { MarkProductAsPurchased } from '@application/use-cases/products/MarkProductAsPurchased';
 import { DeleteProduct } from '@application/use-cases/products/DeleteProduct';
 import { GetProducts } from '@application/use-cases/products/GetProducts';
+import { ReorderProducts } from '@application/use-cases/products/ReorderProducts';
 import { GetProductRecommendations } from '@application/use-cases/products/GetProductRecommendations';
 import { CreateCategory } from '@application/use-cases/categories/CreateCategory';
 import { GetCategoriesByStore } from '@application/use-cases/categories/GetCategoriesByStore';
@@ -226,6 +227,7 @@ export class Container {
   private _markProductAsPurchased!: MarkProductAsPurchased;
   private _deleteProduct!: DeleteProduct;
   private _getProducts!: GetProducts;
+  private _reorderProducts!: ReorderProducts;
   private _getProductRecommendations!: GetProductRecommendations;
   private _createCategory!: CreateCategory;
   private _getCategoriesByStore!: GetCategoriesByStore;
@@ -680,6 +682,12 @@ export class Container {
       this._permisoRepository
     );
 
+    this._reorderProducts = new ReorderProducts(
+      this._productoRepository,
+      this._listaRepository,
+      this._permisoRepository
+    );
+
     this._getProductRecommendations = new GetProductRecommendations(
       this._listaRepository,
       this._productoRepository,
@@ -853,6 +861,7 @@ export class Container {
       this._markProductAsPurchased,
       this._deleteProduct,
       this._getProducts,
+      this._reorderProducts,
       this._realTimeGateway
     );
 
@@ -1068,6 +1077,10 @@ export class Container {
 
   public get getProducts(): GetProducts {
     return this._getProducts;
+  }
+
+  public get reorderProducts(): ReorderProducts {
+    return this._reorderProducts;
   }
 
   public get authController(): AuthController {

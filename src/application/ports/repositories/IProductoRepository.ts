@@ -89,6 +89,18 @@ export interface ProductoResumen {
   valorTotal: number;
 }
 
+export interface ProductoOrden {
+  /**
+   * ID del producto a reordenar
+   */
+  productoId: string;
+
+  /**
+   * Nueva posición de visualización (1-indexada)
+   */
+  posicion: number;
+}
+
 export interface IProductoRepository {
   /**
    * Guarda un producto (crear o actualizar)
@@ -143,6 +155,18 @@ export interface IProductoRepository {
    * Marca todos los productos de una lista como comprados/no comprados
    */
   markAllAsPurchased(listaId: string, comprado: boolean): Promise<Result<number, Error>>;
+
+  /**
+   * Actualiza la posición de visualización de varios productos de una lista
+   * en una sola operación atómica (todo o nada). Las posiciones las asigna
+   * el llamador: el caso de uso ReorderProducts normaliza huecos y relega
+   * al final los productos no incluidos en el payload. Devuelve las
+   * posiciones aplicadas, en el mismo orden recibido.
+   */
+  updateOrden(
+    listaId: string,
+    orden: ProductoOrden[]
+  ): Promise<Result<Array<{ id: string; posicion: number }>, Error>>;
 
   /**
    * Busca productos por categoría

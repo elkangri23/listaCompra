@@ -6,12 +6,13 @@ import type { PrismaClient } from '@prisma/client';
 import type { Result } from '@shared/result';
 import { success, failure } from '@shared/result';
 import type { Producto } from '@domain/entities/Producto';
-import type { 
-  IProductoRepository, 
-  ProductoFilters, 
-  PaginationOptions, 
-  PaginatedResult, 
-  ProductoResumen 
+import type {
+  IProductoRepository,
+  ProductoFilters,
+  PaginationOptions,
+  PaginatedResult,
+  ProductoResumen,
+  ProductoOrden
 } from '@application/ports/repositories/IProductoRepository';
 import { ProductoMapper } from '../mappers/ProductoMapper';
 
@@ -123,7 +124,10 @@ export class PrismaProductoRepository implements IProductoRepository {
       const [productos, total] = await Promise.all([
         this.prisma.producto.findMany({
           where,
-          orderBy: { fechaCreacion: 'desc' },
+          // Orden de visualización (PATCH .../products/reorder); los productos
+          // sin orden asignado (orden 0, p. ej. creados antes del reorden o
+          // recién añadidos) desempatan por fechaCreacion DESC, como antes.
+          orderBy: [{ orden: 'asc' }, { fechaCreacion: 'desc' }],
           skip,
           ...(take && { take })
         }),
@@ -252,6 +256,36 @@ export class PrismaProductoRepository implements IProductoRepository {
       return success(result.count);
     } catch (error) {
       return failure(new Error(`Error al marcar productos como comprados: ${error}`));
+    }
+  }
+
+  async updateOrden(
+    listaId: string,
+    orden: ProductoOrden[]
+  ): Promise<Result<Array<{ id: string; posicion: number }>, Error>> {
+    try {
+      // Todo o nada: si una actualización falla, la transacción revierte
+      // las demás. El where incluye listaId para que un producto de otra
+      // lista no pueda tocarse ni por error de validación aguas arriba.
+      const counts = await this.prisma.$transaction(
+        orden.map(({ productoId, posicion }) =>
+          this.prisma.producto.updateMany({
+            where: { id: productoId, listaId },
+            data: { orden: posicion }
+          })
+        )
+      );
+
+      const noAplicado = orden.find((_, i) => counts[i]?.count !== 1);
+      if (noAplicado) {
+        return failure(new Error(
+          `No se pudo actualizar la posición del producto ${noAplicado.productoId} en la lista ${listaId}`
+        ));
+      }
+
+      return success(orden.map(({ productoId, posicion }) => ({ id: productoId, posicion })));
+    } catch (error) {
+      return failure(new Error(`Error al reordenar productos: ${error}`));
     }
   }
 

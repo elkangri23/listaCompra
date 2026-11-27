@@ -1826,6 +1826,40 @@
             "description": "Elimina un producto de la lista permanentemente."
           },
           "response": []
+        },
+        {
+          "name": "Reordenar Productos de Lista",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orden\": [\n    {\n      \"productoId\": \"{{productId}}\",\n      \"posicion\": 1\n    },\n    {\n      \"productoId\": \"00000000-0000-0000-0000-000000000002\",\n      \"posicion\": 2\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lists/{{listId}}/products/reorder",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lists",
+                "{{listId}}",
+                "products",
+                "reorder"
+              ]
+            },
+            "description": "Reordena los productos de una lista (flechas ↑ ↓ y arrastre táctil). Envía la lista completa reordenada con posiciones 1-indexadas; los productos no incluidos quedan después, en su orden actual, y los huecos se normalizan a 1..N. Sustituye el segundo productoId por el ID real de otro producto de la misma lista (usa Obtener Productos de Lista para verlos)."
+          },
+          "response": []
         }
       ]
     },

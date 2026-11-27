@@ -9,6 +9,7 @@ describe('ProductController realtime events', () => {
   const markProductAsPurchased = { execute: jest.fn() } as any;
   const deleteProduct = { execute: jest.fn() } as any;
   const getProducts = { execute: jest.fn() } as any;
+  const reorderProducts = { execute: jest.fn() } as any;
   const realTimeGateway = { publish: jest.fn() } as any;
 
   let controller: ProductController;
@@ -21,6 +22,7 @@ describe('ProductController realtime events', () => {
       markProductAsPurchased,
       deleteProduct,
       getProducts,
+      reorderProducts,
       realTimeGateway
     );
   });

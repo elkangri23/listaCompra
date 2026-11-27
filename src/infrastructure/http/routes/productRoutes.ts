@@ -77,6 +77,20 @@ const markAsPurchasedSchema = z.object({
   })
 });
 
+const reorderProductsSchema = z.object({
+  body: z.object({
+    orden: z.array(z.object({
+      productoId: z.string().uuid('ID de producto inválido'),
+      posicion: z.number()
+        .int('La posición debe ser un número entero')
+        .min(1, 'La posición mínima es 1')
+    })).min(1, 'Debe especificar al menos un producto para reordenar')
+  }),
+  params: z.object({
+    listaId: z.string().uuid('ID de lista inválido')
+  })
+});
+
 const deleteProductSchema = z.object({
   params: z.object({
     listaId: z.string().uuid('ID de lista inválido'),
@@ -296,6 +310,90 @@ export function createProductRoutes(
     authMiddleware,
     validationMiddleware(markAsPurchasedSchema),
     productController.markProductAsPurchased.bind(productController)
+  );
+
+  /**
+   * @swagger
+   * /lists/{listaId}/products/reorder:
+   *   patch:
+   *     summary: Reordenar los productos de una lista
+   *     tags: [Products]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: listaId
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: ID de la lista
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - orden
+   *             properties:
+   *               orden:
+   *                 type: array
+   *                 minItems: 1
+   *                 description: Orden final de los productos. El frontend envía la lista completa reordenada; los productos no incluidos quedan después, en su orden actual, y los huecos en las posiciones se normalizan a 1..N.
+   *                 items:
+   *                   type: object
+   *                   required:
+   *                     - productoId
+   *                     - posicion
+   *                   properties:
+   *                     productoId:
+   *                       type: string
+   *                       format: uuid
+   *                       description: ID del producto a reordenar
+   *                     posicion:
+   *                       type: integer
+   *                       minimum: 1
+   *                       description: Nueva posición (1-indexada)
+   *     responses:
+   *       200:
+   *         description: Productos reordenados correctamente
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 listaId:
+   *                   type: string
+   *                   format: uuid
+   *                   description: ID de la lista afectada
+   *                 productos:
+   *                   type: array
+   *                   description: Productos confirmados con su nueva posición
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       id:
+   *                         type: string
+   *                         format: uuid
+   *                       posicion:
+   *                         type: integer
+   *                         minimum: 1
+   *                 mensaje:
+   *                   type: string
+   *                   description: Mensaje informativo
+   *       400:
+   *         description: Datos inválidos (lista vacía, producto duplicado, posición duplicada o producto que no pertenece a la lista)
+   *       403:
+   *         description: Sin permisos para reordenar los productos de esta lista
+   *       404:
+   *         description: Lista no encontrada
+   */
+  router.patch(
+    '/:listaId/products/reorder',
+    authMiddleware,
+    validationMiddleware(reorderProductsSchema),
+    productController.reorderProductsInList.bind(productController)
   );
 
   /**

@@ -10,12 +10,14 @@ import type { UpdateProduct } from '../../../application/use-cases/products/Upda
 import type { MarkProductAsPurchased } from '../../../application/use-cases/products/MarkProductAsPurchased';
 import type { DeleteProduct } from '../../../application/use-cases/products/DeleteProduct';
 import type { GetProducts } from '../../../application/use-cases/products/GetProducts';
+import type { ReorderProducts } from '../../../application/use-cases/products/ReorderProducts';
 import type {
   AddProductDto,
   UpdateProductDto,
   MarkAsPurchasedDto,
   DeleteProductDto,
-  GetProductsDto
+  GetProductsDto,
+  ReorderProductsDto
 } from '../../../application/dto/products';
 import { ValidationError } from '../../../application/errors/ValidationError';
 import { UnauthorizedError } from '../../../application/errors/UnauthorizedError';
@@ -29,6 +31,7 @@ export class ProductController {
     private markProductAsPurchasedUseCase: MarkProductAsPurchased,
     private deleteProductUseCase: DeleteProduct,
     private getProductsUseCase: GetProducts,
+    private reorderProductsUseCase: ReorderProducts,
     private readonly realTimeGateway: RealTimeGateway
   ) {}
 
@@ -174,6 +177,46 @@ export class ProductController {
       });
     } catch (error) {
       console.error('Error en markProductAsPurchased:', error);
+      res.status(500).json({ success: false, error: 'Error interno del servidor' });
+    }
+  }
+
+  /**
+   * PATCH /lists/:listaId/products/reorder
+   * Sin evento de tiempo real: reordenar es un cambio de presentación, no
+   * de contenido (no existe tipo PRODUCT_REORDERED), y el frontend
+   * invalida su query de productos al confirmarse la mutación.
+   */
+  async reorderProductsInList(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { listaId } = req.params;
+      const userId = this.getUserId(req);
+
+      if (!userId) {
+        res.status(401).json({ success: false, error: 'Usuario no autenticado' });
+        return;
+      }
+
+      if (!listaId) {
+        res.status(400).json({ success: false, error: 'ID de lista requerido' });
+        return;
+      }
+
+      const dto: ReorderProductsDto = {
+        listaId,
+        orden: req.body.orden
+      };
+
+      const result = await this.reorderProductsUseCase.execute(dto, userId);
+
+      if (result.isFailure) {
+        this.handleError(result.error, res);
+        return;
+      }
+
+      res.status(200).json({ success: true, data: result.value });
+    } catch (error) {
+      console.error('Error en reorderProductsInList:', error);
       res.status(500).json({ success: false, error: 'Error interno del servidor' });
     }
   }

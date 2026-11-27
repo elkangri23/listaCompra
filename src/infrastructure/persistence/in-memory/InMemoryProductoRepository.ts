@@ -55,7 +55,12 @@ export class InMemoryProductoRepository implements IProductoRepository {
     const total = items.length;
     const totalPages = Math.max(1, Math.ceil(total / limit));
     const start = (page - 1) * limit;
-    const paginatedItems = items.slice(start, start + limit);
+    // Orden de visualización (PATCH .../products/reorder); sin orden asignado
+    // (orden 0) desempata por fechaCreacion DESC, como el repositorio Prisma.
+    const orderedItems = [...items].sort(
+      (a, b) => a.orden - b.orden || b.fechaCreacion.getTime() - a.fechaCreacion.getTime()
+    );
+    const paginatedItems = orderedItems.slice(start, start + limit);
 
     return success({
       items: paginatedItems,
@@ -120,6 +125,33 @@ export class InMemoryProductoRepository implements IProductoRepository {
       }
     }
     return success(updated);
+  }
+
+  async updateOrden(
+    listaId: string,
+    orden: Array<{ productoId: string; posicion: number }>
+  ): Promise<Result<Array<{ id: string; posicion: number }>, Error>> {
+    // El caso de uso valida antes que todos pertenezcan a la lista; aquí se
+    // vuelve a comprobar para no aplicar cambios parciales ante un mal uso.
+    for (const { productoId } of orden) {
+      const producto = this.productos.get(productoId);
+      if (!producto || producto.listaId !== listaId) {
+        return failure(new Error(
+          `No se pudo actualizar la posición del producto ${productoId} en la lista ${listaId}`
+        ));
+      }
+    }
+
+    const aplicadas: Array<{ id: string; posicion: number }> = [];
+    for (const { productoId, posicion } of orden) {
+      const producto = this.productos.get(productoId)!;
+      const result = producto.actualizarOrden(posicion);
+      if (result.isFailure) {
+        return failure(new Error(`Error al reordenar productos: ${result.error.message}`));
+      }
+      aplicadas.push({ id: productoId, posicion });
+    }
+    return success(aplicadas);
   }
 
   async deleteAllByList(listaId: string): Promise<Result<number, Error>> {

@@ -64,6 +64,7 @@ npm run dev
 03. Productos → Agregar Producto a Lista (guarda productId)
 03. Productos → Obtener Productos de Lista
 03. Productos → Marcar Producto como Comprado
+03. Productos → Reordenar Productos de Lista
 ```
 
 #### Paso 5: Compartir Lista
@@ -110,12 +111,13 @@ Las siguientes variables se guardan automáticamente al ejecutar ciertos endpoin
 - ✅ Actualizar lista (`PUT /lists/:id`)
 - ✅ Eliminar lista (`DELETE /lists/:id`)
 
-### 🛒 Productos (5 endpoints)
+### 🛒 Productos (6 endpoints)
 - ✅ Agregar Producto (`POST /lists/:listId/products`)
 - ✅ Listar Productos con filtros (`GET /lists/:listId/products`)
 - ✅ Actualizar Producto (`PUT /lists/:listId/products/:productId`)
 - ✅ Marcar como comprado (`PATCH /lists/:listId/products/:productId/purchased`)
 - ✅ Eliminar Producto (`DELETE /lists/:listId/products/:productId`)
+- ✅ Reordenar Productos (`PATCH /lists/:listId/products/reorder`) — envía la lista completa reordenada (posiciones 1-indexadas); los no incluidos quedan después y los huecos se normalizan a 1..N
 
 ### 🏷️ Categorías (6 endpoints)
 - ✅ Crear Categoría (`POST /categories`)
@@ -303,7 +305,7 @@ GET /categories?tiendaId={storeId}&activas=true
 **Carpetas incluidas:**
 - ✅ 01. Autenticación (5)
 - ✅ 02. Listas de Compra (5)
-- ✅ 03. Productos (5)
+- ✅ 03. Productos (6)
 - ✅ 04. Categorías (6)
 - ✅ 05. Tiendas (7)
 - ✅ 06. Invitaciones & Permisos (7)
@@ -880,4 +882,4 @@ Si encuentras algún endpoint que falta o algún error en la colección:
 
 **¡Happy Testing! 🎉**
 
-Última actualización: Noviembre 2025 - Postman 114 requests (MFA/passkeys CU-MFA, auth 13A, colaboradores, auditoría, dashboard)
+Última actualización: Noviembre 2026 - Postman 115 requests (MFA/passkeys CU-MFA, auth 13A, colaboradores, auditoría, dashboard, reorden de productos)

@@ -17,6 +17,8 @@ export interface ProductoProps {
   precio?: number | null;
   comprado?: boolean;
   urgente?: boolean;
+  /** Posición de visualización dentro de la lista (1..N). 0 = sin orden asignado. */
+  orden?: number;
   listaId: string;
   categoriaId?: string;
   creadoPorId: string;
@@ -35,6 +37,7 @@ export class Producto {
     private _precio: number | null,
     private _comprado: boolean,
     private _urgente: boolean,
+    private _orden: number,
     private readonly _listaId: string,
     private _categoriaId: string | null,
     private readonly _creadoPorId: string,
@@ -74,6 +77,10 @@ export class Producto {
 
   public get urgente(): boolean {
     return this._urgente;
+  }
+
+  public get orden(): number {
+    return this._orden;
   }
 
   public get listaId(): string {
@@ -209,6 +216,16 @@ export class Producto {
       ));
     }
 
+    // Validar orden (0 = sin orden asignado, el listado desempata por fechaCreacion)
+    const orden = props.orden ?? 0;
+    if (!Number.isInteger(orden) || orden < 0) {
+      return failure(new InvalidValueError(
+        'El orden debe ser un número entero mayor o igual a 0',
+        'orden',
+        props.orden
+      ));
+    }
+
     const now = createDate();
 
     return success(new Producto(
@@ -220,6 +237,7 @@ export class Producto {
       precioValidado,
       props.comprado ?? false,
       props.urgente ?? false,
+      orden,
       props.listaId.trim(),
       props.categoriaId?.trim() || null,
       props.creadoPorId.trim(),
@@ -377,6 +395,24 @@ export class Producto {
   }
 
   /**
+   * Actualiza la posición de visualización del producto dentro de su lista.
+   * 0 significa "sin orden asignado" (el listado desempata por fechaCreacion).
+   */
+  public actualizarOrden(nuevoOrden: number): Result<void, InvalidValueError> {
+    if (!Number.isInteger(nuevoOrden) || nuevoOrden < 0) {
+      return failure(new InvalidValueError(
+        'El orden debe ser un número entero mayor o igual a 0',
+        'orden',
+        nuevoOrden
+      ));
+    }
+
+    this._orden = nuevoOrden;
+    this._fechaActualizacion = createDate();
+    return success(undefined);
+  }
+
+  /**
    * Marca el producto como comprado
    */
   public marcarComoComprado(): void {
@@ -462,6 +498,7 @@ export class Producto {
       precio: this._precio,
       comprado: this._comprado,
       urgente: this._urgente,
+      orden: this._orden,
       listaId: this._listaId,
       categoriaId: this._categoriaId,
       creadoPorId: this._creadoPorId,
@@ -485,6 +522,7 @@ export class Producto {
       precio: this._precio,
       comprado: this._comprado,
       urgente: this._urgente,
+      orden: this._orden,
       listaId: this._listaId,
       categoriaId: this._categoriaId,
       creadoPorId: this._creadoPorId,
@@ -508,6 +546,7 @@ export class Producto {
         precio: data['precio'] ? Number(data['precio']) : null,
         comprado: data['comprado'],
         urgente: data['urgente'],
+        orden: data['orden'],
         listaId: data['listaId'],
         categoriaId: data['categoriaId'],
         creadoPorId: data['creadoPorId'],
