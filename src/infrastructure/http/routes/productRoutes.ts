@@ -58,7 +58,7 @@ const updateProductSchema = z.object({
       .max(999999.99, 'El precio máximo es 999,999.99')
       .optional(),
     urgente: z.boolean().optional(),
-    categoriaId: z.string().uuid('ID de categoría inválido').optional()
+    categoriaId: z.string().uuid('ID de categoría inválido').nullable().optional()
   }),
   params: z.object({
     listaId: z.string().uuid('ID de lista inválido'),
@@ -226,6 +226,8 @@ export function createProductRoutes(
    *               categoriaId:
    *                 type: string
    *                 format: uuid
+   *                 nullable: true
+   *                 description: ID de la categoría del producto. Enviar null para quitar la categoría.
    *     responses:
    *       200:
    *         description: Producto actualizado correctamente

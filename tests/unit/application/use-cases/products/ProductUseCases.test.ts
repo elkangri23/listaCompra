@@ -90,6 +90,22 @@ describe('UpdateProduct', () => {
     expect(r.isFailure).toBe(true);
   });
 
+  it('categoriaId null quita la categoría del producto', async () => {
+    repo.findById.mockResolvedValue(successResult(makeProducto({ categoriaId: 'c1' })));
+    const r = (await useCase.execute('p1', { categoriaId: null }, 'user-1')) as any;
+    expect(r.isSuccess).toBe(true);
+    expect(r.value.categoriaId).toBeUndefined();
+    const saved = repo.save.mock.calls[0][0] as Producto;
+    expect(saved.categoriaId).toBeNull();
+    expect(outbox.saveEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventData: expect.objectContaining({
+          changedFields: expect.arrayContaining(['categoriaId'])
+        })
+      })
+    );
+  });
+
   it('precio inválido → ValidationError', async () => {
     const r = (await useCase.execute('p1', { precio: -5 }, 'user-1')) as any;
     expect(r.isFailure).toBe(true);

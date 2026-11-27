@@ -42,9 +42,9 @@ export class UpdateProduct {
     }
 
     // Verificar que al menos un campo se va a actualizar
-    if (!dto.nombre && !dto.descripcion && dto.cantidad === undefined && 
-        !dto.unidad && dto.precio === undefined && dto.urgente === undefined && 
-        !dto.categoriaId) {
+    if (!dto.nombre && !dto.descripcion && dto.cantidad === undefined &&
+        !dto.unidad && dto.precio === undefined && dto.urgente === undefined &&
+        dto.categoriaId === undefined) {
       return failure(ValidationError.create(
         'Debe especificar al menos un campo para actualizar',
         'dto',
@@ -147,7 +147,7 @@ export class UpdateProduct {
     }
 
     if (dto.categoriaId !== undefined) {
-      const categoriaResult = producto.actualizarCategoria(dto.categoriaId);
+      const categoriaResult = producto.actualizarCategoria(dto.categoriaId ?? undefined);
       if (categoriaResult.isFailure) {
         return failure(ValidationError.create(
           categoriaResult.error.message,

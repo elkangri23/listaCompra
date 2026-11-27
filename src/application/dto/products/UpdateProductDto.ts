@@ -39,9 +39,10 @@ export interface UpdateProductDto {
   urgente?: boolean;
 
   /**
-   * Nueva categoría del producto
+   * Nueva categoría del producto.
+   * Enviar null para quitar la categoría del producto.
    */
-  categoriaId?: string;
+  categoriaId?: string | null;
 }
 
 export interface UpdateProductResponseDto {
