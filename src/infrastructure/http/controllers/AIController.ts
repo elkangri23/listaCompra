@@ -413,19 +413,12 @@ export class AIController {
         return;
       }
 
-      // Aquí podríamos obtener información real del servicio de IA
-      // Por ahora, devolvemos información mock
-      res.status(200).json({
-        success: true,
-        data: {
-          provider: 'perplexity',
-          tokensUsed: 0,
-          tokensRemaining: 1000000,
-          requestsThisMonth: 0,
-          rateLimitRemaining: 10,
-          resetTime: new Date(Date.now() + 60000).toISOString(),
-          costEstimate: 0
-        }
+      // Sin seguimiento real todavía: no se devuelven datos inventados.
+      // El seguimiento real llegará con FreeLLMAPI (backlog item 4).
+      res.status(503).json({
+        success: false,
+        error: 'El seguimiento de uso de IA aún no está disponible.',
+        code: 'AI_USAGE_NOT_AVAILABLE'
       });
 
     } catch (error) {

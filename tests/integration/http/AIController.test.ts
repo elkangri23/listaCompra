@@ -223,7 +223,7 @@ describe('AIController Integration Tests', () => {
   });
 
   describe('GET /api/ai/usage', () => {
-    it('debe devolver información de uso para administrador', async () => {
+    it('debe responder 503 sin seguimiento real para administrador', async () => {
       // Arrange - Crear nueva app con middleware admin
       const adminApp = express();
       adminApp.use(express.json());
@@ -241,16 +241,17 @@ describe('AIController Integration Tests', () => {
       // Registrar las rutas con el controlador
       adminApp.get('/api/ai/usage', (req, res) => controller.getUsageInfo(req, res));
 
-      // Act
+      // Act — sin seguimiento real, el endpoint responde 503 en vez de datos inventados
       const response = await request(adminApp)
         .get('/api/ai/usage')
-        .expect(200);
+        .expect(503);
 
       // Assert
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.provider).toBe('perplexity');
-      expect(response.body.data).toHaveProperty('tokensUsed');
-      expect(response.body.data).toHaveProperty('rateLimitRemaining');
+      expect(response.body).toEqual({
+        success: false,
+        error: 'El seguimiento de uso de IA aún no está disponible.',
+        code: 'AI_USAGE_NOT_AVAILABLE'
+      });
     });
 
     it('debe denegar acceso a usuarios no administradores', async () => {

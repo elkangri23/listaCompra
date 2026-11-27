@@ -454,38 +454,17 @@ describe('E2E: AI Features Flow', () => {
       expect(response.body.data.features.categorySuggestions).toBe(true);
     });
 
-    it('2. Admin debe obtener información de uso de IA', async () => {
+    it('2. Admin recibe 503: el seguimiento de uso aún no existe', async () => {
       const response = await request(app)
         .get('/api/v1/ai/usage')
         .set('Authorization', `Bearer ${adminToken}`);
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(503);
 
-      expect(response.body.success).toBe(true);
-      const data = response.body.data;
-
-      if (data.usage) {
-        const usage = data.usage;
-        const cacheStats = data.cache;
-        const limits = data.limits;
-
-        expect(usage).toHaveProperty('totalRequests');
-        expect(usage).toHaveProperty('successRate');
-        expect(usage).toHaveProperty('tokensUsed');
-        expect(cacheStats).toHaveProperty('hitRatio');
-        expect(cacheStats).toHaveProperty('savedRequests');
-        expect(limits).toHaveProperty('rateLimitRemaining');
-
-        expect(typeof usage.totalRequests).toBe('number');
-        expect(typeof usage.successRate).toBe('number');
-        expect(typeof cacheStats.hitRatio).toBe('number');
-      } else {
-        expect(data).toHaveProperty('provider');
-        expect(data).toHaveProperty('tokensUsed');
-        expect(data).toHaveProperty('tokensRemaining');
-        expect(data).toHaveProperty('requestsThisMonth');
-        expect(typeof data.tokensUsed).toBe('number');
-        expect(typeof data.tokensRemaining).toBe('number');
-      }
+      expect(response.body).toEqual({
+        success: false,
+        error: 'El seguimiento de uso de IA aún no está disponible.',
+        code: 'AI_USAGE_NOT_AVAILABLE'
+      });
     });
 
     it('3. Usuario normal NO debe acceder a métricas de administrador', async () => {

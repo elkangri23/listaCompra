@@ -417,10 +417,14 @@ export function createAIRoutes(dependencies: {
    *     tags: [Inteligencia Artificial]
    *     summary: Información de uso de la API de IA
    *     description: |
-   *       Devuelve estadísticas detalladas de uso de la API de IA, incluyendo 
+   *       Devuelve estadísticas detalladas de uso de la API de IA, incluyendo
    *       tokens consumidos, requests realizados y costos estimados.
-   *       
+   *
    *       **Acceso:** Solo administradores
+   *
+   *       **Nota:** el seguimiento real aún no existe: hasta que llegue
+   *       (FreeLLMAPI, backlog item 4), el endpoint responde 503
+   *       AI_USAGE_NOT_AVAILABLE en lugar de devolver datos inventados.
    *     operationId: getAIUsageInfo
    *     responses:
    *       200:
@@ -527,6 +531,22 @@ export function createAIRoutes(dependencies: {
    *         $ref: '#/components/responses/ForbiddenError'
    *       429:
    *         $ref: '#/components/responses/RateLimitError'
+   *       503:
+   *         description: Seguimiento de uso aún no disponible
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: false
+   *                 error:
+   *                   type: string
+   *                   example: El seguimiento de uso de IA aún no está disponible.
+   *                 code:
+   *                   type: string
+   *                   example: AI_USAGE_NOT_AVAILABLE
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
