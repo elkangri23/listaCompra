@@ -104,6 +104,15 @@ npm run test:cov
 npm run test:watch
 ```
 
+### **6. Probar la API con Postman**
+
+El repo incluye una batería de pruebas lista para importar en Postman:
+
+- **[`postman_collection.json`](./postman_collection.json)** — Colección completa con las 114 peticiones de la API ("Lista Compra API")
+- **[`postman_environment.json`](./postman_environment.json)** — Variables de entorno para desarrollo local
+
+Para usarla: importa ambos archivos en Postman y sigue el paso a paso de la [guía de testing](./API_Testing_Guide.md).
+
 ---
 
 ## 📚 **Documentación**
