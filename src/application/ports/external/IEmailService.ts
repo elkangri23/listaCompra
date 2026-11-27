@@ -76,6 +76,15 @@ export interface IEmailService {
   ): Promise<EmailResult>;
 
   /**
+   * Envía el código de restablecimiento de contraseña (6 dígitos, item 9c)
+   */
+  sendPasswordResetCodeEmail(
+    recipientEmail: string,
+    recipientName: string,
+    codigo: string
+  ): Promise<EmailResult>;
+
+  /**
    * Verifica conectividad del servicio de email
    */
   verifyConnection(): Promise<boolean>;

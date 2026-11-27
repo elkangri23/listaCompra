@@ -208,6 +208,30 @@ export function renderVerificationCodeEmail(data: VerificationCodeEmailData): st
   });
 }
 
+export interface PasswordResetCodeEmailData {
+  recipientName: string;
+  codigo: string;
+}
+
+export function renderPasswordResetCodeEmail(data: PasswordResetCodeEmailData): string {
+  return renderEmailLayout({
+    preheader: `Tu código para restablecer la contraseña es ${data.codigo}`,
+    title: 'Restablecer tu contraseña',
+    heading: `¡Hola ${data.recipientName}!`,
+    bodyHtml: [
+      paragraph(
+        'Has pedido restablecer tu contraseña en Lista de Compra. Introduce este código para poner una nueva:',
+      ),
+      `<p style="margin:0 0 16px 0;text-align:center;"><span style="display:inline-block;font-size:32px;font-weight:700;letter-spacing:8px;color:#111418;background-color:#f0f2f5;border:1px solid #dbdfe6;border-radius:8px;padding:12px 20px;">${escapeHtml(data.codigo)}</span></p>`,
+      paragraph('El código caduca en 15 minutos y solo sirve una vez.'),
+      renderEmailCallout(
+        '<strong>&#128274; Seguridad:</strong> Si no pediste restablecer tu contraseña, puedes ignorar este correo: tu contraseña no cambia.',
+        '#4387f4',
+      ),
+    ].join('\n'),
+  });
+}
+
 export type ListChangeType = 'item_added' | 'item_removed' | 'item_updated' | 'list_updated';
 
 const CHANGE_META: Record<ListChangeType, { icon: string; label: string; color: string }> = {

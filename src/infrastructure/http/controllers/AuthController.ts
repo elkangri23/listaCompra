@@ -13,6 +13,8 @@ import type { RequestAccountDeletion } from '@application/use-cases/gdpr/Request
 import type { ExportMyData } from '@application/use-cases/gdpr/ExportMyData';
 import type { RequestEmailVerificationCode } from '@application/use-cases/auth/RequestEmailVerificationCode';
 import type { VerifyEmailCode } from '@application/use-cases/auth/VerifyEmailCode';
+import type { RequestPasswordResetCode } from '@application/use-cases/auth/RequestPasswordResetCode';
+import type { ResetPasswordWithCode } from '@application/use-cases/auth/ResetPasswordWithCode';
 import type { RegisterUserDto } from '@application/dto/auth/RegisterUserDto';
 import type { LoginDto } from '@application/dto/auth/LoginDto';
 import type { IUsuarioRepository } from '@application/ports/repositories/IUsuarioRepository';
@@ -30,6 +32,8 @@ export interface AuthControllerDependencies {
   exportMyData?: ExportMyData;
   requestEmailVerificationCode?: RequestEmailVerificationCode;
   verifyEmailCode?: VerifyEmailCode;
+  requestPasswordResetCode?: RequestPasswordResetCode;
+  resetPasswordWithCode?: ResetPasswordWithCode;
   usuarioRepository?: IUsuarioRepository;
 }
 
@@ -575,6 +579,89 @@ export class AuthController {
         return;
       }
       const result = await this.dependencies.requestEmailVerificationCode.execute({ email });
+      if (result.isFailure) {
+        this.handleUseCaseError(result.error, res);
+        return;
+      }
+      res.status(200).json({
+        success: true,
+        data: result.value,
+        message: result.value.mensaje,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /auth/forgot-password
+   * Solicita el código de restablecimiento (item 9c). Respuesta genérica
+   * para no revelar si el correo existe.
+   */
+  requestPasswordReset = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.dependencies.requestPasswordResetCode) {
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      const { email } = req.body as { email?: string };
+      if (!email) {
+        res.status(400).json({
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: 'Email es requerido',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      const result = await this.dependencies.requestPasswordResetCode.execute({ email });
+      if (result.isFailure) {
+        this.handleUseCaseError(result.error, res);
+        return;
+      }
+      res.status(200).json({
+        success: true,
+        data: result.value,
+        message: result.value.mensaje,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /auth/reset-password
+   * Restablece la contraseña con el código de 6 dígitos (item 9c).
+   */
+  resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.dependencies.resetPasswordWithCode) {
+        res.status(500).json({
+          success: false,
+          error: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      const { email, codigo, nuevaPassword } = req.body as { email?: string; codigo?: string; nuevaPassword?: string };
+      if (!email || !codigo || !nuevaPassword) {
+        res.status(400).json({
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: 'Email, código y nueva contraseña son requeridos',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+      const result = await this.dependencies.resetPasswordWithCode.execute({ email, codigo, nuevaPassword });
       if (result.isFailure) {
         this.handleUseCaseError(result.error, res);
         return;

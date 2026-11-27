@@ -270,6 +270,8 @@ describe('AuthController (GDPR, item 15)', () => {
   let exportMyData: any;
   let verifyEmailCode: any;
   let requestEmailVerificationCode: any;
+  let requestPasswordResetCode: any;
+  let resetPasswordWithCode: any;
   let req: Partial<Request>;
   let res: Partial<Response>;
   let next: jest.MockedFunction<NextFunction>;
@@ -279,6 +281,8 @@ describe('AuthController (GDPR, item 15)', () => {
     exportMyData = { execute: jest.fn() };
     verifyEmailCode = { execute: jest.fn() };
     requestEmailVerificationCode = { execute: jest.fn() };
+    requestPasswordResetCode = { execute: jest.fn() };
+    resetPasswordWithCode = { execute: jest.fn() };
 
     authController = new AuthController({
       registerUser: {} as any,
@@ -287,6 +291,8 @@ describe('AuthController (GDPR, item 15)', () => {
       exportMyData,
       verifyEmailCode,
       requestEmailVerificationCode,
+      requestPasswordResetCode,
+      resetPasswordWithCode,
     });
 
     req = {
@@ -454,6 +460,80 @@ describe('AuthController (GDPR, item 15)', () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(requestEmailVerificationCode.execute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('requestPasswordReset', () => {
+    it('solicita el código y devuelve 200', async () => {
+      req.body = { email: 'juan@example.com' };
+      requestPasswordResetCode.execute.mockResolvedValue(
+        success({
+          emailSent: true,
+          mensaje: 'Te hemos enviado un código de 6 dígitos a tu correo.',
+        })
+      );
+
+      await authController.requestPasswordReset(req as Request, res as Response, next);
+
+      expect(requestPasswordResetCode.execute).toHaveBeenCalledWith({
+        email: 'juan@example.com',
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({ emailSent: true }),
+        })
+      );
+    });
+
+    it('devuelve 400 sin email', async () => {
+      req.body = {};
+
+      await authController.requestPasswordReset(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(requestPasswordResetCode.execute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('restablece la contraseña y devuelve 200', async () => {
+      req.body = { email: 'juan@example.com', codigo: '482913', nuevaPassword: 'NuevaPass123!' };
+      resetPasswordWithCode.execute.mockResolvedValue(
+        success({
+          mensaje: 'Tu contraseña ha sido cambiada. Ya puedes entrar con la nueva.',
+        })
+      );
+
+      await authController.resetPassword(req as Request, res as Response, next);
+
+      expect(resetPasswordWithCode.execute).toHaveBeenCalledWith({
+        email: 'juan@example.com',
+        codigo: '482913',
+        nuevaPassword: 'NuevaPass123!',
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('devuelve 400 sin algún campo', async () => {
+      req.body = { email: 'juan@example.com', codigo: '482913' };
+
+      await authController.resetPassword(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(resetPasswordWithCode.execute).not.toHaveBeenCalled();
+    });
+
+    it('devuelve 401 con un código incorrecto', async () => {
+      req.body = { email: 'juan@example.com', codigo: '111111', nuevaPassword: 'NuevaPass123!' };
+      resetPasswordWithCode.execute.mockResolvedValue(
+        failure(new UnauthorizedError('El código no es válido o ha caducado.'))
+      );
+
+      await authController.resetPassword(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
     });
   });
 });

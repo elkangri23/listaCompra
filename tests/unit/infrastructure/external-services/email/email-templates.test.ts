@@ -11,6 +11,7 @@ import {
   renderConfirmationEmail,
   renderNotificationEmail,
   renderVerificationCodeEmail,
+  renderPasswordResetCodeEmail,
 } from '../../../../../src/infrastructure/external-services/email/templates/email-templates';
 
 describe('email-templates', () => {
@@ -164,6 +165,31 @@ describe('email-templates', () => {
 
     it('escapa el nombre del destinatario', () => {
       const html = renderVerificationCodeEmail({
+        recipientName: '<script>alert(1)</script>',
+        codigo: '482913',
+      });
+      expect(html).not.toContain('<script>alert(1)</script>');
+      expect(html).toContain('&lt;script&gt;');
+    });
+  });
+
+  describe('renderPasswordResetCodeEmail', () => {
+    const html = renderPasswordResetCodeEmail({
+      recipientName: 'Lucía',
+      codigo: '482913',
+    });
+
+    it('muestra el código grande, la caducidad y el aviso de seguridad', () => {
+      expect(html).toContain('482913');
+      expect(html).toContain('15 minutos');
+      expect(html).toContain('¡Hola Lucía!');
+      expect(html).toContain('restablecer tu contraseña');
+      expect(html).toContain('tu contraseña no cambia');
+      expect(html).not.toContain('<style>');
+    });
+
+    it('escapa el nombre del destinatario', () => {
+      const html = renderPasswordResetCodeEmail({
         recipientName: '<script>alert(1)</script>',
         codigo: '482913',
       });

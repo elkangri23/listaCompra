@@ -39,6 +39,7 @@ model Usuario {
   mfaChallenges MfaChallenge[]
   passkeys      PasskeyCredential[]
   emailVerificationCodes EmailVerificationCode[]
+  passwordResetCodes     PasswordResetCode[]
 
   @@map("usuarios")
 }
@@ -253,6 +254,22 @@ model EmailVerificationCode {
   @@index([usuarioId])
   @@index([expiraAt])
   @@map("email_verification_codes")
+}
+
+model PasswordResetCode {
+  id        String   @id @default(uuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  codeHash  String
+  intentos  Int      @default(0)
+  expiraAt  DateTime
+  usado     Boolean  @default(false)
+  usadoAt   DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([usuarioId])
+  @@index([expiraAt])
+  @@map("password_reset_codes")
 }
 
 enum TipoPermiso {

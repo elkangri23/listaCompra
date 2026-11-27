@@ -296,6 +296,111 @@ export function createAuthRoutes(authController: AuthController, authMiddleware?
 
   /**
    * @swagger
+   * /api/v1/auth/forgot-password:
+   *   post:
+   *     tags: [Autenticación]
+   *     summary: Solicitar el código de restablecimiento
+   *     description: Genera un código de 6 dígitos (15 minutos, 5 intentos) y lo envía por correo para restablecer la contraseña (item 9c). Respuesta genérica para no revelar si el correo existe. Enfriamiento de 60 s entre reenvíos.
+   *     operationId: requestPasswordReset
+   *     security: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: juan@ejemplo.com
+   *     responses:
+   *       200:
+   *         description: Solicitud procesada
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 emailSent:
+   *                   type: boolean
+   *                   example: true
+   *                 mensaje:
+   *                   type: string
+   *                   example: Te hemos enviado un código de 6 dígitos a tu correo.
+   *       400:
+   *         $ref: '#/components/responses/ValidationError'
+   *       429:
+   *         $ref: '#/components/responses/RateLimitError'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
+  router.post('/forgot-password', authRateLimit, authController.requestPasswordReset);
+
+  /**
+   * @swagger
+   * /api/v1/auth/reset-password:
+   *   post:
+   *     tags: [Autenticación]
+   *     summary: Restablecer la contraseña con el código
+   *     description: Cambia la contraseña con el código de 6 dígitos enviado por correo (item 9c). El código solo sirve una vez; 5 intentos. La nueva contraseña debe tener mínimo 8 caracteres, mayúscula, minúscula y número.
+   *     operationId: resetPassword
+   *     security: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *               - codigo
+   *               - nuevaPassword
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: juan@ejemplo.com
+   *               codigo:
+   *                 type: string
+   *                 description: Código de 6 dígitos
+   *                 example: '482913'
+   *               nuevaPassword:
+   *                 type: string
+   *                 format: password
+   *                 example: NuevaPass123!
+   *     responses:
+   *       200:
+   *         description: Contraseña restablecida
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 mensaje:
+   *                   type: string
+   *                   example: Tu contraseña ha sido cambiada. Ya puedes entrar con la nueva.
+   *       400:
+   *         $ref: '#/components/responses/ValidationError'
+   *       401:
+   *         description: Código no válido o caducado
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *             example:
+   *               error: El código no es válido o ha caducado.
+   *       429:
+   *         $ref: '#/components/responses/RateLimitError'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
+  router.post('/reset-password', authRateLimit, authController.resetPassword);
+
+  /**
+   * @swagger
    * /api/v1/auth/refresh:
    *   post:
    *     tags: [Autenticación]

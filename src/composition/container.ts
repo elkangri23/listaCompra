@@ -15,6 +15,8 @@ import { AuthenticateUser } from '@application/use-cases/auth/AuthenticateUser';
 import { RefreshTokens } from '@application/use-cases/auth/RefreshTokens';
 import { RequestEmailVerificationCode } from '@application/use-cases/auth/RequestEmailVerificationCode';
 import { VerifyEmailCode } from '@application/use-cases/auth/VerifyEmailCode';
+import { RequestPasswordResetCode } from '@application/use-cases/auth/RequestPasswordResetCode';
+import { ResetPasswordWithCode } from '@application/use-cases/auth/ResetPasswordWithCode';
 import { CreateList } from '@application/use-cases/lists/CreateList';
 import { GetUserLists } from '@application/use-cases/lists/GetUserLists';
 import { UpdateList } from '@application/use-cases/lists/UpdateList';
@@ -70,6 +72,7 @@ import { InMemoryTiendaRepository } from '@infrastructure/persistence/in-memory/
 import { InMemoryInvitacionRepository } from '@infrastructure/persistence/in-memory/InMemoryInvitacionRepository';
 import { InMemoryPermisoRepository } from '@infrastructure/persistence/in-memory/InMemoryPermisoRepository';
 import { InMemoryEmailVerificationCodeRepository } from '@infrastructure/persistence/in-memory/InMemoryEmailVerificationCodeRepository';
+import { InMemoryPasswordResetCodeRepository } from '@infrastructure/persistence/in-memory/InMemoryPasswordResetCodeRepository';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { TurnstileService } from '@infrastructure/external-services/auth/TurnstileService';
@@ -130,9 +133,11 @@ import type { IInvitationHashGenerator } from '@domain/services/InvitationHashGe
 import type { IEmailService } from '@application/ports/external/IEmailService';
 import type { IMfaRepository } from '@application/ports/repositories/IMfaRepository';
 import type { IEmailVerificationCodeRepository } from '@application/ports/repositories/IEmailVerificationCodeRepository';
+import type { IPasswordResetCodeRepository } from '@application/ports/repositories/IPasswordResetCodeRepository';
 import type { IPasskeyRepository } from '@application/ports/repositories/IPasskeyRepository';
 import { PrismaMfaRepository } from '@infrastructure/persistence/repositories/PrismaMfaRepository';
 import { PrismaEmailVerificationCodeRepository } from '@infrastructure/persistence/repositories/PrismaEmailVerificationCodeRepository';
+import { PrismaPasswordResetCodeRepository } from '@infrastructure/persistence/repositories/PrismaPasswordResetCodeRepository';
 import { PrismaPasskeyRepository } from '@infrastructure/persistence/repositories/PrismaPasskeyRepository';
 import { GetMfaStatus } from '@application/use-cases/auth/GetMfaStatus';
 import { SetupTotp } from '@application/use-cases/auth/SetupTotp';
@@ -190,8 +195,11 @@ export class Container {
   private _exportMyData!: ExportMyData;
   private _requestEmailVerificationCode!: RequestEmailVerificationCode;
   private _verifyEmailCode!: VerifyEmailCode;
+  private _requestPasswordResetCode!: RequestPasswordResetCode;
+  private _resetPasswordWithCode!: ResetPasswordWithCode;
   private _mfaRepository!: IMfaRepository;
   private _emailVerificationCodeRepository!: IEmailVerificationCodeRepository;
+  private _passwordResetCodeRepository!: IPasswordResetCodeRepository;
   private _passkeyRepository!: IPasskeyRepository;
   private _stepUpPasswordVerifier!: StepUpPasswordVerifier;
   private _registerPasskeyOptions!: RegisterPasskeyOptions;
@@ -357,6 +365,7 @@ export class Container {
       this._invitacionRepository = new InMemoryInvitacionRepository();
       this._permisoRepository = new InMemoryPermisoRepository();
       this._emailVerificationCodeRepository = new InMemoryEmailVerificationCodeRepository();
+      this._passwordResetCodeRepository = new InMemoryPasswordResetCodeRepository();
       this._auditRepository = { save: async () => success({} as any), findById: async () => success(null), find: async () => success([]), count: async () => success(0) };
       this._blueprintRepository = {
         save: async (bp: any) => success(bp),
@@ -401,6 +410,7 @@ export class Container {
     this._usuarioRepository = new PrismaUsuarioRepository(this._prisma);
     this._mfaRepository = new PrismaMfaRepository(this._prisma);
     this._emailVerificationCodeRepository = new PrismaEmailVerificationCodeRepository(this._prisma);
+    this._passwordResetCodeRepository = new PrismaPasswordResetCodeRepository(this._prisma);
     this._passkeyRepository = new PrismaPasskeyRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
     this._productoRepository = new PrismaProductoRepository(this._prisma);
@@ -524,6 +534,18 @@ export class Container {
     this._verifyEmailCode = new VerifyEmailCode(
       this._usuarioRepository,
       this._emailVerificationCodeRepository
+    );
+
+    // Restablecimiento de contraseña por código (item 9c)
+    this._requestPasswordResetCode = new RequestPasswordResetCode(
+      this._usuarioRepository,
+      this._passwordResetCodeRepository,
+      this._emailService
+    );
+    this._resetPasswordWithCode = new ResetPasswordWithCode(
+      this._usuarioRepository,
+      this._passwordResetCodeRepository,
+      this._passwordHasher
     );
 
     this._registerUser = new RegisterUser(
@@ -793,6 +815,8 @@ export class Container {
       exportMyData: this._exportMyData,
       requestEmailVerificationCode: this._requestEmailVerificationCode,
       verifyEmailCode: this._verifyEmailCode,
+      requestPasswordResetCode: this._requestPasswordResetCode,
+      resetPasswordWithCode: this._resetPasswordWithCode,
       usuarioRepository: this._usuarioRepository,
     });
 
@@ -937,6 +961,10 @@ export class Container {
 
   public get emailVerificationCodeRepository(): IEmailVerificationCodeRepository {
     return this._emailVerificationCodeRepository;
+  }
+
+  public get passwordResetCodeRepository(): IPasswordResetCodeRepository {
+    return this._passwordResetCodeRepository;
   }
 
   public get listaRepository(): IListaRepository {

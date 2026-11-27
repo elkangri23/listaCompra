@@ -14,6 +14,7 @@ import {
   renderConfirmationEmail,
   renderNotificationEmail,
   renderVerificationCodeEmail,
+  renderPasswordResetCodeEmail,
 } from './templates/email-templates';
 
 export interface EmailConfig {
@@ -306,6 +307,39 @@ El equipo de Lista de Compra
     });
   }
 
+  async sendPasswordResetCodeEmail(
+    recipientEmail: string,
+    recipientName: string,
+    codigo: string
+  ): Promise<EmailResult> {
+    const subject = 'Tu código para restablecer la contraseña - Lista de Compra';
+
+    const html = this.generatePasswordResetCodeHtml({
+      recipientName,
+      codigo,
+    });
+
+    const text = `
+Hola ${recipientName},
+
+Has pedido restablecer tu contraseña en Lista de Compra. Tu código es: ${codigo}
+
+El código caduca en 15 minutos y solo sirve una vez.
+
+Si no pediste restablecer tu contraseña, puedes ignorar este correo: tu contraseña no cambia.
+
+Saludos,
+El equipo de Lista de Compra
+    `.trim();
+
+    return this.sendEmail({
+      to: recipientEmail,
+      subject,
+      text,
+      html
+    });
+  }
+
   async getStats(): Promise<{ sent: number; failed: number; pending: number; }> {
     return { ...this.stats };
   }
@@ -344,6 +378,13 @@ El equipo de Lista de Compra
     codigo: string;
   }): string {
     return renderVerificationCodeEmail(data);
+  }
+
+  private generatePasswordResetCodeHtml(data: {
+    recipientName: string;
+    codigo: string;
+  }): string {
+    return renderPasswordResetCodeEmail(data);
   }
 
 }

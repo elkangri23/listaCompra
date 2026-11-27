@@ -142,6 +142,20 @@ describe('NodemailerService', () => {
       expect(payload.html).toContain('15 minutos');
       expect(payload.text).toContain('482913');
     });
+
+    it('sendPasswordResetCodeEmail genera asunto y html con el código', async () => {
+      sendMock.mockResolvedValue({ data: { id: 'rst-1' }, error: null });
+
+      const result = await service.sendPasswordResetCodeEmail('v@test.local', 'Lucía', '482913');
+
+      expect(result.success).toBe(true);
+      const payload = sendMock.mock.calls[0]?.[0];
+      expect(payload.to).toEqual(['v@test.local']);
+      expect(payload.subject).toContain('restablecer la contraseña');
+      expect(payload.html).toContain('482913');
+      expect(payload.html).toContain('15 minutos');
+      expect(payload.text).toContain('482913');
+    });
   });
 
   describe('getStats', () => {
