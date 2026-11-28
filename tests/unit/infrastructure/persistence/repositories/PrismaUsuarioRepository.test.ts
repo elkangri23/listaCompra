@@ -163,19 +163,22 @@ describe('PrismaUsuarioRepository', () => {
     expect(unwrap(await repo.countActive())).toBe(7);
   });
 
-  it('search construye OR insensitive sobre nombre/apellidos/email', async () => {
+  it('search construye OR insensitive sobre nombre/apellidos/email (todos los usuarios, activos e inactivos)', async () => {
     const result = await repo.search('carlos', { page: 1, limit: 10 });
 
     expect(prisma.usuario.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          activo: true,
           OR: expect.arrayContaining([
             { nombre: { contains: 'carlos', mode: 'insensitive' } }
           ])
         })
       })
     );
+    // La búsqueda del panel de administración no filtra por activo:
+    // debe encontrar también usuarios inactivos
+    const where = prisma.usuario.findMany.mock.calls[0][0].where as Record<string, unknown>;
+    expect(where).not.toHaveProperty('activo');
     expect(unwrap(result)?.total).toBe(1);
   });
 

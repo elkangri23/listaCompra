@@ -33,6 +33,7 @@ describe('AddProduct', () => {
       deleteById: jest.fn(),
       existsById: jest.fn(),
       countByList: jest.fn(),
+      countByCreator: jest.fn(),
       getResumenByList: jest.fn(),
       markAllAsPurchased: jest.fn(),
       findByCategory: jest.fn(),

@@ -69,6 +69,7 @@ const mockProductoRepository = {
   updatePurchaseStatus: jest.fn(),
   existsByNameAndList: jest.fn(),
   countByList: jest.fn(),
+  countByCreator: jest.fn(),
   findPurchasedByList: jest.fn(),
   findUnpurchasedByList: jest.fn(),
   getResumenByList: jest.fn(),
