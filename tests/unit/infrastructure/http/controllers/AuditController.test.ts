@@ -172,4 +172,47 @@ describe('AuditController', () => {
       expect(res2.statusCode).toBe(500);
     });
   });
+
+  describe('getAdminAuditLogs', () => {
+    it('200 con sobre {success, data} y filtros pasados al use case', async () => {
+      const res = makeRes();
+      await controller.getAdminAuditLogs(makeReq({
+        query: {
+          page: '2', pageSize: '20', entityType: 'Producto', changeType: 'UPDATE',
+          changedByUserId: 'u1', startDate: '2025-01-01', endDate: '2025-12-31'
+        }
+      }), res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(global.execute).toHaveBeenCalledWith(expect.objectContaining({
+        page: 2, pageSize: 20, entityType: 'Producto', changeType: 'UPDATE',
+        changedByUserId: 'u1',
+        startDate: new Date('2025-01-01'),
+        endDate: new Date('2025-12-31')
+      }));
+    });
+
+    it('sin filtros llama con objeto vacío', async () => {
+      const res = makeRes();
+      await controller.getAdminAuditLogs(makeReq(), res);
+      expect(res.statusCode).toBe(200);
+      expect(global.execute).toHaveBeenCalledWith({});
+    });
+
+    it('ValidationError → 400 con success false y genérico → 500', async () => {
+      global.execute.mockResolvedValue(failureResult(validationError()));
+      const res = makeRes();
+      await controller.getAdminAuditLogs(makeReq(), res);
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toEqual({ fields: { page: 'debe ser >= 1' } });
+
+      global.execute.mockResolvedValue(failureResult(new Error('x')));
+      const res2 = makeRes();
+      await controller.getAdminAuditLogs(makeReq(), res2);
+      expect(res2.statusCode).toBe(500);
+      expect(res2.body.success).toBe(false);
+    });
+  });
 });

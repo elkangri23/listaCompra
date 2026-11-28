@@ -154,16 +154,17 @@ export class AuditController {
   }
 
   /**
-   * GET /api/v1/admin/audit
-   * Obtiene el historial de auditoria global (solo para administradores).
+   * Ejecuta el historial global con los filtros de la query.
+   * Compartido por /admin/audit y /admin/audit-logs: solo cambia el sobre
+   * de la respuesta ({status} frente a {success}).
    */
-  async getGlobalAuditHistoryRoute(req: Request, res: Response): Promise<Response> {
+  private async executeGlobalAuditHistory(req: Request) {
     const queryParams = this.parseQueryParams(req);
     const entityType =
       typeof req.query['entityType'] === 'string' ? req.query['entityType'].trim() : undefined;
     const entityId = typeof req.query['entityId'] === 'string' ? req.query['entityId'].trim() : undefined;
 
-    const result = await this.getGlobalAuditHistory.execute({
+    return this.getGlobalAuditHistory.execute({
       ...(queryParams.page !== undefined && { page: queryParams.page }),
       ...(queryParams.pageSize !== undefined && { pageSize: queryParams.pageSize }),
       ...(queryParams.changeType && { changeType: queryParams.changeType }),
@@ -173,6 +174,14 @@ export class AuditController {
       ...(entityType && { entityType }),
       ...(entityId && { entityId }),
     });
+  }
+
+  /**
+   * GET /api/v1/admin/audit
+   * Obtiene el historial de auditoria global (solo para administradores).
+   */
+  async getGlobalAuditHistoryRoute(req: Request, res: Response): Promise<Response> {
+    const result = await this.executeGlobalAuditHistory(req);
 
     if (result.isFailure) {
       if (result.error instanceof ValidationError) {
@@ -191,6 +200,36 @@ export class AuditController {
 
     return res.status(200).json({
       status: 'success',
+      data: result.value,
+    });
+  }
+
+  /**
+   * GET /api/v1/admin/audit-logs
+   * Vista global de auditoría para el panel de administración (solo ADMIN).
+   * Mismos datos y filtros que /admin/audit, pero con el sobre {success, data}
+   * que usan el resto de endpoints de /admin/*.
+   */
+  async getAdminAuditLogs(req: Request, res: Response): Promise<Response> {
+    const result = await this.executeGlobalAuditHistory(req);
+
+    if (result.isFailure) {
+      if (result.error instanceof ValidationError) {
+        return res.status(400).json({
+          success: false,
+          message: result.error.message,
+          errors: result.error.toJSON(),
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: result.error.message,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
       data: result.value,
     });
   }

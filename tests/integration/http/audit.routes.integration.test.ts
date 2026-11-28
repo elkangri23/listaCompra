@@ -9,6 +9,7 @@
 import request from 'supertest';
 import type { Application } from 'express';
 import { Password } from '../../../src/domain/value-objects/Password';
+import { RolUsuario } from '../../../src/domain/entities/Usuario';
 
 const ADMIN_EMAIL = 'audit-admin@test.local';
 const ADMIN_PASSWORD = 'Admin123!';
@@ -17,6 +18,7 @@ describe('Audit Routes Integration Test', () => {
   let app: Application;
   let prisma: any;
   let token: string;
+  let userToken: string;
   let adminUserId: string;
 
   beforeAll(async () => {
@@ -87,6 +89,17 @@ describe('Audit Routes Integration Test', () => {
       ?? loginResponse.body.data?.accessToken
       ?? loginResponse.body.accessToken;
     expect(token).toBeTruthy();
+
+    // Token USUARIO (sin pasar por BD: requireAdmin solo mira el rol del JWT)
+    const userPair = await container.tokenService.generateTokenPair({
+      userId: '33333333-3333-4333-8333-333333333333',
+      email: 'audit-usuario@test.local',
+      role: RolUsuario.USUARIO,
+    });
+    if (userPair.isFailure) {
+      throw new Error('No se pudo emitir el token USUARIO de test');
+    }
+    userToken = userPair.value.accessToken;
   }, 60000);
 
   afterAll(async () => {
@@ -162,5 +175,132 @@ describe('Audit Routes Integration Test', () => {
       .get('/api/v1/admin/audit');
 
     expect(response.status).toBe(401);
+  });
+
+  describe('GET /api/v1/admin/audit-logs (fase 4, panel admin)', () => {
+    it('ADMIN lista con sobre {success, data} y entradas reales', async () => {
+      await prisma.auditEntry.createMany({
+        data: [
+          { entityType: 'Lista', entityId: 'l1', changeType: 'UPDATE', changedByUserId: adminUserId },
+          { entityType: 'Producto', entityId: 'p1', changeType: 'UPDATE', changedByUserId: adminUserId },
+        ],
+      });
+
+      const response = await request(app)
+        .get('/api/v1/admin/audit-logs')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.total).toBe(2);
+      expect(response.body.data.entries).toHaveLength(2);
+      expect(response.body.data.entries[0].entityType).toBeDefined();
+      expect(response.body.data.page).toBe(1);
+      expect(response.body.data.pageSize).toBe(10);
+    });
+
+    it('filtra por entityType', async () => {
+      await prisma.auditEntry.createMany({
+        data: [
+          { entityType: 'Lista', entityId: 'l1', changeType: 'UPDATE' },
+          { entityType: 'Producto', entityId: 'p1', changeType: 'UPDATE' },
+          { entityType: 'Producto', entityId: 'p2', changeType: 'CREATE' },
+        ],
+      });
+
+      const response = await request(app)
+        .get('/api/v1/admin/audit-logs?entityType=Producto')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.total).toBe(2);
+      expect(response.body.data.entries.every((e: any) => e.entityType === 'Producto')).toBe(true);
+    });
+
+    it('filtra por changeType y por changedByUserId', async () => {
+      await prisma.auditEntry.createMany({
+        data: [
+          { entityType: 'Lista', entityId: 'l1', changeType: 'CREATE', changedByUserId: adminUserId },
+          { entityType: 'Lista', entityId: 'l2', changeType: 'UPDATE', changedByUserId: adminUserId },
+          { entityType: 'Lista', entityId: 'l3', changeType: 'UPDATE', changedByUserId: 'otro-usuario' },
+        ],
+      });
+
+      const byType = await request(app)
+        .get('/api/v1/admin/audit-logs?changeType=CREATE')
+        .set('Authorization', `Bearer ${token}`);
+      expect(byType.body.data.total).toBe(1);
+      expect(byType.body.data.entries[0].entityId).toBe('l1');
+
+      const byUser = await request(app)
+        .get(`/api/v1/admin/audit-logs?changedByUserId=${adminUserId}`)
+        .set('Authorization', `Bearer ${token}`);
+      expect(byUser.body.data.total).toBe(2);
+    });
+
+    it('filtra por fechas', async () => {
+      await prisma.auditEntry.createMany({
+        data: [
+          { entityType: 'Lista', entityId: 'l-vieja', changeType: 'UPDATE', timestamp: new Date('2025-01-15T10:00:00Z') },
+          { entityType: 'Lista', entityId: 'l-nueva', changeType: 'UPDATE', timestamp: new Date('2025-06-15T10:00:00Z') },
+        ],
+      });
+
+      const response = await request(app)
+        .get('/api/v1/admin/audit-logs?startDate=2025-06-01T00:00:00Z&endDate=2025-12-31T23:59:59Z')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.total).toBe(1);
+      expect(response.body.data.entries[0].entityId).toBe('l-nueva');
+    });
+
+    it('pagina: page 2 de 12 con pageSize 5', async () => {
+      await prisma.auditEntry.createMany({
+        data: Array.from({ length: 12 }, (_, i) => ({
+          entityType: 'Producto',
+          entityId: `p-${i}`,
+          changeType: 'UPDATE' as const,
+        })),
+      });
+
+      const response = await request(app)
+        .get('/api/v1/admin/audit-logs?page=2&pageSize=5')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.total).toBe(12);
+      expect(response.body.data.entries).toHaveLength(5);
+      expect(response.body.data.page).toBe(2);
+      expect(response.body.data.pageSize).toBe(5);
+      expect(response.body.data.totalPages).toBe(3);
+    });
+
+    it('lista vacía → total 0 sin error', async () => {
+      const response = await request(app)
+        .get('/api/v1/admin/audit-logs')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.total).toBe(0);
+      expect(response.body.data.entries).toEqual([]);
+      expect(response.body.data.totalPages).toBe(0);
+    });
+
+    it('USUARIO → 403 ADMIN_ROLE_REQUIRED', async () => {
+      const response = await request(app)
+        .get('/api/v1/admin/audit-logs')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(response.status).toBe(403);
+      expect(response.body.code).toBe('ADMIN_ROLE_REQUIRED');
+    });
+
+    it('sin token → 401', async () => {
+      const response = await request(app).get('/api/v1/admin/audit-logs');
+
+      expect(response.status).toBe(401);
+    });
   });
 });

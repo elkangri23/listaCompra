@@ -5,6 +5,7 @@
 
 import { Router } from 'express';
 import type { AdminController } from '@infrastructure/http/controllers/AdminController';
+import type { AuditController } from '@infrastructure/http/controllers/AuditController';
 import { validationMiddleware } from '@infrastructure/http/middlewares/validationMiddleware';
 import { createAdminRateLimitMiddleware } from '@infrastructure/http/middlewares/adminRateLimitMiddleware';
 import { securityTestEndpoint } from '../../security/SecurityTestingService';
@@ -42,7 +43,10 @@ const updateUserStatusSchema = z.object({
 export function createAdminRoutes(
   adminController: AdminController,
   authMiddleware: any,
-  adminMiddleware: any
+  adminMiddleware: any,
+  // Opcional para no romper los montajes de tests que solo usan AdminController:
+  // sin él, la ruta /audit-logs no se registra.
+  auditController?: AuditController
 ): Router {
   const router = Router();
   
@@ -635,6 +639,87 @@ export function createAdminRoutes(
     validationMiddleware(updateUserStatusSchema),
     (req: any, res: any) => adminController.updateUserStatus(req, res)
   );
+
+  /**
+   * @swagger
+   * /api/v1/admin/audit-logs:
+   *   get:
+   *     summary: Vista global de auditoría (panel de administración)
+   *     description: Lista los cambios registrados en audit_entries, paginados y con filtros. Solo administradores. Mismos datos que /admin/audit con el sobre {success, data} del resto de /admin/*.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           default: 1
+   *         description: Número de página.
+   *       - in: query
+   *         name: pageSize
+   *         schema:
+   *           type: integer
+   *           default: 10
+   *         description: Tamaño de página.
+   *       - in: query
+   *         name: entityType
+   *         schema:
+   *           type: string
+   *           enum: [Lista, Producto]
+   *         description: Tipo de entidad a filtrar.
+   *       - in: query
+   *         name: changeType
+   *         schema:
+   *           type: string
+   *           enum: [CREATE, UPDATE, DELETE]
+   *         description: Tipo de cambio a filtrar.
+   *       - in: query
+   *         name: changedByUserId
+   *         schema:
+   *           type: string
+   *         description: ID del usuario que realizó el cambio.
+   *       - in: query
+   *         name: startDate
+   *         schema:
+   *           type: string
+   *           format: date-time
+   *         description: Fecha de inicio para filtrar.
+   *       - in: query
+   *         name: endDate
+   *         schema:
+   *           type: string
+   *           format: date-time
+   *         description: Fecha de fin para filtrar.
+   *     responses:
+   *       200:
+   *         description: Historial global de auditoría.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   $ref: '#/components/schemas/AuditHistoryResponse'
+   *       401:
+   *         $ref: '#/components/responses/UnauthorizedError'
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
+  if (auditController) {
+    router.get(
+      '/audit-logs',
+      authMiddleware,
+      adminMiddleware,
+      adminRateLimitMiddleware,
+      (req: any, res: any) => auditController.getAdminAuditLogs(req, res)
+    );
+  }
 
   return router;
 }
