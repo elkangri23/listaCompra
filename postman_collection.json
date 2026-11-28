@@ -3959,6 +3959,52 @@
           "response": []
         },
         {
+          "name": "Auditoría Global — Panel Admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/audit-logs?page=1&pageSize=10&entityType=Lista&changeType=UPDATE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "entityType",
+                  "value": "Lista"
+                },
+                {
+                  "key": "changeType",
+                  "value": "UPDATE"
+                }
+              ]
+            },
+            "description": "Vista global de auditoría del panel de administración (fase 4). Mismos datos y filtros que /admin/audit pero con el sobre {success, data} del resto de /admin/*. Filtros: entityType (Lista|Producto), changeType (CREATE|UPDATE|DELETE), changedByUserId, startDate, endDate. Solo ADMIN (403 ADMIN_ROLE_REQUIRED para USUARIO)."
+          },
+          "response": []
+        },
+        {
           "name": "Auditoría de Lista",
           "request": {
             "method": "GET",

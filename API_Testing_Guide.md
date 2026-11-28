@@ -949,6 +949,12 @@ DELETE {{baseUrl}}/lists/{{listId}}/collaborators/{{targetUserId}}
 # Auditoría global paginada (ADMIN): filtros entityType/entityId/changeType/startDate/endDate
 GET {{baseUrl}}/admin/audit?page=1&pageSize=10&entityType=Producto
 
+# Auditoría global del panel de administración (fase 4, ADMIN): mismos datos
+# y filtros que /admin/audit, con el sobre {success, data} del resto de /admin/*
+GET {{baseUrl}}/admin/audit-logs?page=1&pageSize=10&entityType=Lista&changeType=UPDATE
+# Sin token → 401; USUARIO → 403 ADMIN_ROLE_REQUIRED
+# Nota: en producción solo hay eventos Lista y Producto (sin eventos de Usuario).
+
 # Auditoría por recurso
 GET {{baseUrl}}/audit/lists/{{listId}}
 GET {{baseUrl}}/audit/products/{{productId}}   # ?changeType=UPDATE
