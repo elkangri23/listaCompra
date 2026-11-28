@@ -50,7 +50,7 @@ describe('PrismaAIUsageEventRepository', () => {
       create: jest.fn().mockResolvedValue({ id: 'abc', ...eventInput, createdAt: new Date() }),
       findMany: jest.fn().mockResolvedValue([]),
     };
-    const repo = new PrismaAIUsageEventRepository({ aiUsageEvent: delegate });
+    const repo = new PrismaAIUsageEventRepository({ aIUsageEvent: delegate });
     const since = new Date('2026-11-22T00:00:00Z');
 
     const saved = await repo.save({ ...eventInput });
