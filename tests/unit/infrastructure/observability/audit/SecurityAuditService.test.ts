@@ -5,7 +5,7 @@
  * - RabbitMQEventPublisher
  */
 
-import { SecurityAuditService, InMemoryAuditRepository, AuditEventType } from '../../../../../src/infrastructure/observability/audit/SecurityAuditService';
+import { SecurityAuditService, InMemoryAuditRepository, AuditEventType, type AuditEvent } from '../../../../../src/infrastructure/observability/audit/SecurityAuditService';
 import { GetGlobalAuditHistory } from '../../../../../src/application/use-cases/audit/GetGlobalAuditHistory';
 import { GetAuditHistoryForProduct } from '../../../../../src/application/use-cases/audit/GetAuditHistoryForProduct';
 import { RabbitMQEventPublisher } from '../../../../../src/infrastructure/messaging/rabbitmq/RabbitMQEventPublisher';
@@ -365,5 +365,130 @@ describe('RabbitMQEventPublisher', () => {
     await pub.initialize();
     const r = (await pub.close()) as any;
     expect(r.isSuccess).toBe(true);
+  });
+});
+
+describe('SecurityAuditService — ramas restantes', () => {
+  let repo: any;
+  let logger: any;
+  let service: SecurityAuditService;
+
+  beforeEach(() => {
+    repo = {
+      save: jest.fn().mockResolvedValue(undefined),
+      findByEventType: jest.fn().mockResolvedValue([]),
+      getStats: jest.fn().mockResolvedValue({ totalEvents: 0 }),
+      findByUserId: jest.fn().mockResolvedValue([]),
+      findByRiskLevel: jest.fn().mockResolvedValue([])
+    };
+    logger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
+    service = new SecurityAuditService(repo, logger);
+  });
+
+  const baseEvent = {
+    eventType: AuditEventType.AUTH_LOGIN,
+    resourceType: 'auth',
+    action: 'login',
+    outcome: 'SUCCESS' as const,
+    details: {},
+    riskLevel: 'LOW' as const
+  };
+
+  it('createAuditEventData conserva resourceId, ipAddress y userAgent si existen', async () => {
+    await service.logLoginAttempt('u1', 'a@b.com', true, '10.0.0.1', 'UA-Test/1.0');
+    const saved = repo.save.mock.calls[0][0];
+    expect(saved.ipAddress).toBe('10.0.0.1');
+    expect(saved.userAgent).toBe('UA-Test/1.0');
+  });
+
+  it('getHighRiskEvents combina CRITICAL y HIGH ordenados por timestamp desc', async () => {
+    const older = { ...baseEvent, riskLevel: 'HIGH' as const, timestamp: new Date('2025-01-01') };
+    const newer = { ...baseEvent, riskLevel: 'CRITICAL' as const, timestamp: new Date('2025-06-01') };
+    repo.findByRiskLevel.mockImplementation(async (level: string) =>
+      level === 'HIGH' ? [older] : [newer]
+    );
+
+    const result = await service.getHighRiskEvents();
+    expect(result).toHaveLength(2);
+    expect(result[0]?.riskLevel).toBe('CRITICAL');
+    expect(result[1]?.riskLevel).toBe('HIGH');
+  });
+});
+
+describe('InMemoryAuditRepository — sorting, paginación y retención', () => {
+  let repo: InMemoryAuditRepository;
+
+  const event = (over: Partial<AuditEvent> = {}): AuditEvent => ({
+    id: 'id',
+    timestamp: new Date(),
+    eventType: AuditEventType.AUTH_LOGIN,
+    resourceType: 'auth',
+    action: 'login',
+    outcome: 'SUCCESS' as const,
+    details: {},
+    riskLevel: 'LOW' as const,
+    ...over
+  });
+
+  beforeEach(() => {
+    repo = new InMemoryAuditRepository();
+  });
+
+  it('applyOptions con sortBy=timestamp asc ordena cronológicamente', async () => {
+    await repo.save(event({ id: 'a', userId: 'x', timestamp: new Date('2025-03-01') }));
+    await repo.save(event({ id: 'b', userId: 'x', timestamp: new Date('2025-01-01') }));
+    await repo.save(event({ id: 'c', userId: 'x', timestamp: new Date('2025-02-01') }));
+
+    const r = await repo.findByUserId('x', { sortBy: 'timestamp', sortOrder: 'asc' });
+    expect(r.map((e) => e.id)).toEqual(['b', 'c', 'a']);
+  });
+
+  it('applyOptions con sortBy distinto de timestamp no reordena', async () => {
+    await repo.save(event({ id: 'a', userId: 'x' }));
+    await repo.save(event({ id: 'b', userId: 'x' }));
+
+    const r = await repo.findByUserId('x', { sortBy: 'riskLevel' } as any);
+    expect(r).toHaveLength(2);
+  });
+
+  it('applyOptions aplica offset y limit', async () => {
+    for (let i = 0; i < 5; i++) {
+      await repo.save(event({ id: `e${i}`, userId: 'x' }));
+    }
+
+    const r = await repo.findByUserId('x', { offset: 1, limit: 2 });
+    expect(r.map((e) => e.id)).toEqual(['e1', 'e2']);
+  });
+
+  it('getStats calcula la ventana según timeframe (hour/day/week/month)', async () => {
+    await repo.save(event());
+    for (const tf of ['hour', 'day', 'week', 'month'] as const) {
+      const stats = await repo.getStats(tf);
+      expect(stats.totalEvents).toBe(1);
+    }
+  });
+
+  it('save descarta eventos antiguos al superar 10000 (retención)', async () => {
+    for (let i = 0; i < 10002; i++) {
+      await repo.save(event({ id: `ev-${i}` }));
+    }
+    // Accedemos al estado interno vía la API pública: se conservan los últimos 10000
+    const all = await repo.findByDateRange(new Date(0), new Date(Date.now() + 86400000));
+    expect(all).toHaveLength(10000);
+  });
+
+  it('findByEventType y findByDateRange aplican opciones', async () => {
+    await repo.save(event({ id: 'a' }));
+    await repo.save(event({ id: 'b' }));
+
+    const byType = await repo.findByEventType(AuditEventType.AUTH_LOGIN, { limit: 1 });
+    expect(byType).toHaveLength(1);
+
+    const byRange = await repo.findByDateRange(
+      new Date(Date.now() - 60000),
+      new Date(Date.now() + 60000),
+      { offset: 1 }
+    );
+    expect(byRange).toHaveLength(1);
   });
 });

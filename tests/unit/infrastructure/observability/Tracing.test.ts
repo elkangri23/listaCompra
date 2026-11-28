@@ -161,3 +161,76 @@ describe('Tracing bootstrap', () => {
     expect(nodeSdkConstructor).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('Tracing ramas de error y cabeceras OTLP', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    startMock.mockReset();
+    shutdownMock.mockReset();
+    otlpExporterConstructor.mockClear();
+    process.env = { ...originalEnv };
+    delete process.env['TRACING_ENABLED'];
+    delete process.env['OTEL_EXPORTER_OTLP_HEADERS'];
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  function importTracing() {
+    let tracingModule: typeof TracingModule | undefined;
+    jest.isolateModules(() => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      tracingModule = require('../../../../src/infrastructure/observability/tracing/Tracing');
+    });
+
+    if (!tracingModule) {
+      throw new Error('No se pudo cargar el módulo de tracing en pruebas');
+    }
+
+    return tracingModule;
+  }
+
+  test('shutdownTracing sin SDK activo es un no-op', async () => {
+    const { shutdownTracing, isTracingEnabled } = importTracing();
+
+    await expect(shutdownTracing()).resolves.toBeUndefined();
+    expect(shutdownMock).not.toHaveBeenCalled();
+    expect(isTracingEnabled()).toBe(false);
+  });
+
+  test('shutdownTracing captura errores del SDK y limpia el estado', async () => {
+    process.env['TRACING_ENABLED'] = 'true';
+    startMock.mockResolvedValue();
+    shutdownMock.mockRejectedValueOnce(new Error('shutdown boom'));
+
+    const { initializeTracing, shutdownTracing, isTracingEnabled } = importTracing();
+
+    await initializeTracing();
+    await expect(shutdownTracing()).resolves.toBeUndefined();
+
+    expect(shutdownMock).toHaveBeenCalledTimes(1);
+    expect(isTracingEnabled()).toBe(false);
+  });
+
+  test('parsea OTEL_EXPORTER_OTLP_HEADERS en pares clave=valor', async () => {
+    process.env['TRACING_ENABLED'] = 'true';
+    process.env['OTEL_EXPORTER_OTLP_HEADERS'] =
+      'authorization=Bearer token123, malformed-header,  , x-tenant=acme';
+    startMock.mockResolvedValue();
+
+    const { initializeTracing } = importTracing();
+    await initializeTracing();
+
+    expect(otlpExporterConstructor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: {
+          authorization: 'Bearer token123',
+          'x-tenant': 'acme'
+        }
+      })
+    );
+  });
+});

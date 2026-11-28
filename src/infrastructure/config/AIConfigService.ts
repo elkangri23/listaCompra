@@ -5,9 +5,10 @@
  * variables de entorno y puede actualizarse en caliente desde los endpoints
  * de administración (PUT /api/v1/ai/admin/config) sin reiniciar el servidor.
  *
- * Nota de alcance: la configuración vive en memoria (se resetea al reiniciar,
- * volviendo a las variables de entorno). Persistir en BD requeriría una
- * migración; se documenta como mejora futura.
+ * Nota de alcance: la configuración efectiva se persiste en .env (Opción B)
+ * tras cada actualización en caliente, de modo que sobrevive a reinicios del
+ * servidor sin necesidad de base de datos. La persistencia en BD (tabla de
+ * configuración) queda documentada como mejora futura.
  */
 
 import type { AIConfig, AIProviderId, PerplexityConfig} from './ai.config';

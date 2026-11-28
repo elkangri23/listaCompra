@@ -660,9 +660,9 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 8. ✅ **Postman**: 82 requests; API_Testing_Guide.md con CU-30/CU-31
 
 #### Pendiente (Fase 19):
-- MFA/TOTP (fase 1 en desarrollo por agente paralelo)
-- Coverage > 80%: CacheIntegrityService, container.ts, controladores IA restantes
-- Persistir config IA en BD (ahora en memoria)
+- ~~MFA/TOTP~~ ✅ Implementado (migraciones `mfa_totp_phase1`/`mfa_passkeys_phase2`, rutas `mfaRoutes.ts`)
+- ~~Persistir config IA~~ ✅ Resuelto con persistencia en .env (Opción B, `EnvFileWriter`); persistencia en BD queda como mejora futura
+- ~~Coverage > 80%~~ ✅ Superado el 80%: AIController, DTOs IA (CU-30/CU-33), DomainEventFactory, CacheIntegrityService, AIConfigController (92%+); MfaController/PerplexityService/Container como siguientes objetivos
 
 ---
 
