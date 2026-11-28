@@ -179,7 +179,7 @@ Ver sección [MFA & Passkeys](#-nuevo-mfa--passkeys-cu-mfa-fases-1-3) más abajo
 - ✅ Recomendaciones por producto (`GET /recommendations/:listId/for-product/:productId`)
 - ✅ Ejemplos de contexto (`GET /recommendations/context-examples`)
 
-### 👑 Administración (7 endpoints)
+### 👑 Administración (11 endpoints)
 - ✅ Iniciar impersonación (`POST /admin/impersonate`)
 - ✅ Finalizar impersonación (`DELETE /admin/impersonate`)
 - ✅ Estado de impersonación (`GET /admin/impersonate/status`)
@@ -187,6 +187,10 @@ Ver sección [MFA & Passkeys](#-nuevo-mfa--passkeys-cu-mfa-fases-1-3) más abajo
 - ✅ Security Test Suite (`GET /admin/security/test`)
 - ✅ Listar usuarios (`GET /admin/users?q=&page=1&limit=20`)
 - ✅ Activar / desactivar usuario (`PATCH /admin/users/:id/status`)
+- ✅ Listar copias de seguridad (`GET /admin/backups?page=1&pageSize=20`) — fase 6
+- ✅ Solicitar copia manual (`POST /admin/backups`) — fase 6, 201 PENDING; 409 si ya hay una PENDING
+- ✅ Descargar copia (`GET /admin/backups/:id/download`) — fase 6, .sql.gz; 404 si el fichero no está en disco
+- ✅ Solicitar restauración (`POST /admin/backups/:id/restore`) — fase 6, 202 RESTORING; confirmacion "RESTAURAR" + motivo
 
 ### 📊 Dashboard y Monitoreo (4 endpoints)
 - ✅ Métricas (`GET /dashboard/metrics`)
@@ -972,6 +976,37 @@ GET {{baseUrl}}/admin/security/login-attempts?page=1&pageSize=20&success=false
 # alertas, la lista viene vacía.
 GET {{baseUrl}}/admin/security/alerts?page=1&pageSize=20
 
+# Copias de seguridad (fase 6, ADMIN): copias reales de la base de datos.
+# El backend solo REGISTRA y EXPONE; el dump y la restauración los hacen
+# scripts del host + cron en el VPS (backup-prod.sh, backup-watcher.sh
+# cada 5 min, restore-prod.sh), porque el contenedor de la API no puede
+# ejecutar comandos del host ni docker exec. Ciclo: PENDING → CREATED |
+# FAILED (creación) y CREATED → RESTORING → RESTORED | RESTORE_FAILED.
+# Listar (fecha desc, pageSize por defecto 20, máx. 100):
+GET {{baseUrl}}/admin/backups?page=1&pageSize=20
+
+# Solicitar una copia manual (201, PENDING, source MANUAL, filename
+# provisional manual-<uuid>.sql.gz; el watcher la procesa y la fila pasa
+# a CREATED con filename y sizeBytes reales, o a FAILED con failureReason).
+# Segunda solicitud con una PENDING → 409.
+POST {{baseUrl}}/admin/backups
+
+# Descargar el .sql.gz (200, application/gzip). 404 si la copia no existe
+# o el fichero no está en disco. Verificar con: gzip -t <fichero>.
+GET {{baseUrl}}/admin/backups/{{backupId}}/download
+
+# Solicitar una restauración (202, RESTORING). Requiere confirmacion
+# exactamente "RESTAURAR" y motivo no vacío (400 si no); 404 si la copia
+# no existe; 400 si es PENDING o FAILED; 409 si ya hay una restauración
+# solicitada o en curso. restore-prod.sh ENSAYA primero en una base
+# aislada y solo si el ensayo pasa crea una copia pre-restore, para la
+# API y restaura. ⚠️ Reescribe la base de producción: solo con necesidad real.
+POST {{baseUrl}}/admin/backups/{{backupId}}/restore
+{
+  "confirmacion": "RESTAURAR",
+  "motivo": "Revertir el despliegue roto"
+}
+
 # Auditoría por recurso
 GET {{baseUrl}}/audit/lists/{{listId}}
 GET {{baseUrl}}/audit/products/{{productId}}   # ?changeType=UPDATE
@@ -993,4 +1028,4 @@ Si encuentras algún endpoint que falta o algún error en la colección:
 
 **¡Happy Testing! 🎉**
 
-Última actualización: Noviembre 2026 - Postman 118 requests (MFA/passkeys CU-MFA, auth 13A, colaboradores, auditoría, dashboard, reorden de productos)
+Última actualización: Noviembre 2026 - Postman 125 requests (MFA/passkeys CU-MFA, auth 13A, colaboradores, auditoría, dashboard, reorden de productos, copias de seguridad fase 6)

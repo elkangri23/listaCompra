@@ -11,6 +11,11 @@ import type { UpdateUserStatus } from '@application/use-cases/admin/UpdateUserSt
 import type { GetSecurityOverview } from '@application/use-cases/admin/GetSecurityOverview';
 import type { GetLoginAttempts } from '@application/use-cases/admin/GetLoginAttempts';
 import type { GetSecurityAlerts } from '@application/use-cases/admin/GetSecurityAlerts';
+import type { GetBackups } from '@application/use-cases/admin/GetBackups';
+import type { RequestBackup } from '@application/use-cases/admin/RequestBackup';
+import type { DownloadBackup } from '@application/use-cases/admin/DownloadBackup';
+import type { RequestRestore } from '@application/use-cases/admin/RequestRestore';
+import type { RequestRestoreDto } from '@application/dto/admin/BackupDto';
 import type { UpdateUserStatusDto } from '@application/dto/admin/AdminUserDto';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 import type {
@@ -68,7 +73,11 @@ export class AdminController {
     private readonly updateUserStatusUseCase?: UpdateUserStatus,
     private readonly getSecurityOverviewUseCase?: GetSecurityOverview,
     private readonly getLoginAttemptsUseCase?: GetLoginAttempts,
-    private readonly getSecurityAlertsUseCase?: GetSecurityAlerts
+    private readonly getSecurityAlertsUseCase?: GetSecurityAlerts,
+    private readonly getBackupsUseCase?: GetBackups,
+    private readonly requestBackupUseCase?: RequestBackup,
+    private readonly downloadBackupUseCase?: DownloadBackup,
+    private readonly requestRestoreUseCase?: RequestRestore
   ) {}
 
   /**
@@ -695,8 +704,269 @@ export class AdminController {
   };
 
   /**
+   * GET /admin/backups
+   * Lista paginada de copias de seguridad (fecha desc).
+   */
+  getBackups = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Usuario no autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+        return;
+      }
+
+      if (!this.getBackupsUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de copias de seguridad no disponible',
+          code: 'BACKUPS_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const page = parseQueryInt(req.query['page'], 1);
+      const pageSize = parseQueryInt(req.query['pageSize'], 20);
+
+      const result = await this.getBackupsUseCase.execute({ page, pageSize });
+
+      res.status(200).json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      logger.error('Error inesperado al listar copias de seguridad', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        adminUserId: req.user?.id
+      });
+
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  };
+
+  /**
+   * POST /admin/backups
+   * Registra una solicitud manual de copia de seguridad. SOLO registra:
+   * el dump lo hace backup-prod.sh (vía el watcher) en el host. Si ya hay
+   * una PENDING → 409.
+   */
+  requestBackup = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const adminUserId = req.user?.id;
+
+      if (!adminUserId) {
+        res.status(401).json({
+          error: 'Usuario no autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+        return;
+      }
+
+      if (!this.requestBackupUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de copias de seguridad no disponible',
+          code: 'BACKUPS_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const result = await this.requestBackupUseCase.execute(adminUserId);
+
+      if (!result.isSuccess) {
+        const statusCode = this.getErrorStatusCode(result.error);
+        logger.warn('Fallo al solicitar copia de seguridad', {
+          adminUserId,
+          error: result.error.message,
+          errorType: result.error.constructor.name
+        });
+
+        res.status(statusCode).json({
+          error: result.error.message,
+          code: result.error.constructor.name.replace('Error', '').toUpperCase()
+        });
+        return;
+      }
+
+      res.status(201).json({
+        success: true,
+        data: result.value
+      });
+    } catch (error) {
+      logger.error('Error inesperado al solicitar copia de seguridad', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        adminUserId: req.user?.id
+      });
+
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  };
+
+  /**
+   * GET /admin/backups/:id/download
+   * Descarga el .sql.gz de una copia desde el volumen /backups (solo
+   * lectura). Si la copia no existe o el fichero no está en disco → 404.
+   */
+  downloadBackup = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Usuario no autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+        return;
+      }
+
+      if (!this.downloadBackupUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de copias de seguridad no disponible',
+          code: 'BACKUPS_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const backupId = req.params['id'];
+      if (!backupId) {
+        res.status(400).json({
+          error: 'ID de copia requerido',
+          code: 'VALIDATION_ERROR'
+        });
+        return;
+      }
+
+      const result = await this.downloadBackupUseCase.execute(backupId);
+
+      if (!result.isSuccess) {
+        const statusCode = this.getErrorStatusCode(result.error);
+        logger.warn('Fallo al descargar copia de seguridad', {
+          adminUserId: req.user?.id,
+          backupId,
+          error: result.error.message,
+          errorType: result.error.constructor.name
+        });
+
+        res.status(statusCode).json({
+          error: result.error.message,
+          code: result.error.constructor.name.replace('Error', '').toUpperCase()
+        });
+        return;
+      }
+
+      res.status(200);
+      res.setHeader('Content-Type', 'application/gzip');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${result.value.filename}"`
+      );
+      res.setHeader('Content-Length', String(result.value.buffer.length));
+      res.send(result.value.buffer);
+    } catch (error) {
+      logger.error('Error inesperado al descargar copia de seguridad', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        adminUserId: req.user?.id
+      });
+
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  };
+
+  /**
+   * POST /admin/backups/:id/restore
+   * Registra una solicitud de restauración (confirmación RESTAURAR +
+   * motivo). SOLO registra: la restauración la hace restore-prod.sh (vía
+   * el watcher) en el host, previo ensayo en base aislada. 400 si la
+   * confirmación o el motivo no son válidos o la copia es PENDING/FAILED;
+   * 404 si no existe; 409 si ya hay una restauración en curso.
+   */
+  requestRestore = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const adminUserId = req.user?.id;
+
+      if (!adminUserId) {
+        res.status(401).json({
+          error: 'Usuario no autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+        return;
+      }
+
+      if (!this.requestRestoreUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de copias de seguridad no disponible',
+          code: 'BACKUPS_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const backupId = req.params['id'];
+      if (!backupId) {
+        res.status(400).json({
+          error: 'ID de copia requerido',
+          code: 'VALIDATION_ERROR'
+        });
+        return;
+      }
+      const dto: RequestRestoreDto = req.body;
+
+      const result = await this.requestRestoreUseCase.execute(
+        adminUserId,
+        backupId,
+        dto
+      );
+
+      if (!result.isSuccess) {
+        const statusCode = this.getErrorStatusCode(result.error);
+        logger.warn('Fallo al solicitar restauración de copia', {
+          adminUserId,
+          backupId,
+          error: result.error.message,
+          errorType: result.error.constructor.name
+        });
+
+        res.status(statusCode).json({
+          error: result.error.message,
+          code: result.error.constructor.name.replace('Error', '').toUpperCase()
+        });
+        return;
+      }
+
+      res.status(202).json({
+        success: true,
+        data: result.value
+      });
+    } catch (error) {
+      logger.error('Error inesperado al solicitar restauración de copia', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        adminUserId: req.user?.id
+      });
+
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  };
+
+  /**
    * Mapea tipos de error a códigos de estado HTTP
    */
+
   private getErrorStatusCode(error: Error): number {
     switch (error.constructor.name) {
     case 'ValidationError':
@@ -706,6 +976,8 @@ export class AdminController {
       return 401;
     case 'NotFoundError':
       return 404;
+    case 'ConflictError':
+      return 409;
     default:
       return 500;
     }

@@ -340,3 +340,60 @@ model LoginAttempt {
   @@index([createdAt])
   @@map("login_attempts")
 }
+
+/// Copias de seguridad reales de la base de datos (panel admin, fase 6).
+///
+/// CICLO DE VIDA (el backend solo REGISTRA y EXPONE; el trabajo pesado lo
+/// hacen scripts del host + cron en el VPS, porque el contenedor de la API
+/// no puede ejecutar comandos del host ni docker exec):
+///
+///   PENDING   → solicitud manual registrada por POST /admin/backups.
+///               El watcher (backup-watcher.sh, cada 5 min) la recoge y
+///               ejecuta backup-prod.sh <id>.
+///   CREATED   → el dump existe en /opt/listacompra/backups/ y la fila
+///               lleva filename y sizeBytes reales. También es el estado
+///               de las copias programadas (source SCHEDULED, sin pasar
+///               por PENDING) y de la copia pre-restore (salvavidas).
+///   FAILED    → la creación falló; el motivo va en `failureReason`
+///               (NUNCA en restoreReason: ese campo es solo de
+///               restauraciones) y el detalle en el log del script.
+///   RESTORING → solicitud de restauración registrada por
+///               POST /admin/backups/:id/restore (confirmación RESTAURAR
+///               + motivo). Significa a la vez "solicitada, pendiente de
+///               procesar" y "en curso": el watcher la recoge (por
+///               restoreRequestedAt no nulo) y delega en restore-prod.sh,
+///               que es el único que toca producción. Mientras haya una
+///               fila RESTORING no se acepta otra restauración (409).
+///   RESTORED  → la restauración terminó bien; restoredAt = cuando se
+///               completó. restoreReason guarda el motivo que dio el admin.
+///   RESTORE_FAILED → el ensayo o algún paso falló; el motivo va en
+///               `failureReason`. Si falló ANTES de tocar producción, la
+///               base no se tocó; si falló DESPUÉS, el log del script lo
+///               dice y la copia pre-restore permite revertir a mano.
+///
+/// Sin FK a usuarios: una copia programada no tiene creador, y la
+/// telemetría no debe interferir con la cascada GDPR de borrado de
+/// cuenta (igual que ai_usage_events y login_attempts).
+model Backup {
+  id                      String    @id @default(uuid())
+  filename                String
+  sizeBytes               Int       @default(0) // 0 mientras PENDING
+  status                  String // 'PENDING' | 'CREATED' | 'FAILED' | 'RESTORING' | 'RESTORED' | 'RESTORE_FAILED'
+  source                  String // 'SCHEDULED' | 'MANUAL'
+  createdByUserId         String?
+  createdAt               DateTime  @default(now())
+  /// Motivo de la restauración, dado por el admin que la solicitó.
+  restoreReason           String?
+  restoredAt              DateTime?
+  /// Cuándo se solicitó la restauración (distingue "solicitada, pendiente"
+  /// de "en curso": el watcher procesa las RESTORING con este campo).
+  restoreRequestedAt      DateTime?
+  restoreRequestedByUserId String?
+  /// Motivo del fallo de creación (FAILED) o de restauración
+  /// (RESTORE_FAILED). El detalle completo queda en el log del script.
+  failureReason           String?
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("backups")
+}

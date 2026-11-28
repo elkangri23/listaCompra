@@ -49,6 +49,10 @@ import { UpdateUserStatus } from '@application/use-cases/admin/UpdateUserStatus'
 import { GetSecurityOverview } from '@application/use-cases/admin/GetSecurityOverview';
 import { GetLoginAttempts } from '@application/use-cases/admin/GetLoginAttempts';
 import { GetSecurityAlerts } from '@application/use-cases/admin/GetSecurityAlerts';
+import { GetBackups } from '@application/use-cases/admin/GetBackups';
+import { RequestBackup } from '@application/use-cases/admin/RequestBackup';
+import { DownloadBackup } from '@application/use-cases/admin/DownloadBackup';
+import { RequestRestore } from '@application/use-cases/admin/RequestRestore';
 import { BulkCategorizeProducts } from '@application/use-cases/ai/BulkCategorizeProducts';
 import { GetAuditHistoryForList } from '@application/use-cases/audit/GetAuditHistoryForList';
 import { GetAuditHistoryForProduct } from '@application/use-cases/audit/GetAuditHistoryForProduct';
@@ -83,6 +87,11 @@ import { InMemoryAIUsageEventRepository } from '@infrastructure/persistence/in-m
 import { PrismaAIUsageEventRepository } from '@infrastructure/persistence/repositories/PrismaAIUsageEventRepository';
 import { InMemoryLoginAttemptRepository } from '@infrastructure/persistence/in-memory/InMemoryLoginAttemptRepository';
 import { PrismaLoginAttemptRepository } from '@infrastructure/persistence/repositories/PrismaLoginAttemptRepository';
+import { PrismaBackupRepository } from '@infrastructure/persistence/repositories/PrismaBackupRepository';
+import { InMemoryBackupRepository } from '@infrastructure/persistence/in-memory/InMemoryBackupRepository';
+import type { IBackupRepository } from '@application/ports/repositories/IBackupRepository';
+import { LocalBackupFileStore } from '@infrastructure/external-services/backup/LocalBackupFileStore';
+import type { IBackupFileStore } from '@application/ports/external/IBackupFileStore';
 import type { ILoginAttemptRepository } from '@application/ports/repositories/ILoginAttemptRepository';
 import type { ILoginAttemptRecorder } from '@application/ports/external/ILoginAttemptRecorder';
 import { LoginAttemptRecorder } from '@infrastructure/security/LoginAttemptRecorder';
@@ -266,6 +275,10 @@ export class Container {
   private _getSecurityOverview!: GetSecurityOverview;
   private _getLoginAttempts!: GetLoginAttempts;
   private _getSecurityAlerts!: GetSecurityAlerts;
+  private _getBackups!: GetBackups;
+  private _requestBackup!: RequestBackup;
+  private _downloadBackup!: DownloadBackup;
+  private _requestRestore!: RequestRestore;
   private _bulkCategorizeProducts!: BulkCategorizeProducts;
   private _getAuditHistoryForList!: GetAuditHistoryForList;
   private _getAuditHistoryForProduct!: GetAuditHistoryForProduct;
@@ -288,6 +301,8 @@ export class Container {
   private _aiUsageEventRepository!: IAIUsageEventRepository;
   private _aiUsageRecorder!: IAIUsageRecorder;
   private _loginAttemptRepository!: ILoginAttemptRepository;
+  private _backupRepository!: IBackupRepository;
+  private _backupFileStore!: IBackupFileStore;
   private _loginAttemptRecorder!: ILoginAttemptRecorder;
   private _aiHealthChecker!: AIHealthChecker;
   private _getAIUsage!: GetAIUsage;
@@ -399,6 +414,8 @@ export class Container {
       this._passwordResetCodeRepository = new InMemoryPasswordResetCodeRepository();
       this._aiUsageEventRepository = new InMemoryAIUsageEventRepository();
       this._loginAttemptRepository = new InMemoryLoginAttemptRepository();
+      this._backupRepository = new InMemoryBackupRepository();
+      this._backupFileStore = new LocalBackupFileStore();
       this._auditRepository = { save: async () => success({} as any), findById: async () => success(null), find: async () => success([]), count: async () => success(0) };
       this._blueprintRepository = {
         save: async (bp: any) => success(bp),
@@ -446,6 +463,8 @@ export class Container {
     this._passwordResetCodeRepository = new PrismaPasswordResetCodeRepository(this._prisma);
     this._aiUsageEventRepository = new PrismaAIUsageEventRepository(this._prisma);
     this._loginAttemptRepository = new PrismaLoginAttemptRepository(this._prisma);
+    this._backupRepository = new PrismaBackupRepository(this._prisma);
+    this._backupFileStore = new LocalBackupFileStore();
     this._passkeyRepository = new PrismaPasskeyRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
     this._productoRepository = new PrismaProductoRepository(this._prisma);
@@ -850,6 +869,17 @@ export class Container {
       this._usuarioRepository
     );
 
+    this._getBackups = new GetBackups(this._backupRepository);
+
+    this._requestBackup = new RequestBackup(this._backupRepository);
+
+    this._downloadBackup = new DownloadBackup(
+      this._backupRepository,
+      this._backupFileStore
+    );
+
+    this._requestRestore = new RequestRestore(this._backupRepository);
+
     this._bulkCategorizeProducts = new BulkCategorizeProducts(
       this._aiService,
       this._usuarioRepository,
@@ -969,7 +999,11 @@ export class Container {
       this._updateUserStatus,
       this._getSecurityOverview,
       this._getLoginAttempts,
-      this._getSecurityAlerts
+      this._getSecurityAlerts,
+      this._getBackups,
+      this._requestBackup,
+      this._downloadBackup,
+      this._requestRestore
     );
 
     this._recommendationsController = new RecommendationsController(

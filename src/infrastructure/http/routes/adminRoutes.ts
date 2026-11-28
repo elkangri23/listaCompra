@@ -40,6 +40,17 @@ const updateUserStatusSchema = z.object({
   })
 });
 
+// Restauración de copia (fase 6): la validación de negocio (confirmación
+// exactamente "RESTAURAR", motivo no vacío) vive en el caso de uso
+// RequestRestore; aquí solo se exige que vengan los dos campos como
+// cadenas, para que el 400 del caso de uso tenga su mensaje exacto.
+const requestRestoreSchema = z.object({
+  body: z.object({
+    confirmacion: z.string(),
+    motivo: z.string()
+  })
+});
+
 export function createAdminRoutes(
   adminController: AdminController,
   authMiddleware: any,
@@ -910,7 +921,282 @@ export function createAdminRoutes(
 
   /**
    * @swagger
+   * /api/v1/admin/backups:
+   *   get:
+   *     summary: Listar copias de seguridad
+   *     description: Lista las copias de seguridad reales de la base de datos, ordenadas por fecha descendente, paginadas. Solo administradores.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *         description: Número de página
+   *       - in: query
+   *         name: pageSize
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 20
+   *         description: Elementos por página
+   *     responses:
+   *       200:
+   *         description: Listado de copias de seguridad
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     backups:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           id:
+   *                             type: string
+   *                           filename:
+   *                             type: string
+   *                           sizeBytes:
+   *                             type: integer
+   *                           status:
+   *                             type: string
+   *                             enum: [PENDING, CREATED, FAILED, RESTORING, RESTORED, RESTORE_FAILED]
+   *                           source:
+   *                             type: string
+   *                             enum: [SCHEDULED, MANUAL]
+   *                           createdAt:
+   *                             type: string
+   *                             format: date-time
+   *                           createdByUserId:
+   *                             type: string
+   *                             nullable: true
+   *                           restoreReason:
+   *                             type: string
+   *                             nullable: true
+   *                           restoredAt:
+   *                             type: string
+   *                             format: date-time
+   *                             nullable: true
+   *                           failureReason:
+   *                             type: string
+   *                             nullable: true
+   *                     total:
+   *                       type: integer
+   *                     page:
+   *                       type: integer
+   *                     pageSize:
+   *                       type: integer
+   *                     totalPages:
+   *                       type: integer
+   *       401:
+   *         description: Token no válido o expirado
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.get(
+    '/backups',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    (req: any, res: any) => adminController.getBackups(req, res)
+  );
+
+  /**
+   * @swagger
+   * /api/v1/admin/backups:
+   *   post:
+   *     summary: Solicitar una copia de seguridad manual
+   *     description: Registra una solicitud de copia de seguridad (status PENDING, source MANUAL). NO hace el dump: el watcher del host (backup-watcher.sh, cada 5 min) recoge la solicitud y ejecuta backup-prod.sh. Si ya hay una PENDING, devuelve 409.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       201:
+   *         description: Solicitud de copia registrada
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     backup:
+   *                       type: object
+   *                       properties:
+   *                         id:
+   *                           type: string
+   *                         filename:
+   *                           type: string
+   *                         sizeBytes:
+   *                           type: integer
+   *                         status:
+   *                           type: string
+   *                           enum: [PENDING]
+   *                         source:
+   *                           type: string
+   *                           enum: [MANUAL]
+   *                         createdAt:
+   *                           type: string
+   *                           format: date-time
+   *                         createdByUserId:
+   *                           type: string
+   *       401:
+   *         description: Token no válido o expirado
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       409:
+   *         description: Ya hay una copia de seguridad pendiente de procesar
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.post(
+    '/backups',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    (req: any, res: any) => adminController.requestBackup(req, res)
+  );
+
+  /**
+   * @swagger
+   * /api/v1/admin/backups/{id}/download:
+   *   get:
+   *     summary: Descargar el fichero de una copia de seguridad
+   *     description: Descarga el .sql.gz de la copia desde el volumen /backups (solo lectura). Si la copia no existe o el fichero no está en disco, devuelve 404.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: ID de la copia
+   *     responses:
+   *       200:
+   *         description: Fichero .sql.gz de la copia
+   *         content:
+   *           application/gzip:
+   *             schema:
+   *               type: string
+   *               format: binary
+   *       401:
+   *         description: Token no válido o expirado
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       404:
+   *         description: Copia no encontrada o fichero no disponible en disco
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.get(
+    '/backups/:id/download',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    (req: any, res: any) => adminController.downloadBackup(req, res)
+  );
+
+  /**
+   * @swagger
+   * /api/v1/admin/backups/{id}/restore:
+   *   post:
+   *     summary: Solicitar la restauración de una copia de seguridad
+   *     description: Registra una solicitud de restauración (status RESTORING). NO restaura nada directamente: el watcher del host delega en restore-prod.sh, que primero ensaya en una base aislada y solo si el ensayo pasa crea una copia pre-restore, para la API y restaura. Requiere confirmacion exactamente "RESTAURAR" y un motivo no vacío.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: ID de la copia
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               confirmacion:
+   *                 type: string
+   *                 example: RESTAURAR
+   *                 description: Palabra de confirmación, exactamente "RESTAURAR"
+   *               motivo:
+   *                 type: string
+   *                 description: Motivo no vacío de la restauración
+   *             required:
+   *               - confirmacion
+   *               - motivo
+   *     responses:
+   *       202:
+   *         description: Solicitud de restauración registrada
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     backup:
+   *                       type: object
+   *                       properties:
+   *                         id:
+   *                           type: string
+   *                         status:
+   *                           type: string
+   *                           enum: [RESTORING]
+   *                         restoreReason:
+   *                           type: string
+   *       400:
+   *         description: Confirmación distinta de "RESTAURAR", motivo vacío, o copia PENDING/FAILED
+   *       401:
+   *         description: Token no válido o expirado
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       404:
+   *         description: Copia no encontrada
+   *       409:
+   *         description: Ya hay una restauración solicitada o en curso
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.post(
+    '/backups/:id/restore',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    validationMiddleware(requestRestoreSchema),
+    (req: any, res: any) => adminController.requestRestore(req, res)
+  );
+
+  /**
+   * @swagger
    * /api/v1/admin/audit-logs:
+
    *   get:
    *     summary: Vista global de auditoría (panel de administración)
    *     description: Lista los cambios registrados en audit_entries, paginados y con filtros. Solo administradores. Mismos datos que /admin/audit con el sobre {success, data} del resto de /admin/*.

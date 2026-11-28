@@ -4113,6 +4113,169 @@
           "response": []
         },
         {
+          "name": "Copias — Listar (Panel Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/backups?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "backups"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Lista las copias de seguridad reales de la base de datos (fase 6), ordenadas por fecha desc, paginadas. Campos por copia: id, filename, sizeBytes (0 mientras PENDING), status (PENDING | CREATED | FAILED | RESTORING | RESTORED | RESTORE_FAILED), source (SCHEDULED | MANUAL), createdAt, createdByUserId, restoreReason, restoredAt, failureReason. Solo ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Copias — Solicitar Manual (Panel Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 y backup PENDING', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.backup.status).to.eql('PENDING');",
+                  "    pm.collectionVariables.set('backupId', json.data.backup.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/backups",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "backups"
+              ]
+            },
+            "description": "Registra una solicitud manual de copia de seguridad (201, status PENDING, source MANUAL, filename provisional manual-<uuid>.sql.gz). SOLO registra: el watcher del host (backup-watcher.sh, cada 5 min) recoge la PENDING y ejecuta backup-prod.sh, que actualiza la fila a CREATED con filename y sizeBytes reales o a FAILED con failureReason. Si ya hay una PENDING → 409. Solo ADMIN. El test guarda el id en {{backupId}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Copias — Descargar (Panel Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/backups/{{backupId}}/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "backups",
+                "{{backupId}}",
+                "download"
+              ]
+            },
+            "description": "Descarga el .sql.gz de la copia (200, Content-Type application/gzip, Content-Disposition attachment). Lee del volumen /backups (solo lectura). Si la copia no existe o el fichero no está en disco → 404. Solo ADMIN. Verificar el contenido con: gzip -t <fichero descargado>."
+          },
+          "response": []
+        },
+        {
+          "name": "Copias — Solicitar Restauración (Panel Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 202 y backup RESTORING', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.backup.status).to.eql('RESTORING');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/backups/{{backupId}}/restore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "backups",
+                "{{backupId}}",
+                "restore"
+              ]
+            },
+            "description": "Registra una solicitud de restauración (202, status RESTORING, restoreReason=motivo). Requiere confirmacion exactamente \"RESTAURAR\" y motivo no vacío (400 si no). 404 si la copia no existe; 400 si es PENDING o FAILED; 409 si ya hay una restauración solicitada o en curso. SOLO registra: el watcher delega en restore-prod.sh, que primero ENSAYA en una base aislada y solo si el ensayo pasa crea una copia pre-restore, para la API y restaura. Solo ADMIN. ⚠️ Restaurar producción reescribe la base: usar solo con necesidad real.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmacion\": \"RESTAURAR\",\n  \"motivo\": \"Revertir el despliegue roto\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Auditoría de Lista",
           "request": {
             "method": "GET",
