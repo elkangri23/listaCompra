@@ -97,6 +97,11 @@ export class InMemoryProductoRepository implements IProductoRepository {
     return success(count);
   }
 
+  async countByCreator(creadoPorId: string): Promise<Result<number, Error>> {
+    const count = Array.from(this.productos.values()).filter(producto => producto.creadoPorId === creadoPorId).length;
+    return success(count);
+  }
+
   async getResumenByList(listaId: string): Promise<Result<ProductoResumen, Error>> {
     const productos = Array.from(this.productos.values()).filter(producto => producto.listaId === listaId);
     const total = productos.length;

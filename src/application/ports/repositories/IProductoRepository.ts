@@ -147,6 +147,12 @@ export interface IProductoRepository {
   countByList(listaId: string): Promise<Result<number, Error>>;
 
   /**
+   * Cuenta el total de productos agregados por un usuario (creadoPorId).
+   * Lo usa el panel de administración para el listado de usuarios.
+   */
+  countByCreator(creadoPorId: string): Promise<Result<number, Error>>;
+
+  /**
    * Obtiene un resumen de productos de una lista
    */
   getResumenByList(listaId: string): Promise<Result<ProductoResumen, Error>>;

@@ -44,6 +44,8 @@ import { CancelInvitation } from '@application/use-cases/invitations/CancelInvit
 import { DeclineInvitation } from '@application/use-cases/invitations/DeclineInvitation';
 import { ImpersonateUser } from '@application/use-cases/admin/ImpersonateUser';
 import { EndImpersonation } from '@application/use-cases/admin/EndImpersonation';
+import { GetAdminUsers } from '@application/use-cases/admin/GetAdminUsers';
+import { UpdateUserStatus } from '@application/use-cases/admin/UpdateUserStatus';
 import { BulkCategorizeProducts } from '@application/use-cases/ai/BulkCategorizeProducts';
 import { GetAuditHistoryForList } from '@application/use-cases/audit/GetAuditHistoryForList';
 import { GetAuditHistoryForProduct } from '@application/use-cases/audit/GetAuditHistoryForProduct';
@@ -244,6 +246,8 @@ export class Container {
   private _declineInvitation!: DeclineInvitation;
   private _impersonateUser!: ImpersonateUser;
   private _endImpersonation!: EndImpersonation;
+  private _getAdminUsers!: GetAdminUsers;
+  private _updateUserStatus!: UpdateUserStatus;
   private _bulkCategorizeProducts!: BulkCategorizeProducts;
   private _getAuditHistoryForList!: GetAuditHistoryForList;
   private _getAuditHistoryForProduct!: GetAuditHistoryForProduct;
@@ -780,6 +784,16 @@ export class Container {
       this._auditRepository
     );
 
+    this._getAdminUsers = new GetAdminUsers(
+      this._usuarioRepository,
+      this._listaRepository,
+      this._productoRepository
+    );
+
+    this._updateUserStatus = new UpdateUserStatus(
+      this._usuarioRepository
+    );
+
     this._bulkCategorizeProducts = new BulkCategorizeProducts(
       this._aiService,
       this._usuarioRepository,
@@ -894,7 +908,9 @@ export class Container {
     this._adminController = new AdminController(
       this._impersonateUser,
       this._endImpersonation,
-      this._auditRepository
+      this._auditRepository,
+      this._getAdminUsers,
+      this._updateUserStatus
     );
 
     this._recommendationsController = new RecommendationsController(

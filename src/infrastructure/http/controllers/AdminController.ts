@@ -6,6 +6,9 @@
 import type { Request, Response } from 'express';
 import type { ImpersonateUser } from '@application/use-cases/admin/ImpersonateUser';
 import type { EndImpersonation } from '@application/use-cases/admin/EndImpersonation';
+import type { GetAdminUsers } from '@application/use-cases/admin/GetAdminUsers';
+import type { UpdateUserStatus } from '@application/use-cases/admin/UpdateUserStatus';
+import type { UpdateUserStatusDto } from '@application/dto/admin/AdminUserDto';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 import type {
   ImpersonateUserDto,
@@ -29,11 +32,25 @@ interface AuthenticatedRequest extends Request {
 
 const logger = new Logger('AdminController');
 
+/**
+ * Lee un entero de un query param; devuelve el valor por defecto si no es
+ * un entero válido. El caso de uso normaliza página (>= 1) y límite (1..100).
+ */
+function parseQueryInt(value: unknown, defaultValue: number): number {
+  if (typeof value !== 'string') {
+    return defaultValue;
+  }
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : defaultValue;
+}
+
 export class AdminController {
   constructor(
     private readonly impersonateUserUseCase: ImpersonateUser,
     private readonly endImpersonationUseCase: EndImpersonation,
-    private readonly auditRepository?: IAuditRepository
+    private readonly auditRepository?: IAuditRepository,
+    private readonly getAdminUsersUseCase?: GetAdminUsers,
+    private readonly updateUserStatusUseCase?: UpdateUserStatus
   ) {}
 
   /**
@@ -350,11 +367,172 @@ export class AdminController {
   };
 
   /**
+   * GET /admin/users
+   * Lista usuarios con búsqueda y paginación, con conteos de listas
+   * creadas y productos agregados
+   */
+  getAdminUsers = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const adminUserId = req.user?.id;
+
+      if (!adminUserId) {
+        res.status(401).json({
+          error: 'Usuario no autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+        return;
+      }
+
+      if (!this.getAdminUsersUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de listado de usuarios no disponible',
+          code: 'ADMIN_USERS_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const rawQ = req.query['q'];
+      const q = typeof rawQ === 'string' && rawQ.trim() !== ''
+        ? rawQ.trim()
+        : undefined;
+      const page = parseQueryInt(req.query['page'], 1);
+      const limit = parseQueryInt(req.query['limit'], 20);
+
+      logger.info('Solicitud de listado de usuarios (admin)', {
+        adminUserId,
+        q: q ?? null,
+        page,
+        limit
+      });
+
+      const result = await this.getAdminUsersUseCase.execute({ q, page, limit });
+
+      if (!result.isSuccess) {
+        logger.error('Error al listar usuarios (admin)', {
+          error: result.error.message,
+          adminUserId
+        });
+        res.status(500).json({
+          error: 'Error interno del servidor al listar usuarios',
+          code: 'ADMIN_USERS_FETCH_ERROR'
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: result.value
+      });
+
+    } catch (error) {
+      logger.error('Error inesperado al listar usuarios (admin)', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        adminUserId: req.user?.id
+      });
+
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  };
+
+  /**
+   * PATCH /admin/users/:id/status
+   * Activa o desactiva la cuenta de un usuario
+   */
+  updateUserStatus = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const adminUserId = req.user?.id;
+
+      if (!adminUserId) {
+        res.status(401).json({
+          error: 'Usuario no autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+        return;
+      }
+
+      if (!this.updateUserStatusUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de gestión de usuarios no disponible',
+          code: 'ADMIN_USERS_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const userId = req.params['id'];
+      if (!userId) {
+        res.status(400).json({
+          error: 'ID de usuario requerido',
+          code: 'VALIDATION_ERROR'
+        });
+        return;
+      }
+      const dto: UpdateUserStatusDto = req.body;
+
+      logger.info('Solicitud de cambio de estado de usuario (admin)', {
+        adminUserId,
+        userId,
+        activo: dto.activo
+      });
+
+      const result = await this.updateUserStatusUseCase.execute(
+        adminUserId,
+        userId,
+        dto.activo
+      );
+
+      if (!result.isSuccess) {
+        const statusCode = this.getErrorStatusCode(result.error);
+        logger.warn('Fallo en cambio de estado de usuario', {
+          adminUserId,
+          userId,
+          error: result.error.message,
+          errorType: result.error.constructor.name
+        });
+
+        res.status(statusCode).json({
+          error: result.error.message,
+          code: result.error.constructor.name.replace('Error', '').toUpperCase()
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: result.value.activo
+          ? 'Usuario activado correctamente'
+          : 'Usuario desactivado correctamente',
+        data: {
+          usuario: result.value
+        }
+      });
+
+    } catch (error) {
+      logger.error('Error inesperado al actualizar el estado del usuario', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        adminUserId: req.user?.id
+      });
+
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  };
+
+  /**
    * Mapea tipos de error a códigos de estado HTTP
    */
   private getErrorStatusCode(error: Error): number {
     switch (error.constructor.name) {
     case 'ValidationError':
+    case 'BusinessRuleViolationError':
       return 400;
     case 'UnauthorizedError':
       return 401;

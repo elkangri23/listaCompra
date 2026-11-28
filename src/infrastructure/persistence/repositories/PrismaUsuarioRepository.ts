@@ -299,7 +299,6 @@ export class PrismaUsuarioRepository implements IUsuarioRepository {
       const [usuariosData, total] = await Promise.all([
         this.prisma.usuario.findMany({
           where: {
-            activo: true,
             OR: [
               { nombre: { contains: term, mode: 'insensitive' } },
               { apellidos: { contains: term, mode: 'insensitive' } },
@@ -312,7 +311,6 @@ export class PrismaUsuarioRepository implements IUsuarioRepository {
         }),
         this.prisma.usuario.count({
           where: {
-            activo: true,
             OR: [
               { nombre: { contains: term, mode: 'insensitive' } },
               { apellidos: { contains: term, mode: 'insensitive' } },

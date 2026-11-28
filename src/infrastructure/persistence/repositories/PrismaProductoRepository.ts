@@ -211,6 +211,17 @@ export class PrismaProductoRepository implements IProductoRepository {
     }
   }
 
+  async countByCreator(creadoPorId: string): Promise<Result<number, Error>> {
+    try {
+      const count = await this.prisma.producto.count({
+        where: { creadoPorId }
+      });
+      return success(count);
+    } catch (error) {
+      return failure(new Error(`Error al contar productos del usuario: ${error}`));
+    }
+  }
+
   async getResumenByList(listaId: string): Promise<Result<ProductoResumen, Error>> {
     try {
       const [comprados, urgentes, valorTotal] = await Promise.all([

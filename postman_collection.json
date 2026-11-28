@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Lista Compra API",
-    "description": "Colección Postman v2.0.0 - 57 endpoints cubriendo autenticación, gestión colaborativa, inteligencia artificial, plantillas, administración avanzada y observabilidad de caché.",
+    "description": "Colección Postman v2.0.0 - 59 endpoints cubriendo autenticación, gestión colaborativa, inteligencia artificial, plantillas, administración avanzada y observabilidad de caché.",
     "version": "2.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -4085,6 +4085,78 @@
               ]
             },
             "description": "Historial de cambios de un producto concreto, con filtro changeType opcional (CREATE|UPDATE|DELETE)."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Usuarios (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users?q=&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": ""
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Lista los usuarios del sistema con búsqueda por nombre o correo y paginación (solo ADMIN). Incluye conteos reales de listas creadas y productos agregados por usuario."
+          },
+          "response": []
+        },
+        {
+          "name": "Activar / Desactivar Usuario (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{userId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{userId}}",
+                "status"
+              ]
+            },
+            "description": "Activa o desactiva la cuenta de un usuario (solo ADMIN). Un administrador no puede desactivar su propia cuenta. Devuelve 400 si el usuario ya está en el estado pedido y 404 si no existe.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            }
           },
           "response": []
         }

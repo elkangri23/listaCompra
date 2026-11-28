@@ -179,12 +179,14 @@ Ver sección [MFA & Passkeys](#-nuevo-mfa--passkeys-cu-mfa-fases-1-3) más abajo
 - ✅ Recomendaciones por producto (`GET /recommendations/:listId/for-product/:productId`)
 - ✅ Ejemplos de contexto (`GET /recommendations/context-examples`)
 
-### 👑 Administración (5 endpoints)
+### 👑 Administración (7 endpoints)
 - ✅ Iniciar impersonación (`POST /admin/impersonate`)
 - ✅ Finalizar impersonación (`DELETE /admin/impersonate`)
 - ✅ Estado de impersonación (`GET /admin/impersonate/status`)
 - ✅ Auditoría (beta) (`GET /admin/audit/impersonations`)
 - ✅ Security Test Suite (`GET /admin/security/test`)
+- ✅ Listar usuarios (`GET /admin/users?q=&page=1&limit=20`)
+- ✅ Activar / desactivar usuario (`PATCH /admin/users/:id/status`)
 
 ### 📊 Dashboard y Monitoreo (4 endpoints)
 - ✅ Métricas (`GET /dashboard/metrics`)
@@ -211,7 +213,7 @@ Ver sección [MFA & Passkeys](#-nuevo-mfa--passkeys-cu-mfa-fases-1-3) más abajo
 - ✅ Limpiar eventos (`DELETE /dev/events`)
 - ✅ Publicar evento de prueba (`POST /dev/events/test`)
 
-**Total de Endpoints:** **57 endpoints** (12 dedicados a IA y observabilidad)
+**Total de Endpoints:** **59 endpoints** (12 dedicados a IA y observabilidad)
 
 ## 🎯 Ejemplos de Testing
 
@@ -313,12 +315,12 @@ GET /categories?tiendaId={storeId}&activas=true
 - ✅ 08. IA - Listas por Ocasión (3)
 - ✅ 09. IA - Recomendaciones Contextuales (3)
 - ✅ 10. Blueprints/Plantillas (8)
-- ✅ 11. 🛡️ Admin & Security (5)
+- ✅ 11. 🛡️ Admin & Security (7)
 - ✅ 12. ♻️ Cache Observability (Analytics 5 + Integrity 5)
 - ✅ 13. Dashboard & Monitoring (4)
 - ✅ 14. Dev Utilities (solo dev/test) (3)
 
-**Total:** **57 endpoints** listos para ejecutar (incluye CU-28, CU-29, CU-32, CU-33 y observabilidad de cache).
+**Total:** **59 endpoints** listos para ejecutar (incluye CU-28, CU-29, CU-32, CU-33 y observabilidad de cache).
 
 > Swagger UI actualizado en `/api/docs` y colección sincronizada con los nuevos endpoints de cache.
 
@@ -382,6 +384,8 @@ GET /categories?tiendaId={storeId}&activas=true
 11. Admin & Security → Consultar Estado de Impersonación
 11. Admin & Security → Auditoría de Impersonaciones (beta)
 11. Admin & Security → Ejecutar Security Test Suite
+11. Admin & Security → Listar Usuarios (con búsqueda y paginación)
+11. Admin & Security → Activar / Desactivar Usuario
 11. Admin & Security → Finalizar Impersonación
 ```
 
@@ -739,6 +743,50 @@ Ejecuta una suite completa de tests de seguridad automáticos para validar la po
 - Usa las recomendaciones para priorizar mejoras de seguridad
 - Los tests en desarrollo pueden fallar por configuraciones locales
 - Revisa el `report` completo para contexto detallado
+
+### Listar Usuarios (panel admin, fase 2)
+
+**Endpoint**: `GET /admin/users?q=&page=1&limit=20`
+**Autenticación**: Bearer <redacted> (Rol Admin requerido)
+
+Lista los usuarios con búsqueda por nombre, apellidos o email (`q`) y paginación (`page` default 1, `limit` default 20, máx 100). Cada usuario incluye conteos reales de `listasCreadas` y `productosAgregados`. No incluye `ultimaConexion` (no se registra en el backend).
+
+```json
+{
+  "success": true,
+  "data": {
+    "usuarios": [
+      {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "nombre": "Luis Perez",
+        "email": "luis@ejemplo.com",
+        "rol": "USUARIO",
+        "activo": true,
+        "emailVerificado": true,
+        "fechaCreacion": "2026-11-28T08:00:00.000Z",
+        "fechaActualizacion": "2026-11-28T08:00:00.000Z",
+        "listasCreadas": 1,
+        "productosAgregados": 2
+      }
+    ],
+    "total": 3,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 1
+  }
+}
+```
+
+### Activar / Desactivar Usuario (panel admin, fase 2)
+
+**Endpoint**: `PATCH /admin/users/:id/status`
+**Autenticación**: Bearer <redacted> (Rol Admin requerido)
+
+```json
+{ "activo": false }
+```
+
+**Códigos**: `200` OK · `400` body inválido, auto-desactivación o el usuario ya está en ese estado · `401` sin token · `403` no ADMIN · `404` usuario inexistente.
 
 ---
 

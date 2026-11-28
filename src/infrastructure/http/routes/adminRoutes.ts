@@ -33,6 +33,12 @@ const endImpersonationSchema = z.object({
   })
 });
 
+const updateUserStatusSchema = z.object({
+  body: z.object({
+    activo: z.boolean()
+  })
+});
+
 export function createAdminRoutes(
   adminController: AdminController,
   authMiddleware: any,
@@ -443,6 +449,191 @@ export function createAdminRoutes(
     adminMiddleware,
     adminRateLimitMiddleware,
     securityTestEndpoint
+  );
+
+  /**
+   * @swagger
+   * /api/v1/admin/users:
+   *   get:
+   *     summary: Listar usuarios
+   *     description: Lista los usuarios del sistema con búsqueda por nombre o correo y paginación. Incluye conteos reales de listas creadas y productos agregados por cada usuario.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: q
+   *         schema:
+   *           type: string
+   *         description: Búsqueda por nombre, apellidos o email
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *         description: Número de página
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 20
+   *         description: Elementos por página
+   *     responses:
+   *       200:
+   *         description: Listado de usuarios
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     usuarios:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           id:
+   *                             type: string
+   *                           nombre:
+   *                             type: string
+   *                           email:
+   *                             type: string
+   *                           rol:
+   *                             type: string
+   *                             enum: [USUARIO, ADMIN]
+   *                           activo:
+   *                             type: boolean
+   *                           emailVerificado:
+   *                             type: boolean
+   *                           fechaCreacion:
+   *                             type: string
+   *                             format: date-time
+   *                           fechaActualizacion:
+   *                             type: string
+   *                             format: date-time
+   *                           listasCreadas:
+   *                             type: integer
+   *                           productosAgregados:
+   *                             type: integer
+   *                     total:
+   *                       type: integer
+   *                     page:
+   *                       type: integer
+   *                     limit:
+   *                       type: integer
+   *                     totalPages:
+   *                       type: integer
+   *       401:
+   *         description: Token no válido o expirado
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.get(
+    '/users',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    (req: any, res: any) => adminController.getAdminUsers(req, res)
+  );
+
+  /**
+   * @swagger
+   * /api/v1/admin/users/{id}/status:
+   *   patch:
+   *     summary: Activar o desactivar un usuario
+   *     description: Activa o desactiva la cuenta de un usuario. Un administrador no puede desactivar su propia cuenta.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: ID del usuario
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               activo:
+   *                 type: boolean
+   *                 description: Nuevo estado de la cuenta
+   *             required:
+   *               - activo
+   *           example:
+   *             activo: false
+   *     responses:
+   *       200:
+   *         description: Estado del usuario actualizado
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 message:
+   *                   type: string
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     usuario:
+   *                       type: object
+   *                       properties:
+   *                         id:
+   *                           type: string
+   *                         nombre:
+   *                           type: string
+   *                         email:
+   *                           type: string
+   *                         rol:
+   *                           type: string
+   *                         activo:
+   *                           type: boolean
+   *                         emailVerificado:
+   *                           type: boolean
+   *                         fechaCreacion:
+   *                           type: string
+   *                           format: date-time
+   *                         fechaActualizacion:
+   *                           type: string
+   *                           format: date-time
+   *       400:
+   *         description: Datos inválidos, auto-desactivación o el usuario ya está en ese estado
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ErrorResponse'
+   *       401:
+   *         description: Token no válido o expirado
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       404:
+   *         description: Usuario no encontrado
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.patch(
+    '/users/:id/status',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    validationMiddleware(updateUserStatusSchema),
+    (req: any, res: any) => adminController.updateUserStatus(req, res)
   );
 
   return router;
