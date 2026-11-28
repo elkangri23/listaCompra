@@ -280,3 +280,141 @@ describe('PerplexityService', () => {
     });
   });
 });
+
+describe('PerplexityService - registro real de uso (fase 3)', () => {
+  const makeRecorder = () => ({ record: jest.fn().mockResolvedValue(undefined) });
+
+  beforeEach(() => {
+    postMock.mockReset();
+    (axios.create as unknown as jest.Mock).mockImplementation(() => ({ post: postMock }));
+  });
+
+  it('éxito del modelo registra un evento success=true, cached=false', async () => {
+    const recorder = makeRecorder();
+    const svc = new PerplexityService(makeConfig(), undefined, recorder as any);
+    postMock.mockResolvedValue(aiResponse(JSON.stringify([
+      { category: 'Lácteos', confidence: 0.9, reasoning: 'leche' }
+    ])));
+
+    const suggestions = await svc.suggestCategories('Leche');
+
+    expect(suggestions[0]!.category).toBe('Lácteos');
+    expect(recorder.record).toHaveBeenCalledTimes(1);
+    expect(recorder.record).toHaveBeenCalledWith(expect.objectContaining({
+      provider: 'perplexity',
+      model: 'sonar',
+      operation: 'category-suggestions',
+      success: true,
+      cached: false,
+      userId: null,
+    }));
+    expect(typeof recorder.record.mock.calls[0][0].latencyMs).toBe('number');
+  });
+
+  it('fallo del modelo registra success=false y la sugerencia sigue funcionando (fallback)', async () => {
+    const recorder = makeRecorder();
+    const svc = new PerplexityService(makeConfig(), undefined, recorder as any);
+    postMock.mockRejectedValue(new Error('IA caída'));
+
+    const suggestions = await svc.suggestCategories('Leche entera');
+
+    expect(suggestions[0]!.category).toBe('Lácteos'); // fallback por reglas
+    expect(recorder.record).toHaveBeenCalledTimes(1);
+    expect(recorder.record).toHaveBeenCalledWith(expect.objectContaining({
+      operation: 'category-suggestions',
+      success: false,
+      cached: false,
+    }));
+  });
+
+  it('input inválido NO se registra', async () => {
+    const recorder = makeRecorder();
+    const svc = new PerplexityService(makeConfig(), undefined, recorder as any);
+
+    await svc.suggestCategories('');
+
+    expect(postMock).not.toHaveBeenCalled();
+    expect(recorder.record).not.toHaveBeenCalled();
+  });
+
+  it('un recorder que rechaza NO rompe la sugerencia', async () => {
+    const recorder = { record: jest.fn().mockRejectedValue(new Error('BD caída')) };
+    const svc = new PerplexityService(makeConfig(), undefined, recorder as any);
+    postMock.mockResolvedValue(aiResponse(JSON.stringify([
+      { category: 'Lácteos', confidence: 0.9, reasoning: 'leche' }
+    ])));
+
+    const suggestions = await svc.suggestCategories('Leche');
+
+    expect(suggestions).toHaveLength(1);
+    expect(recorder.record).toHaveBeenCalledTimes(1);
+  });
+
+  it('cache hit registra cached=true, success=true sin llamar al modelo', async () => {
+    const recorder = makeRecorder();
+    const cacheService = {
+      get: jest.fn().mockResolvedValue([{ category: 'Lácteos', confidence: 0.9, reasoning: 'cache' }]),
+      set: jest.fn().mockResolvedValue(undefined),
+      delete: jest.fn().mockResolvedValue(undefined),
+    };
+    const svc = new PerplexityService(makeConfig(), cacheService as any, recorder as any);
+
+    const suggestions = await svc.suggestCategories('Leche');
+
+    expect(suggestions[0]!.category).toBe('Lácteos');
+    expect(postMock).not.toHaveBeenCalled();
+    expect(recorder.record).toHaveBeenCalledTimes(1);
+    expect(recorder.record).toHaveBeenCalledWith(expect.objectContaining({
+      operation: 'category-suggestions',
+      success: true,
+      cached: true,
+    }));
+  });
+
+  it('bulk: éxito registra un evento; JSON inválido registra success=false con fallback', async () => {
+    const recorder = makeRecorder();
+    const svc = new PerplexityService(makeConfig(), undefined, recorder as any);
+
+    postMock.mockResolvedValue(aiResponse(JSON.stringify({
+      products: [{ nombre: 'Leche', suggestedCategory: { nombre: 'Lácteos', confidence: 95 }, alternativeCategories: [] }]
+    })));
+    const ok = await svc.bulkCategorizeProducts([{ nombre: 'Leche' }]);
+    expect(JSON.parse(ok).products).toHaveLength(1);
+    expect(recorder.record).toHaveBeenCalledTimes(1);
+    expect(recorder.record).toHaveBeenCalledWith(expect.objectContaining({
+      operation: 'bulk-categorize',
+      success: true,
+      cached: false,
+    }));
+
+    recorder.record.mockClear();
+    postMock.mockResolvedValue(aiResponse('esto no es JSON'));
+    const fallback = await svc.bulkCategorizeProducts([{ nombre: 'Leche' }]);
+    expect(JSON.parse(fallback).products[0].suggestedCategory.nombre).toBe('Lácteos');
+    expect(recorder.record).toHaveBeenCalledTimes(1);
+    expect(recorder.record).toHaveBeenCalledWith(expect.objectContaining({
+      operation: 'bulk-categorize',
+      success: false,
+    }));
+  });
+
+  it('bulk: validación que lanza antes del modelo NO se registra (devuelve fallback)', async () => {
+    const recorder = makeRecorder();
+    const svc = new PerplexityService(makeConfig(), undefined, recorder as any);
+
+    // El método captura el error de validación y devuelve el fallback
+    const result = await svc.bulkCategorizeProducts([]);
+    expect(JSON.parse(result).products).toEqual([]);
+    expect(postMock).not.toHaveBeenCalled();
+    expect(recorder.record).not.toHaveBeenCalled();
+  });
+
+  it('sin recorder no registra nada y no cambia las respuestas', async () => {
+    postMock.mockResolvedValue(aiResponse(JSON.stringify([
+      { category: 'Lácteos', confidence: 0.9, reasoning: 'leche' }
+    ])));
+    const svc = new PerplexityService(makeConfig());
+    const suggestions = await svc.suggestCategories('Leche');
+    expect(suggestions).toHaveLength(1);
+  });
+});

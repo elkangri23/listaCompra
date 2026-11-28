@@ -24,6 +24,7 @@ import type {
 import type { PerplexityConfig} from '../../config/ai.config';
 import { AI_USE_CASES } from '../../config/ai.config';
 import { Logger } from '../../observability/logger/Logger';
+import type { IAIUsageRecorder, AIUsageOperation } from '../../../application/ports/external/IAIUsageRecorder';
 import type { CacheService} from '../cache/RedisCacheService';
 import { CacheKeyBuilder, CACHE_TTL } from '../cache/RedisCacheService';
 import { AISecurityUtils } from './AISecurityUtils';
@@ -33,10 +34,12 @@ export class PerplexityService implements IAIService {
   private chatAdapter: ILLMChatAdapter; // mutable: updateConfig() recrea el adaptador en caliente
   private readonly config: PerplexityConfig;
   private readonly cacheService: CacheService | undefined;
+  private readonly usageRecorder: IAIUsageRecorder | undefined;
 
-  constructor(config: PerplexityConfig, cacheService?: CacheService) {
+  constructor(config: PerplexityConfig, cacheService?: CacheService, usageRecorder?: IAIUsageRecorder) {
     this.config = config;
     this.cacheService = cacheService;
+    this.usageRecorder = usageRecorder;
     this.chatAdapter = createChatAdapter(config);
 
     // Logging seguro - NUNCA exponer la API key completa
@@ -104,6 +107,9 @@ export class PerplexityService implements IAIService {
     pastExamples?: PastCategoryExample[],
     storeContext?: string
   ): Promise<CategorySuggestion[]> {
+    // La latencia se mide desde que la entrada es válida: el retorno
+    // temprano por input inválido NO se registra como evento de uso.
+    let startedAt = 0;
     try {
       // 🛡️ SANITIZACIÓN DE SEGURIDAD
       const sanitizedProductName = AISecurityUtils.sanitizeUserInput(productName, 100);
@@ -119,6 +125,8 @@ export class PerplexityService implements IAIService {
         });
         return this.getFallbackCategorySuggestions(productName);
       }
+
+      startedAt = Date.now();
 
       // Intentar obtener del cache primero
       if (this.cacheService) {
@@ -136,6 +144,7 @@ export class PerplexityService implements IAIService {
             cacheKey,
             suggestionsCount: cached.length
           });
+          await this.recordUsage('category-suggestions', startedAt, true, true);
           return cached;
         }
       }
@@ -189,6 +198,7 @@ export class PerplexityService implements IAIService {
         avgConfidence: suggestions.reduce((acc, s) => acc + s.confidence, 0) / suggestions.length
       });
 
+      await this.recordUsage('category-suggestions', startedAt, true, false);
       return suggestions;
 
     } catch (error) {
@@ -196,6 +206,9 @@ export class PerplexityService implements IAIService {
         productName: productName.substring(0, 50), // Solo log de muestra
         storeName: storeName?.substring(0, 30)
       });
+
+      // El fallback por reglas NO es una llamada al modelo: success=false.
+      await this.recordUsage('category-suggestions', startedAt, false, false);
       
       // En caso de error, devolver sugerencias por defecto basadas en heurísticas
       return this.getFallbackCategorySuggestions(productName);
@@ -388,6 +401,12 @@ REGLAS ESTRICTAS:
 
   /**
    * Obtiene información de uso de la API
+   *
+   * NOTA (panel admin, fase 3): el uso REAL viene de la tabla
+   * `ai_usage_events` (GET /ai/usage, caso de uso GetAIUsage). Este
+   * método se queda como está porque quitarlo del puerto IAIService
+   * rompería todos sus dobles de test; en producción no tiene llamadas
+   * (solo tests). Sus valores son estimados, no reales.
    */
   async getUsageInfo(): Promise<APIUsageInfo> {
     // Perplexity no proporciona endpoint de usage por ahora
@@ -401,6 +420,33 @@ REGLAS ESTRICTAS:
       resetTime: new Date(Date.now() + 60000), // próximo minuto
       costEstimate: 0
     };
+  }
+
+  /**
+   * Registra un evento de uso real (best-effort, nunca lanza).
+   * DECISIÓN: el fallback por reglas NO es una llamada al modelo y NO
+   * cuenta como éxito de IA → se registra con success=false.
+   */
+  private async recordUsage(
+    operation: AIUsageOperation,
+    startedAt: number,
+    success: boolean,
+    cached: boolean
+  ): Promise<void> {
+    if (!this.usageRecorder || startedAt <= 0) return;
+    try {
+      await this.usageRecorder.record({
+        provider: this.config.provider,
+        model: this.config.model,
+        operation,
+        latencyMs: Date.now() - startedAt,
+        success,
+        cached,
+        userId: null,
+      });
+    } catch {
+      // Best-effort: un fallo del registro no rompe la operación de IA.
+    }
   }
 
   /**
@@ -1012,6 +1058,9 @@ Responde SOLO con el JSON, sin texto adicional.`;
     existingCategories?: string[]
   ): Promise<string> {
     const startTime = Date.now();
+    // La latencia del evento se mide solo sobre la llamada al modelo:
+    // la validación de entrada (que lanza antes) NO se registra.
+    let modelStartedAt = 0;
 
     try {
       // Validar inputs
@@ -1061,6 +1110,7 @@ Responde SOLO con el JSON, sin texto adicional.`;
       });
 
       // Llamar al proveedor LLM configurado (a través del adaptador)
+      modelStartedAt = Date.now();
       const response = await this.chatAdapter.chat(
         'Eres un asistente experto en categorización de productos de supermercado. Siempre respondes con JSON válido estricto.',
         prompt,
@@ -1082,6 +1132,8 @@ Responde SOLO con el JSON, sin texto adicional.`;
         this.logger.warn('Respuesta de IA no es JSON válido, usando fallback', {
           contentPreview: content.substring(0, 200)
         });
+        // JSON inválido del modelo → fallback por reglas: success=false.
+        await this.recordUsage('bulk-categorize', modelStartedAt, false, false);
         return this.generateFallbackBulkCategorization(products);
       }
 
@@ -1089,6 +1141,7 @@ Responde SOLO con el JSON, sin texto adicional.`;
       const parsed = JSON.parse(content);
       if (!parsed.products || !Array.isArray(parsed.products)) {
         this.logger.warn('Respuesta de IA con estructura inválida, usando fallback');
+        await this.recordUsage('bulk-categorize', modelStartedAt, false, false);
         return this.generateFallbackBulkCategorization(products);
       }
 
@@ -1100,6 +1153,7 @@ Responde SOLO con el JSON, sin texto adicional.`;
         tokensUsed: response.usage?.totalTokens
       });
 
+      await this.recordUsage('bulk-categorize', modelStartedAt, true, false);
       return content;
 
     } catch (error: any) {
@@ -1109,6 +1163,11 @@ Responde SOLO con el JSON, sin texto adicional.`;
         processingTime,
         productsCount: products.length
       });
+
+      // El fallback por reglas NO es una llamada al modelo: success=false.
+      // (Si el fallo fue de validación antes de llamar al modelo,
+      // modelStartedAt es 0 y no se registra nada.)
+      await this.recordUsage('bulk-categorize', modelStartedAt, false, false);
 
       // Intentar fallback
       return this.generateFallbackBulkCategorization(products);

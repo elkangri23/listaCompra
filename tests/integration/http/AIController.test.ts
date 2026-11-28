@@ -273,4 +273,127 @@ describe('AIController Integration Tests', () => {
       });
     });
   });
+
+  describe('GET /api/ai/health con AIHealthChecker (fase 3)', () => {
+    const healthyResult = {
+      status: 'healthy',
+      provider: 'freellmapi',
+      model: 'qwen3.8-27b',
+      latencyMs: 123,
+      checkedAt: '2026-11-28T10:00:00.000Z',
+      cached: false,
+    };
+
+    const buildAppWithChecker = (checkResult: unknown) => {
+      const checker = { check: jest.fn().mockResolvedValue(checkResult) };
+      const ctrl = new AIController(undefined, undefined, undefined, undefined, checker as any);
+      const testApp = express();
+      testApp.use(express.json());
+      testApp.get('/api/ai/health', ctrl.healthCheck.bind(ctrl));
+      return { testApp, checker };
+    };
+
+    it('debe devolver el resultado real del checker (healthy)', async () => {
+      const { testApp, checker } = buildAppWithChecker(healthyResult);
+
+      const response = await request(testApp).get('/api/ai/health').expect(200);
+
+      expect(response.body).toEqual({ success: true, data: healthyResult });
+      expect(checker.check).toHaveBeenCalledTimes(1);
+    });
+
+    it('debe devolver 200 con degraded cuando el proveedor falla', async () => {
+      const degraded = { ...healthyResult, status: 'degraded', latencyMs: null, reason: 'PROVIDER_ERROR' };
+      const { testApp } = buildAppWithChecker(degraded);
+
+      const response = await request(testApp).get('/api/ai/health').expect(200);
+
+      expect(response.body.data.status).toBe('degraded');
+      expect(response.body.data.reason).toBe('PROVIDER_ERROR');
+    });
+  });
+
+  describe('GET /api/ai/usage con GetAIUsage (fase 3)', () => {
+    const usageResult = {
+      provider: 'freellmapi',
+      model: 'qwen3.8-27b',
+      today: {
+        total: 3,
+        byOperation: { 'category-suggestions': 2, 'bulk-categorize': 1, 'config-test': 0 },
+        success: 2,
+        failed: 1,
+        avgLatencyMs: 200,
+        cached: 1,
+        cachedPercentage: 33,
+      },
+      last7Days: [
+        { date: '2026-11-28', total: 3, success: 2, failed: 1, byOperation: { 'category-suggestions': 2, 'bulk-categorize': 1, 'config-test': 0 } },
+      ],
+      hasData: true,
+    };
+
+    const buildAdminAppWithUsage = (result: unknown) => {
+      const getAIUsage = { execute: jest.fn().mockResolvedValue(result) };
+      const ctrl = new AIController(undefined, undefined, undefined, getAIUsage as any);
+      const testApp = express();
+      testApp.use(express.json());
+      testApp.use((req: any, _res, next) => {
+        req.user = { userId: 'admin-user-id', email: 'admin@example.com', role: 'admin' };
+        next();
+      });
+      testApp.get('/api/ai/usage', ctrl.getUsageInfo.bind(ctrl));
+      return { testApp, getAIUsage };
+    };
+
+    it('debe responder 200 con los agregados reales para administrador', async () => {
+      const { testApp, getAIUsage } = buildAdminAppWithUsage(usageResult);
+
+      const response = await request(testApp).get('/api/ai/usage').expect(200);
+
+      expect(response.body).toEqual({ success: true, data: usageResult });
+      expect(getAIUsage.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('sin eventos debe responder 200 con ceros y hasData false', async () => {
+      const empty = {
+        provider: 'freellmapi',
+        model: 'qwen3.8-27b',
+        today: {
+          total: 0,
+          byOperation: { 'category-suggestions': 0, 'bulk-categorize': 0, 'config-test': 0 },
+          success: 0,
+          failed: 0,
+          avgLatencyMs: null,
+          cached: 0,
+          cachedPercentage: null,
+        },
+        last7Days: [],
+        hasData: false,
+      };
+      const { testApp } = buildAdminAppWithUsage(empty);
+
+      const response = await request(testApp).get('/api/ai/usage').expect(200);
+
+      expect(response.body.data.hasData).toBe(false);
+      expect(response.body.data.today.avgLatencyMs).toBeNull();
+      expect(response.body.data.today.cachedPercentage).toBeNull();
+    });
+
+    it('debe denegar acceso a usuarios no administradores aunque haya caso de uso', async () => {
+      const getAIUsage = { execute: jest.fn().mockResolvedValue(usageResult) };
+      const ctrl = new AIController(undefined, undefined, undefined, getAIUsage as any);
+      const testApp = express();
+      testApp.use(express.json());
+      testApp.use((req: any, _res, next) => {
+        req.user = { userId: 'user-id', email: 'user@example.com', role: 'user' };
+        next();
+      });
+      testApp.get('/api/ai/usage', ctrl.getUsageInfo.bind(ctrl));
+
+      const response = await request(testApp).get('/api/ai/usage').expect(403);
+
+      expect(response.body.code).toBe('ACCESS_DENIED');
+      expect(getAIUsage.execute).not.toHaveBeenCalled();
+    });
+  });
 });

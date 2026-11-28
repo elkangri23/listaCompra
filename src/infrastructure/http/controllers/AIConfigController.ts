@@ -9,6 +9,7 @@
 import type { Request, Response } from 'express';
 import type { AIConfigService } from '@infrastructure/config/AIConfigService';
 import type { PerplexityService } from '@infrastructure/external-services/ai/PerplexityService';
+import type { IAIUsageRecorder } from '@application/ports/external/IAIUsageRecorder';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 
 export class AIConfigController {
@@ -16,7 +17,8 @@ export class AIConfigController {
 
   constructor(
     private readonly aiConfigService: AIConfigService,
-    private readonly aiService: PerplexityService
+    private readonly aiService: PerplexityService,
+    private readonly usageRecorder?: IAIUsageRecorder
   ) {}
 
   /**
@@ -79,6 +81,10 @@ export class AIConfigController {
    * una key candidata sin guardarla (body.apiKey) para probar antes de guardar.
    */
   async testConfig(req: Request, res: Response): Promise<void> {
+    // startedAt fuera del try: el catch solo registra si se llegó a
+    // intentar la llamada al modelo (los 400 NOT_CONFIGURED / clave
+    // corta retornan antes, con startedAt en 0, y NO se registran).
+    let startedAt = 0;
     try {
       const candidateApiKey: string | undefined = req.body?.apiKey;
 
@@ -104,7 +110,7 @@ export class AIConfigController {
 
       // Verificar conectividad con una petición mínima de chat completions
       const axiosModule = await import('axios');
-      const startedAt = Date.now();
+      startedAt = Date.now();
       await axiosModule.default.post(
         `${config.apiUrl}/chat/completions`,
         {
@@ -121,6 +127,9 @@ export class AIConfigController {
         }
       );
       const latencyMs = Date.now() - startedAt;
+
+      // Evento config-test (best-effort, nunca rompe la respuesta).
+      await this.recordConfigTest(config, latencyMs, true);
 
       res.status(200).json({
         success: true,
@@ -140,6 +149,13 @@ export class AIConfigController {
 
       this.logger.error('Test de configuración IA fallido', error);
 
+      // Solo se registra cuando se intentó la llamada al modelo: los
+      // 400 NOT_CONFIGURED / clave corta retornan antes (startedAt en 0)
+      // y NO se registran.
+      if (startedAt > 0) {
+        await this.recordConfigTest(this.aiConfigService.get(), Date.now() - startedAt, false);
+      }
+
       res.status(400).json({
         success: false,
         error:
@@ -148,6 +164,30 @@ export class AIConfigController {
             : `No se pudo conectar con el proveedor: ${axiosError.message || 'error de red'}`,
         code: 'CONNECTION_ERROR',
       });
+    }
+  }
+
+  /**
+   * Registra un evento `config-test` (best-effort, nunca lanza).
+   */
+  private async recordConfigTest(
+    config: { provider: string; model: string },
+    latencyMs: number,
+    success: boolean
+  ): Promise<void> {
+    if (!this.usageRecorder) return;
+    try {
+      await this.usageRecorder.record({
+        provider: config.provider,
+        model: config.model,
+        operation: 'config-test',
+        latencyMs,
+        success,
+        cached: false,
+        userId: null,
+      });
+    } catch {
+      // Best-effort: un fallo del registro no rompe la respuesta.
     }
   }
 }

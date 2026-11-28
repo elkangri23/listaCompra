@@ -144,4 +144,69 @@ describe('AIConfigController', () => {
       expect(res.body.error).toContain('No se pudo conectar');
     });
   });
+
+  describe('testConfig con usageRecorder (fase 3)', () => {
+    const makeRecorder = () => ({ record: jest.fn().mockResolvedValue(undefined) });
+
+    it('éxito registra config-test con success=true', async () => {
+      const axios = jest.requireMock('axios');
+      axios.default.post.mockResolvedValue({});
+      const recorder = makeRecorder();
+      const ctrl = new AIConfigController(services.config as any, services.ai as any, recorder as any);
+      const res = makeRes();
+
+      await ctrl.testConfig(makeReq(), res);
+
+      expect(res.statusCode).toBe(200);
+      expect(recorder.record).toHaveBeenCalledTimes(1);
+      expect(recorder.record).toHaveBeenCalledWith(expect.objectContaining({
+        provider: 'freellmapi',
+        model: 'gpt-4o-mini',
+        operation: 'config-test',
+        success: true,
+        cached: false,
+        userId: null,
+      }));
+    });
+
+    it('fallo del proveedor registra config-test con success=false', async () => {
+      const axios = jest.requireMock('axios');
+      axios.default.post.mockRejectedValue({ response: { status: 401 } });
+      const recorder = makeRecorder();
+      const ctrl = new AIConfigController(services.config as any, services.ai as any, recorder as any);
+      const res = makeRes();
+
+      await ctrl.testConfig(makeReq(), res);
+
+      expect(res.statusCode).toBe(400);
+      expect(recorder.record).toHaveBeenCalledTimes(1);
+      expect(recorder.record).toHaveBeenCalledWith(expect.objectContaining({
+        operation: 'config-test',
+        success: false,
+      }));
+    });
+
+    it('400 NOT_CONFIGURED no se registra (no se intentó la llamada)', async () => {
+      services.config.isConfigured.mockReturnValue(false);
+      const recorder = makeRecorder();
+      const ctrl = new AIConfigController(services.config as any, services.ai as any, recorder as any);
+      const res = makeRes();
+
+      await ctrl.testConfig(makeReq(), res);
+
+      expect(res.statusCode).toBe(400);
+      expect(recorder.record).not.toHaveBeenCalled();
+    });
+
+    it('400 clave corta no se registra', async () => {
+      const recorder = makeRecorder();
+      const ctrl = new AIConfigController(services.config as any, services.ai as any, recorder as any);
+      const res = makeRes();
+
+      await ctrl.testConfig(makeReq({ body: { apiKey: 'corta' } }), res);
+
+      expect(res.statusCode).toBe(400);
+      expect(recorder.record).not.toHaveBeenCalled();
+    });
+  });
 });

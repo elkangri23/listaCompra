@@ -167,7 +167,7 @@ Ver sección [MFA & Passkeys](#-nuevo-mfa--passkeys-cu-mfa-fases-1-3) más abajo
 - ✅ Sugerencias unitarias (`POST /ai/category-suggestions`)
 - ✅ Categorización masiva (CU-29) (`POST /ai/bulk-categorize`)
 - ✅ Health check (`GET /ai/health`)
-- ✅ Telemetría IA (solo admin) (`GET /ai/info`)
+- ✅ Uso real de IA (solo admin) (`GET /ai/usage`)
 
 ### 🎉 IA - Listas por Ocasión (3 endpoints)
 - ✅ Ocasiones disponibles (`GET /occasion-lists/occasions`)
@@ -841,6 +841,46 @@ Puedes cambiar también `apiKey` directamente (vacía = conserva la actual). Si 
 Prueba la conectividad sin aplicar la config. Útil antes de usar PUT.
 
 **Códigos**: `200` OK · `400` provider/valores inválidos · `401` sin token · `403` no ADMIN · `502` test fallido (conectividad).
+
+---
+
+## 🆕 Nuevo: Uso real y salud honesta de IA (panel admin, fase 3)
+
+Cada llamada real al modelo deja un evento en `ai_usage_events` (sugerencias de categoría, categorización masiva y test de config; el fallback por reglas no cuenta como éxito de IA). Nada inventado: sin eventos, todo a cero.
+
+### GET `/{{baseUrl}}/ai/usage` (ADMIN)
+```json
+{
+  "success": true,
+  "data": {
+    "provider": "freellmapi",
+    "model": "qwen3.8-27b",
+    "today": {
+      "total": 12,
+      "byOperation": { "category-suggestions": 9, "bulk-categorize": 2, "config-test": 1 },
+      "success": 11,
+      "failed": 1,
+      "avgLatencyMs": 842,
+      "cached": 3,
+      "cachedPercentage": 25
+    },
+    "last7Days": [
+      { "date": "2026-11-28", "total": 12, "success": 11, "failed": 1, "byOperation": { "category-suggestions": 9, "bulk-categorize": 2, "config-test": 1 } }
+    ],
+    "hasData": true
+  }
+}
+```
+`last7Days` tiene 7 entradas (de más antiguo a más reciente, incluyendo hoy; fechas `YYYY-MM-DD` en UTC). Sin eventos: `today` a cero, `avgLatencyMs: null`, `cachedPercentage: null`, `hasData: false`.
+
+**Códigos**: `200` OK · `401` sin token · `403` no ADMIN · `503` solo si el seguimiento no está cableado (no debería pasar en producción).
+
+### GET `/{{baseUrl}}/ai/health` (pública)
+Comprueba de verdad el proveedor configurado con un ping (chat completion mínima, `max_tokens: 1`). El resultado se cachea en memoria 60 s (`cached: true` sirve lo cacheado sin volver a llamar al proveedor; los pings de salud no se registran como eventos de uso).
+```json
+{ "success": true, "data": { "status": "healthy", "provider": "freellmapi", "model": "qwen3.8-27b", "latencyMs": 245, "checkedAt": "2026-11-28T10:30:00Z", "cached": false } }
+```
+Si el proveedor no está configurado o falla: `status: "degraded"`, `latencyMs: null`, `reason: "NOT_CONFIGURED"` o `"PROVIDER_ERROR"` (siempre 200, salvo error interno inesperado → 503).
 
 ---
 

@@ -2957,7 +2957,7 @@
                 "health"
               ]
             },
-            "description": "Verifica el estado de salud del subsistema de IA."
+            "description": "Comprueba de verdad el proveedor IA configurado con un ping (chat completion mínima, max_tokens 1). Siempre 200: {success:true, data:{status: healthy|degraded, provider, model, latencyMs, reason?: NOT_CONFIGURED|PROVIDER_ERROR, checkedAt, cached}}. Caché en memoria 60 s (cached:true sin nueva llamada al proveedor). Ruta pública."
           },
           "response": []
         },
@@ -3038,7 +3038,7 @@
                 "usage"
               ]
             },
-            "description": "Información de uso estimada del proveedor IA configurado (tokens, rate limit)."
+            "description": "Agregados REALES de uso de IA (panel admin, fase 3) a partir de ai_usage_events: hoy + últimos 7 días por día. Solo ADMIN. 200 {success:true, data:{provider, model, today:{total, byOperation, success, failed, avgLatencyMs, cached, cachedPercentage}, last7Days:[{date, total, success, failed, byOperation}], hasData}}. Sin eventos: ceros, avgLatencyMs/cachedPercentage null, hasData:false. 403 no ADMIN."
           },
           "response": []
         },

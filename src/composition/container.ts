@@ -76,6 +76,13 @@ import { InMemoryInvitacionRepository } from '@infrastructure/persistence/in-mem
 import { InMemoryPermisoRepository } from '@infrastructure/persistence/in-memory/InMemoryPermisoRepository';
 import { InMemoryEmailVerificationCodeRepository } from '@infrastructure/persistence/in-memory/InMemoryEmailVerificationCodeRepository';
 import { InMemoryPasswordResetCodeRepository } from '@infrastructure/persistence/in-memory/InMemoryPasswordResetCodeRepository';
+import { InMemoryAIUsageEventRepository } from '@infrastructure/persistence/in-memory/InMemoryAIUsageEventRepository';
+import { PrismaAIUsageEventRepository } from '@infrastructure/persistence/repositories/PrismaAIUsageEventRepository';
+import type { IAIUsageEventRepository } from '@application/ports/repositories/IAIUsageEventRepository';
+import type { IAIUsageRecorder } from '@application/ports/external/IAIUsageRecorder';
+import { AIUsageRecorder } from '@infrastructure/external-services/ai/AIUsageRecorder';
+import { AIHealthChecker } from '@infrastructure/external-services/ai/AIHealthChecker';
+import { GetAIUsage } from '@application/use-cases/ai/GetAIUsage';
 import { BcryptPasswordHasher } from '@infrastructure/external-services/auth/BcryptPasswordHasher';
 import { JWTTokenService } from '@infrastructure/external-services/auth/JWTTokenService';
 import { TurnstileService } from '@infrastructure/external-services/auth/TurnstileService';
@@ -267,6 +274,10 @@ export class Container {
   private _aiController!: AIController;
   private _aiConfigService!: AIConfigService;
   private _aiConfigController!: AIConfigController;
+  private _aiUsageEventRepository!: IAIUsageEventRepository;
+  private _aiUsageRecorder!: IAIUsageRecorder;
+  private _aiHealthChecker!: AIHealthChecker;
+  private _getAIUsage!: GetAIUsage;
   private _auditController!: AuditController;
   private _dashboardController!: DashboardController;
   private _occasionListController!: OccasionListController;
@@ -373,6 +384,7 @@ export class Container {
       this._permisoRepository = new InMemoryPermisoRepository();
       this._emailVerificationCodeRepository = new InMemoryEmailVerificationCodeRepository();
       this._passwordResetCodeRepository = new InMemoryPasswordResetCodeRepository();
+      this._aiUsageEventRepository = new InMemoryAIUsageEventRepository();
       this._auditRepository = { save: async () => success({} as any), findById: async () => success(null), find: async () => success([]), count: async () => success(0) };
       this._blueprintRepository = {
         save: async (bp: any) => success(bp),
@@ -418,6 +430,7 @@ export class Container {
     this._mfaRepository = new PrismaMfaRepository(this._prisma);
     this._emailVerificationCodeRepository = new PrismaEmailVerificationCodeRepository(this._prisma);
     this._passwordResetCodeRepository = new PrismaPasswordResetCodeRepository(this._prisma);
+    this._aiUsageEventRepository = new PrismaAIUsageEventRepository(this._prisma);
     this._passkeyRepository = new PrismaPasskeyRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
     this._productoRepository = new PrismaProductoRepository(this._prisma);
@@ -461,11 +474,21 @@ export class Container {
     if (!aiConfig.apiKey) {
       console.warn(`⚠️  ${getAIProviderMeta(aiConfig.provider)?.apiKeyEnv ?? 'API key del proveedor IA'} no está configurada en .env - El servicio de IA no funcionará (proveedor por defecto: freellmapi)`);
     }
-    this._aiService = new PerplexityService(aiConfig);
+    // Seguimiento real de uso de IA (panel admin, fase 3): el recorder
+    // es best-effort y se inyecta en el PerplexityService SIN cache, que
+    // es el que ven los casos de uso de categorización en producción.
+    this._aiUsageRecorder = new AIUsageRecorder(this._aiUsageEventRepository);
+    this._aiService = new PerplexityService(aiConfig, undefined, this._aiUsageRecorder);
     this._aiConfigService = new AIConfigService(aiConfig);
+    this._aiHealthChecker = new AIHealthChecker(this._aiConfigService);
+    this._getAIUsage = new GetAIUsage(this._aiUsageEventRepository, () => {
+      const c = this._aiConfigService.get();
+      return { provider: c.provider, model: c.model };
+    });
     this._aiConfigController = new AIConfigController(
       this._aiConfigService,
-      this._aiService as PerplexityService
+      this._aiService as PerplexityService,
+      this._aiUsageRecorder
     );
 
     const redisConfig: RedisConfig = getRedisConfig();
@@ -473,6 +496,7 @@ export class Container {
     this._cachedAIService = new CachedAIService({
       aiConfig,
       redisConfig,
+      usageRecorder: this._aiUsageRecorder,
     });
     
     // Configurar EventPublisher según variables de entorno
@@ -927,7 +951,9 @@ export class Container {
         this._categoriaRepository,
         this._tiendaRepository,
         this._cachedAIService
-      )
+      ),
+      this._getAIUsage,
+      this._aiHealthChecker
     );
 
     this._auditController = new AuditController(

@@ -10,6 +10,8 @@ import type { BulkCategorizeProducts } from '../../../application/use-cases/ai/B
 import type {
   AnalyzePurchaseHabitsUseCase
 } from '../../../application/use-cases/ai/AnalyzePurchaseHabits';
+import type { GetAIUsage } from '../../../application/use-cases/ai/GetAIUsage';
+import type { AIHealthChecker } from '../../external-services/ai/AIHealthChecker';
 import {
   validateAnalyzePurchaseHabitsDto,
   TIME_RANGE_PRESETS
@@ -27,7 +29,9 @@ export class AIController {
   constructor(
     private readonly getCategorySuggestionsUseCase?: GetCategorySuggestionsUseCase,
     private readonly bulkCategorizeProductsUseCase?: BulkCategorizeProducts,
-    private readonly analyzePurchaseHabitsUseCase?: AnalyzePurchaseHabitsUseCase
+    private readonly analyzePurchaseHabitsUseCase?: AnalyzePurchaseHabitsUseCase,
+    private readonly getAIUsageUseCase?: GetAIUsage,
+    private readonly aiHealthChecker?: AIHealthChecker
   ) {}
 
   /**
@@ -367,21 +371,30 @@ export class AIController {
     try {
       this.logger.http('Health check del servicio IA');
 
-      // Aquí podríamos verificar la disponibilidad del servicio de IA
-      // Por ahora, simplemente respondemos que está disponible
-      
+      // Sin checker (tests viejos que construyen el controlador sin él):
+      // se conserva la respuesta histórica. Con checker, comprobación
+      // real del proveedor con caché de 60 s (ver AIHealthChecker).
+      if (!this.aiHealthChecker) {
+        res.status(200).json({
+          success: true,
+          data: {
+            status: 'healthy',
+            provider: 'perplexity',
+            timestamp: new Date().toISOString(),
+            features: {
+              categorySuggestions: true,
+              purchaseAnalysis: false, // Funcionalidad futura
+              productRecommendations: false // Funcionalidad futura
+            }
+          }
+        });
+        return;
+      }
+
+      const result = await this.aiHealthChecker.check();
       res.status(200).json({
         success: true,
-        data: {
-          status: 'healthy',
-          provider: 'perplexity',
-          timestamp: new Date().toISOString(),
-          features: {
-            categorySuggestions: true,
-            purchaseAnalysis: false, // Funcionalidad futura
-            productRecommendations: false // Funcionalidad futura
-          }
-        }
+        data: result
       });
 
     } catch (error) {
@@ -416,12 +429,22 @@ export class AIController {
         return;
       }
 
-      // Sin seguimiento real todavía: no se devuelven datos inventados.
-      // El seguimiento real llegará con FreeLLMAPI (backlog item 4).
-      res.status(503).json({
-        success: false,
-        error: 'El seguimiento de uso de IA aún no está disponible.',
-        code: 'AI_USAGE_NOT_AVAILABLE'
+      // Sin caso de uso (tests viejos que construyen el controlador
+      // sin él): se conserva el 503 histórico. Con caso de uso, los
+      // agregados reales de `ai_usage_events` (nunca inventados).
+      if (!this.getAIUsageUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'El seguimiento de uso de IA aún no está disponible.',
+          code: 'AI_USAGE_NOT_AVAILABLE'
+        });
+        return;
+      }
+
+      const usage = await this.getAIUsageUseCase.execute();
+      res.status(200).json({
+        success: true,
+        data: usage
       });
 
     } catch (error) {

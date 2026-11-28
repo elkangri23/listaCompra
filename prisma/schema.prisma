@@ -298,3 +298,23 @@ model PasskeyCredential {
   @@index([usuarioId])
   @@map("webauthn_credentials")
 }
+
+/// Eventos de uso real de IA (panel admin, fase 3): un evento por llamada
+/// real al modelo. `userId` es siempre null hoy (agregados globales) y
+/// NO tiene FK: la telemetría no debe interferir con la cascada GDPR
+/// de borrado de cuenta.
+model AIUsageEvent {
+  id        String   @id @default(uuid())
+  userId    String?
+  provider  String
+  model     String
+  operation String // 'category-suggestions' | 'bulk-categorize' | 'config-test'
+  latencyMs Int
+  success   Boolean
+  cached    Boolean
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([operation])
+  @@map("ai_usage_events")
+}

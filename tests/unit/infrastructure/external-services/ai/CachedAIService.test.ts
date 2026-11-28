@@ -118,6 +118,38 @@ describe('CachedAIService', () => {
       expect(parsed.products[0].nombre).toBe('Leche');
     });
 
+    it('bulkCategorizeProducts en cache hit registra el evento cached=true', async () => {
+      const recorder = { record: jest.fn().mockResolvedValue(undefined) };
+      const serviceWithRecorder = new CachedAIService({
+        aiConfig: { provider: 'freellmapi', model: 'qwen3.8-27b' } as any,
+        redisConfig: { host: 'localhost', port: 6379 } as any,
+        usageRecorder: recorder as any,
+      });
+      const cacheService = (serviceWithRecorder as unknown as { cacheService: { get: jest.Mock } }).cacheService!;
+      cacheService.get.mockResolvedValue(JSON.stringify({ products: [{ nombre: 'Leche', source: 'ai' }] }));
+
+      const result = await serviceWithRecorder.bulkCategorizeProducts([{ nombre: 'Leche' }]);
+
+      expect(JSON.parse(result)._fromCache).toBe(true);
+      expect(recorder.record).toHaveBeenCalledTimes(1);
+      expect(recorder.record).toHaveBeenCalledWith(expect.objectContaining({
+        operation: 'bulk-categorize',
+        success: true,
+        cached: true,
+        provider: 'freellmapi',
+        model: 'qwen3.8-27b',
+      }));
+    });
+
+    it('bulkCategorizeProducts en cache hit sin recorder no registra nada', async () => {
+      const cacheService = (service as unknown as { cacheService: { get: jest.Mock } }).cacheService!;
+      cacheService.get.mockResolvedValue(JSON.stringify({ products: [{ nombre: 'Leche', source: 'ai' }] }));
+
+      const result = await service.bulkCategorizeProducts([{ nombre: 'Leche' }]);
+
+      expect(JSON.parse(result)._fromCache).toBe(true);
+    });
+
     it('bulkCategorizeProducts con cache caído continúa hacia IA', async () => {
       const cacheService = (service as unknown as { cacheService: { get: jest.Mock; set: jest.Mock } }).cacheService!;
       cacheService.get.mockRejectedValue(new Error('redis down'));

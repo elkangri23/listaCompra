@@ -322,94 +322,96 @@ export function createAIRoutes(dependencies: {
    *     tags: [Inteligencia Artificial]
    *     summary: Health check del servicio de IA
    *     description: |
-   *       Verifica el estado de salud del servicio de IA, incluyendo conectividad 
-   *       con Perplexity API y estado del cache Redis.
+   *       Comprueba de verdad el proveedor IA configurado con una
+   *       completion mínima (ping, max_tokens 1). El resultado se cachea
+   *       en memoria 60 s: las llamadas dentro de ese plazo sirven el
+   *       resultado cacheado (campo `cached: true`) sin volver a llamar
+   *       al proveedor. Si el proveedor no está configurado o falla, el
+   *       estado es `degraded` con un `reason` corto (`NOT_CONFIGURED` o
+   *       `PROVIDER_ERROR`). Ruta pública (sin autenticación).
    *     operationId: aiHealthCheck
    *     security: []
    *     responses:
    *       200:
-   *         description: Servicio de IA saludable
+   *         description: Resultado de la comprobación (healthy o degraded)
    *         content:
    *           application/json:
    *             schema:
    *               type: object
    *               properties:
-   *                 status:
-   *                   type: string
-   *                   enum: [healthy, degraded, unhealthy]
-   *                   description: Estado general del servicio
-   *                 timestamp:
-   *                   type: string
-   *                   format: date-time
-   *                   description: Timestamp del health check
-   *                 services:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
    *                   type: object
    *                   properties:
-   *                     perplexityAPI:
-   *                       type: object
-   *                       properties:
-   *                         status:
-   *                           type: string
-   *                           enum: [connected, disconnected, error]
-   *                         responseTime:
-   *                           type: number
-   *                           description: Tiempo de respuesta en ms
-   *                     redisCache:
-   *                       type: object
-   *                       properties:
-   *                         status:
-   *                           type: string
-   *                           enum: [connected, disconnected, error]
-   *                         hitRatio:
-   *                           type: number
-   *                           description: Ratio de cache hits
-   *                 uptime:
-   *                   type: number
-   *                   description: Tiempo de actividad en segundos
+   *                     status:
+   *                       type: string
+   *                       enum: [healthy, degraded]
+   *                       description: Estado general del servicio
+   *                     provider:
+   *                       type: string
+   *                       example: freellmapi
+   *                     model:
+   *                       type: string
+   *                       example: qwen3.8-27b
+   *                     latencyMs:
+   *                       type: number
+   *                       nullable: true
+   *                       description: Latencia del ping en ms (null si no se pudo comprobar)
+   *                     reason:
+   *                       type: string
+   *                       enum: [NOT_CONFIGURED, PROVIDER_ERROR]
+   *                       description: Motivo del estado degraded (ausente si healthy)
+   *                     checkedAt:
+   *                       type: string
+   *                       format: date-time
+   *                       description: Cuándo se hizo la comprobación real
+   *                     cached:
+   *                       type: boolean
+   *                       description: true si el resultado viene de la caché de 60 s
    *             examples:
    *               servicio_saludable:
-   *                 summary: Todo funcionando
+   *                 summary: Proveedor responde
    *                 value:
-   *                   status: healthy
-   *                   timestamp: 2024-10-29T10:30:00Z
-   *                   services:
-   *                     perplexityAPI:
-   *                       status: connected
-   *                       responseTime: 245
-   *                     redisCache:
-   *                       status: connected
-   *                       hitRatio: 0.85
-   *                   uptime: 3600
+   *                   success: true
+   *                   data:
+   *                     status: healthy
+   *                     provider: freellmapi
+   *                     model: qwen3.8-27b
+   *                     latencyMs: 245
+   *                     checkedAt: 2026-11-28T10:30:00Z
+   *                     cached: false
    *               servicio_degradado:
-   *                 summary: Cache desconectado
+   *                 summary: Proveedor no responde
    *                 value:
-   *                   status: degraded
-   *                   timestamp: 2024-10-29T10:30:00Z
-   *                   services:
-   *                     perplexityAPI:
-   *                       status: connected
-   *                       responseTime: 180
-   *                     redisCache:
-   *                       status: disconnected
-   *                       hitRatio: 0
-   *                   uptime: 1800
+   *                   success: true
+   *                   data:
+   *                     status: degraded
+   *                     provider: freellmapi
+   *                     model: qwen3.8-27b
+   *                     latencyMs: null
+   *                     reason: PROVIDER_ERROR
+   *                     checkedAt: 2026-11-28T10:30:00Z
+   *                     cached: false
    *       503:
-   *         description: Servicio de IA no disponible
+   *         description: Error interno inesperado en el health check
    *         content:
    *           application/json:
    *             schema:
    *               type: object
    *               properties:
-   *                 status:
-   *                   type: string
-   *                   example: unhealthy
+   *                 success:
+   *                   type: boolean
+   *                   example: false
    *                 error:
    *                   type: string
-   *                   example: No se puede conectar con el servicio de IA
-   *                 timestamp:
+   *                   example: Servicio de IA no disponible
+   *                 code:
    *                   type: string
-   *                   format: date-time
+   *                   example: SERVICE_UNAVAILABLE
    */
+
   router.get('/health',
     aiController.healthCheck.bind(aiController)
   );
@@ -419,116 +421,108 @@ export function createAIRoutes(dependencies: {
    * /api/v1/ai/usage:
    *   get:
    *     tags: [Inteligencia Artificial]
-   *     summary: Información de uso de la API de IA
+   *     summary: Uso real de la API de IA (panel admin, fase 3)
    *     description: |
-   *       Devuelve estadísticas detalladas de uso de la API de IA, incluyendo
-   *       tokens consumidos, requests realizados y costos estimados.
+   *       Agregados reales de uso de IA a partir de la tabla
+   *       `ai_usage_events` (un evento por llamada real al modelo):
+   *       hoy y últimos 7 días por día. Sin eventos, todo a cero con
+   *       `avgLatencyMs: null`, `cachedPercentage: null` y
+   *       `hasData: false`; nunca se devuelven valores inventados.
    *
    *       **Acceso:** Solo administradores
-   *
-   *       **Nota:** el seguimiento real aún no existe: hasta que llegue
-   *       (FreeLLMAPI, backlog item 4), el endpoint responde 503
-   *       AI_USAGE_NOT_AVAILABLE en lugar de devolver datos inventados.
    *     operationId: getAIUsageInfo
    *     responses:
    *       200:
-   *         description: Información de uso obtenida exitosamente
+   *         description: Agregados reales de uso de IA
    *         content:
    *           application/json:
    *             schema:
    *               type: object
    *               properties:
-   *                 period:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
    *                   type: object
    *                   properties:
-   *                     from:
+   *                     provider:
    *                       type: string
-   *                       format: date-time
-   *                       description: Inicio del período
-   *                     to:
+   *                       example: freellmapi
+   *                     model:
    *                       type: string
-   *                       format: date-time
-   *                       description: Fin del período
-   *                 usage:
-   *                   type: object
-   *                   properties:
-   *                     totalRequests:
-   *                       type: number
-   *                       description: Total de requests realizados
-   *                     successfulRequests:
-   *                       type: number
-   *                       description: Requests exitosos
-   *                     failedRequests:
-   *                       type: number
-   *                       description: Requests fallidos
-   *                     tokensUsed:
-   *                       type: number
-   *                       description: Tokens consumidos total
-   *                     averageTokensPerRequest:
-   *                       type: number
-   *                       description: Promedio de tokens por request
-   *                 costs:
-   *                   type: object
-   *                   properties:
-   *                     estimatedCost:
-   *                       type: number
-   *                       format: float
-   *                       description: Costo estimado en USD
-   *                     costPerRequest:
-   *                       type: number
-   *                       format: float
-   *                       description: Costo promedio por request
-   *                 cache:
-   *                   type: object
-   *                   properties:
-   *                     hitRatio:
-   *                       type: number
-   *                       format: float
-   *                       description: Ratio de cache hits
-   *                     savedRequests:
-   *                       type: number
-   *                       description: Requests ahorrados por cache
-   *                     estimatedSavings:
-   *                       type: number
-   *                       format: float
-   *                       description: Ahorros estimados por cache en USD
-   *                 topUsers:
-   *                   type: array
-   *                   items:
-   *                     type: object
-   *                     properties:
-   *                       userId:
-   *                         type: string
-   *                         format: uuid
-   *                       email:
-   *                         type: string
-   *                       requests:
-   *                         type: number
-   *                       tokensUsed:
-   *                         type: number
-   *                   description: Usuarios con mayor uso
+   *                       example: qwen3.8-27b
+   *                     today:
+   *                       type: object
+   *                       properties:
+   *                         total:
+   *                           type: integer
+   *                         byOperation:
+   *                           type: object
+   *                           properties:
+   *                             category-suggestions:
+   *                               type: integer
+   *                             bulk-categorize:
+   *                               type: integer
+   *                             config-test:
+   *                               type: integer
+   *                         success:
+   *                           type: integer
+   *                         failed:
+   *                           type: integer
+   *                         avgLatencyMs:
+   *                           type: integer
+   *                           nullable: true
+   *                         cached:
+   *                           type: integer
+   *                         cachedPercentage:
+   *                           type: integer
+   *                           nullable: true
+   *                           description: 0-100, null si total es 0
+   *                     last7Days:
+   *                       type: array
+   *                       description: 7 entradas, de más antiguo a más reciente, incluyendo hoy
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           date:
+   *                             type: string
+   *                             example: 2026-11-28
+   *                           total:
+   *                             type: integer
+   *                           success:
+   *                             type: integer
+   *                           failed:
+   *                             type: integer
+   *                           byOperation:
+   *                             type: object
+   *                     hasData:
+   *                       type: boolean
    *             example:
-   *               period:
-   *                 from: 2024-10-22T00:00:00Z
-   *                 to: 2024-10-29T23:59:59Z
-   *               usage:
-   *                 totalRequests: 1250
-   *                 successfulRequests: 1180
-   *                 failedRequests: 70
-   *                 tokensUsed: 45000
-   *                 averageTokensPerRequest: 38.1
-   *               costs:
-   *                 estimatedCost: 2.25
-   *                 costPerRequest: 0.0019
-   *               cache:
-   *                 hitRatio: 0.72
-   *                 savedRequests: 900
-   *                 estimatedSavings: 1.71
-   *               topUsers:
-   *                 - userId: 550e8400-e29b-41d4-a716-446655440000
-   *                   email: juan@ejemplo.com
-   *                   requests: 89
-   *                   tokensUsed: 3200
+   *               success: true
+   *               data:
+   *                 provider: freellmapi
+   *                 model: qwen3.8-27b
+   *                 today:
+   *                   total: 12
+   *                   byOperation:
+   *                     category-suggestions: 9
+   *                     bulk-categorize: 2
+   *                     config-test: 1
+   *                   success: 11
+   *                   failed: 1
+   *                   avgLatencyMs: 842
+   *                   cached: 3
+   *                   cachedPercentage: 25
+   *                 last7Days:
+   *                   - date: 2026-11-22
+   *                     total: 4
+   *                     success: 4
+   *                     failed: 0
+   *                     byOperation:
+   *                       category-suggestions: 4
+   *                       bulk-categorize: 0
+   *                       config-test: 0
+   *                 hasData: true
    *       401:
    *         $ref: '#/components/responses/UnauthorizedError'
    *       403:
@@ -536,7 +530,7 @@ export function createAIRoutes(dependencies: {
    *       429:
    *         $ref: '#/components/responses/RateLimitError'
    *       503:
-   *         description: Seguimiento de uso aún no disponible
+   *         description: Seguimiento de uso aún no disponible (solo si el caso de uso no está cableado)
    *         content:
    *           application/json:
    *             schema:
@@ -551,8 +545,6 @@ export function createAIRoutes(dependencies: {
    *                 code:
    *                   type: string
    *                   example: AI_USAGE_NOT_AVAILABLE
-   *       500:
-   *         $ref: '#/components/responses/InternalServerError'
    */
 
   /**

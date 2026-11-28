@@ -10,6 +10,7 @@ import type { PerplexityConfig } from '../../config/ai.config';
 import type { RedisConfig } from '../../config/redis.config';
 import type { RedisClientType } from 'redis';
 import { Logger } from '../../observability/logger/Logger';
+import type { IAIUsageRecorder } from '../../../application/ports/external/IAIUsageRecorder';
 import type {
   IAIService,
   CategorySuggestion,
@@ -28,16 +29,21 @@ import type {
 export interface CachedAIServiceDependencies {
   aiConfig: PerplexityConfig;
   redisConfig?: RedisConfig; // Opcional - si no se proporciona, no usa cache
+  usageRecorder?: IAIUsageRecorder; // Opcional - registra el uso real de IA
 }
 
 export class CachedAIService implements IAIService {
   private readonly logger = new Logger('CachedAIService');
   private readonly perplexityService: PerplexityService;
+  private readonly aiConfig: PerplexityConfig;
+  private readonly usageRecorder: IAIUsageRecorder | undefined;
   private readonly cacheService?: RedisCacheService;
   private readonly cacheAnalytics?: RedisCacheAnalytics;
 
   constructor(dependencies: CachedAIServiceDependencies) {
-    const { aiConfig, redisConfig } = dependencies;
+    const { aiConfig, redisConfig, usageRecorder } = dependencies;
+    this.aiConfig = aiConfig;
+    this.usageRecorder = usageRecorder;
 
     // Inicializar cache si se proporciona configuración
     if (redisConfig) {
@@ -46,7 +52,10 @@ export class CachedAIService implements IAIService {
     }
 
     // Inicializar servicio de IA con cache opcional
-    this.perplexityService = new PerplexityService(aiConfig, this.cacheService);
+    // El recorder se reenvía al PerplexityService interno: es él quien
+    // registra las llamadas reales al modelo (el bulk de producción
+    // pasa por aquí solo en AnalyzePurchaseHabits/CreateOccasionList).
+    this.perplexityService = new PerplexityService(aiConfig, this.cacheService, this.usageRecorder);
   }
 
   /**
@@ -170,7 +179,12 @@ export class CachedAIService implements IAIService {
             productsCount: products.length,
             cacheKey: cacheKey.substring(0, 50) + '...'
           });
-          
+
+          // Cache hit de bulk: no hay llamada al modelo; se registra
+          // como evento con cached=true (el PerplexityService interno
+          // no se ejecuta en este camino y no registraría nada).
+          await this.recordBulkCacheHit();
+
           // Marcar como source 'cache' en metadata
           const parsed: any = JSON.parse(cached);
           return JSON.stringify({
@@ -249,9 +263,35 @@ export class CachedAIService implements IAIService {
 
   /**
    * Obtiene información de uso
+   *
+   * NOTA (panel admin, fase 3): el uso REAL viene de la tabla
+   * `ai_usage_events` (GET /ai/usage, caso de uso GetAIUsage). Este
+   * método se queda como está porque quitarlo del puerto IAIService
+   * rompería todos sus dobles de test; en producción no tiene llamadas
+   * (solo tests). Sus valores son estimados, no reales.
    */
   async getUsageInfo(): Promise<APIUsageInfo> {
     return await this.perplexityService.getUsageInfo();
+  }
+
+  /**
+   * Registra el cache hit de bulk-categorize (best-effort, nunca lanza).
+   */
+  private async recordBulkCacheHit(): Promise<void> {
+    if (!this.usageRecorder) return;
+    try {
+      await this.usageRecorder.record({
+        provider: this.aiConfig.provider,
+        model: this.aiConfig.model,
+        operation: 'bulk-categorize',
+        latencyMs: 0,
+        success: true,
+        cached: true,
+        userId: null,
+      });
+    } catch {
+      // Best-effort: un fallo del registro no rompe la operación de IA.
+    }
   }
 
   /**
