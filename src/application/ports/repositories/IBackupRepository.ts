@@ -75,6 +75,8 @@ export interface IBackupRepository {
   findMany(page: number, pageSize: number): Promise<PaginatedBackups>;
   /** La primera solicitud manual pendiente, si la hay (para el watcher). */
   findPending(): Promise<Backup | null>;
+  /** La última copia en estado CREATED, si la hay (salud de copias del panel admin). */
+  findLatestCreated(): Promise<Backup | null>;
   /**
    * Alguna restauración solicitada o en curso (status RESTORING con
    * restoreRequestedAt). Mientras haya una, no se acepta otra (409).

@@ -78,6 +78,13 @@ export class PrismaBackupRepository implements IBackupRepository {
     });
   }
 
+  async findLatestCreated(): Promise<Backup | null> {
+    return this.delegate.findFirst({
+      where: { status: 'CREATED' },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findRestoring(): Promise<Backup | null> {
     return this.delegate.findFirst({
       where: { status: 'RESTORING', restoreRequestedAt: { not: null } },

@@ -53,6 +53,7 @@ import { GetBackups } from '@application/use-cases/admin/GetBackups';
 import { RequestBackup } from '@application/use-cases/admin/RequestBackup';
 import { DownloadBackup } from '@application/use-cases/admin/DownloadBackup';
 import { RequestRestore } from '@application/use-cases/admin/RequestRestore';
+import { GetAdminMetricsOverview } from '@application/use-cases/admin/GetAdminMetricsOverview';
 import { BulkCategorizeProducts } from '@application/use-cases/ai/BulkCategorizeProducts';
 import { GetAuditHistoryForList } from '@application/use-cases/audit/GetAuditHistoryForList';
 import { GetAuditHistoryForProduct } from '@application/use-cases/audit/GetAuditHistoryForProduct';
@@ -89,6 +90,9 @@ import { InMemoryLoginAttemptRepository } from '@infrastructure/persistence/in-m
 import { PrismaLoginAttemptRepository } from '@infrastructure/persistence/repositories/PrismaLoginAttemptRepository';
 import { PrismaBackupRepository } from '@infrastructure/persistence/repositories/PrismaBackupRepository';
 import { InMemoryBackupRepository } from '@infrastructure/persistence/in-memory/InMemoryBackupRepository';
+import { PrismaAdminMetricsRepository } from '@infrastructure/persistence/repositories/PrismaAdminMetricsRepository';
+import { InMemoryAdminMetricsRepository } from '@infrastructure/persistence/in-memory/InMemoryAdminMetricsRepository';
+import type { IAdminMetricsRepository } from '@application/ports/repositories/IAdminMetricsRepository';
 import type { IBackupRepository } from '@application/ports/repositories/IBackupRepository';
 import { LocalBackupFileStore } from '@infrastructure/external-services/backup/LocalBackupFileStore';
 import type { IBackupFileStore } from '@application/ports/external/IBackupFileStore';
@@ -275,6 +279,7 @@ export class Container {
   private _getSecurityOverview!: GetSecurityOverview;
   private _getLoginAttempts!: GetLoginAttempts;
   private _getSecurityAlerts!: GetSecurityAlerts;
+  private _getAdminMetricsOverview!: GetAdminMetricsOverview;
   private _getBackups!: GetBackups;
   private _requestBackup!: RequestBackup;
   private _downloadBackup!: DownloadBackup;
@@ -302,6 +307,7 @@ export class Container {
   private _aiUsageRecorder!: IAIUsageRecorder;
   private _loginAttemptRepository!: ILoginAttemptRepository;
   private _backupRepository!: IBackupRepository;
+  private _adminMetricsRepository!: IAdminMetricsRepository;
   private _backupFileStore!: IBackupFileStore;
   private _loginAttemptRecorder!: ILoginAttemptRecorder;
   private _aiHealthChecker!: AIHealthChecker;
@@ -415,6 +421,13 @@ export class Container {
       this._aiUsageEventRepository = new InMemoryAIUsageEventRepository();
       this._loginAttemptRepository = new InMemoryLoginAttemptRepository();
       this._backupRepository = new InMemoryBackupRepository();
+      this._adminMetricsRepository = new InMemoryAdminMetricsRepository(
+        this._usuarioRepository,
+        this._listaRepository,
+        this._productoRepository,
+        this._invitacionRepository,
+        this._permisoRepository
+      );
       this._backupFileStore = new LocalBackupFileStore();
       this._auditRepository = { save: async () => success({} as any), findById: async () => success(null), find: async () => success([]), count: async () => success(0) };
       this._blueprintRepository = {
@@ -464,6 +477,7 @@ export class Container {
     this._aiUsageEventRepository = new PrismaAIUsageEventRepository(this._prisma);
     this._loginAttemptRepository = new PrismaLoginAttemptRepository(this._prisma);
     this._backupRepository = new PrismaBackupRepository(this._prisma);
+    this._adminMetricsRepository = new PrismaAdminMetricsRepository(this._prisma);
     this._backupFileStore = new LocalBackupFileStore();
     this._passkeyRepository = new PrismaPasskeyRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
@@ -869,6 +883,13 @@ export class Container {
       this._usuarioRepository
     );
 
+    this._getAdminMetricsOverview = new GetAdminMetricsOverview(
+      this._adminMetricsRepository,
+      this._loginAttemptRepository,
+      this._backupRepository,
+      this._aiUsageEventRepository
+    );
+
     this._getBackups = new GetBackups(this._backupRepository);
 
     this._requestBackup = new RequestBackup(this._backupRepository);
@@ -1003,7 +1024,8 @@ export class Container {
       this._getBackups,
       this._requestBackup,
       this._downloadBackup,
-      this._requestRestore
+      this._requestRestore,
+      this._getAdminMetricsOverview
     );
 
     this._recommendationsController = new RecommendationsController(

@@ -52,6 +52,8 @@ export interface ILoginAttemptRepository {
   ): Promise<PaginatedLoginAttempts>;
   /** Intentos fallidos desde una fecha (para alertas de fuerza bruta). */
   findFailedSince(since: Date): Promise<LoginAttempt[]>;
+  /** Intentos correctos desde una fecha (para actividad diaria del panel admin). */
+  findSuccessfulSince(since: Date): Promise<LoginAttempt[]>;
   /** Nº de intentos fallidos desde una fecha (para el overview). */
   countFailedSince(since: Date): Promise<number>;
 }
