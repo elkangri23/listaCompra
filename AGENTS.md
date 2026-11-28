@@ -437,7 +437,7 @@ Sistema de gestión de listas de compra colaborativas con arquitectura limpia (h
 2. ✅ Casos de uso en `src/application/use-cases/admin/` (ImpersonateUser.ts, EndImpersonation.ts)
 3. ✅ AdminController en `src/infrastructure/http/controllers/` (168 líneas con endpoint auditoría funcional)
 4. ✅ Rutas en `src/infrastructure/http/routes/adminRoutes.ts` (137 líneas con Swagger/OpenAPI)
-5. ✅ Rate limiting administrativo avanzado en `adminRateLimitMiddleware.ts` (210 líneas, 3 niveles)
+5. ✅ Rate limiting administrativo avanzado en `adminRateLimitMiddleware.ts` (4 niveles: impersonación 5/h, auditoría 20/5min, escrituras admin 10/15min, lecturas admin GET 60/15min — lecturas y escrituras con presupuestos separados desde 2026-11-28 para que el polling del panel no reciba 429)
 6. ✅ Logs de auditoría para impersonaciones y acciones administrativas
 7. ✅ Tests de seguridad (66 tests de integración pasando)
 8. ✅ Integración DI Container completa
