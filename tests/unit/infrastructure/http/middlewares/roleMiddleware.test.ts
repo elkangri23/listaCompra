@@ -85,6 +85,18 @@ describe('requireRole', () => {
     expect(res.body.code).toBe('INSUFFICIENT_ROLE');
     expect(res.body.requiredRoles).toEqual([RolUsuario.ADMIN]);
   });
+
+  it('403 con código personalizado cuando se pasa insufficientRoleCode', () => {
+    const adminOnly = requireRole([RolUsuario.ADMIN], {
+      insufficientRoleCode: 'ADMIN_ROLE_REQUIRED'
+    });
+    const res = makeRes();
+    const next = jest.fn();
+    adminOnly(makeReq(usuarioValido), res, next);
+    expect(res.statusCode).toBe(403);
+    expect(res.body.code).toBe('ADMIN_ROLE_REQUIRED');
+    expect(res.body.requiredRoles).toEqual([RolUsuario.ADMIN]);
+  });
 });
 
 describe('requireAdmin', () => {
@@ -106,13 +118,13 @@ describe('requireAdmin', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('403 si no es admin (bloquea en requireRole interno)', () => {
+  it('403 si no es admin (ADMIN_ROLE_REQUIRED)', () => {
     const res = makeRes();
     const next = jest.fn();
     requireAdmin(makeReq(usuarioValido), res, next);
     expect(res.statusCode).toBe(403);
-    // la primera validación (rol permitido) corta antes de la doble verificación
-    expect(res.body.code).toBe('INSUFFICIENT_ROLE');
+    // requireAdmin devuelve ADMIN_ROLE_REQUIRED en los endpoints de administración
+    expect(res.body.code).toBe('ADMIN_ROLE_REQUIRED');
   });
 
   it('403 admin con email no verificado', () => {

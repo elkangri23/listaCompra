@@ -25,9 +25,15 @@ export interface AuthenticatedRequest extends Request {
  * Middleware para validar que el usuario tenga uno de los roles requeridos
  * Incluye validaciones de seguridad mejoradas
  * @param allowedRoles Array de roles permitidos para acceder al endpoint
+ * @param options.insufficientRoleCode Código de error 403 cuando el rol no está
+ * permitido (por defecto 'INSUFFICIENT_ROLE'; los endpoints de administración
+ * usan 'ADMIN_ROLE_REQUIRED' a través de requireAdmin)
  * @returns Middleware function
  */
-export const requireRole = (allowedRoles: RolUsuario[]): RequestHandler => {
+export const requireRole = (
+  allowedRoles: RolUsuario[],
+  options?: { insufficientRoleCode?: string }
+): RequestHandler => {
   const handler = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     try {
       // VALIDACIÓN 1: Usuario autenticado
@@ -116,7 +122,7 @@ export const requireRole = (allowedRoles: RolUsuario[]): RequestHandler => {
         
         res.status(403).json({
           error: 'Rol insuficiente para acceder a este recurso',
-          code: 'INSUFFICIENT_ROLE',
+          code: options?.insufficientRoleCode ?? 'INSUFFICIENT_ROLE',
           requiredRoles: allowedRoles
         });
         return;
@@ -162,8 +168,12 @@ export const requireRole = (allowedRoles: RolUsuario[]): RequestHandler => {
 export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
   const authReq = req as AuthenticatedRequest;
   try {
-    // Todas las validaciones del requireRole más validaciones específicas de admin
-    const roleCheck = requireRole([RolUsuario.ADMIN]);
+    // Todas las validaciones del requireRole más validaciones específicas de admin.
+    // Los endpoints de administración devuelven ADMIN_ROLE_REQUIRED cuando el
+    // rol no es ADMIN (el chequeo doble de abajo queda como defensa en profundidad).
+    const roleCheck = requireRole([RolUsuario.ADMIN], {
+      insufficientRoleCode: 'ADMIN_ROLE_REQUIRED'
+    });
     
     // Ejecutar validaciones base primero
     roleCheck(req, res, (error?: any) => {

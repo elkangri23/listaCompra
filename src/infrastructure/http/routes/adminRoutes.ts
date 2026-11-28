@@ -11,18 +11,26 @@ import { securityTestEndpoint } from '../../security/SecurityTestingService';
 import { z } from 'zod';
 
 // Esquemas de validación
+// validationMiddleware valida el objeto req completo: los campos van bajo `body`
+// (patrón del resto de rutas). Con el esquema plano anterior, safeParse(req)
+// nunca veía targetUserId/targetUserEmail y el refine fallaba siempre:
+// POST /impersonate devolvía 400 incluso con un cuerpo válido.
 const impersonateUserSchema = z.object({
-  targetUserId: z.string().uuid().optional(),
-  targetUserEmail: z.string().email().optional(),
-  reason: z.string().min(3).max(500).optional(),
-  durationMinutes: z.number().int().min(1).max(480).optional()
-}).refine((data) => data.targetUserId || data.targetUserEmail, {
-  message: 'Debe especificar targetUserId o targetUserEmail'
+  body: z.object({
+    targetUserId: z.string().uuid().optional(),
+    targetUserEmail: z.string().email().optional(),
+    reason: z.string().min(3).max(500).optional(),
+    durationMinutes: z.number().int().min(1).max(480).optional()
+  }).refine((data) => data.targetUserId || data.targetUserEmail, {
+    message: 'Debe especificar targetUserId o targetUserEmail'
+  })
 });
 
 const endImpersonationSchema = z.object({
-  sessionId: z.string().uuid().optional(),
-  reason: z.string().min(3).max(500).optional()
+  body: z.object({
+    sessionId: z.string().uuid().optional(),
+    reason: z.string().min(3).max(500).optional()
+  })
 });
 
 export function createAdminRoutes(

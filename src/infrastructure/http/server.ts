@@ -194,7 +194,7 @@ export async function createServer(dependencies: ServerDependencies): Promise<Ap
   app.use('/api/v1/admin', createAdminRoutes(
     dependencies.adminController,
     dependencies.authMiddleware,
-    dependencies.authMiddleware // Por ahora usar authMiddleware en lugar de adminMiddleware
+    requireAdmin // Solo administradores (RolUsuario.ADMIN) en las rutas que lo exigen
   ));
   app.use('/api/v1/ai', createAIRoutes({
     aiController: dependencies.aiController,
