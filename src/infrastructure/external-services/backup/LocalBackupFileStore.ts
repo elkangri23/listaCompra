@@ -13,7 +13,7 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { basename, resolve } from 'node:path';
+import { basename, relative, resolve } from 'node:path';
 
 import type { IBackupFileStore } from '@application/ports/external/IBackupFileStore';
 
@@ -27,9 +27,12 @@ export class LocalBackupFileStore implements IBackupFileStore {
   async read(filename: string): Promise<Buffer | null> {
     // basename: un filename guardado como "../../etc/passwd" se reduce a
     // "passwd", y la comprobación de prefijo bloquea cualquier escape.
+    // (relative() en vez de startsWith para que funcione con el
+    // separador de Windows también.)
     const safeName = basename(filename);
     const resolved = resolve(this.baseDir, safeName);
-    if (resolved !== this.baseDir && !resolved.startsWith(`${this.baseDir}/`)) {
+    const relativeToBase = relative(this.baseDir, resolved);
+    if (relativeToBase.startsWith('..')) {
       return null;
     }
     try {

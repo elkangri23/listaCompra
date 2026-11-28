@@ -335,12 +335,31 @@ describe('AIController', () => {
       expect(res.statusCode).toBe(403);
     });
 
-    it('devuelve 200 con la información de uso para admin', async () => {
+    it('devuelve 503 cuando no hay caso de uso de uso de IA aunque sea admin', async () => {
       const res = makeRes();
       await controller.getUsageInfo(makeReq({ user: { userId: 'a-1', rol: 'ADMIN' } }), res);
+      expect(res.statusCode).toBe(503);
+      expect(res.body.code).toBe('AI_USAGE_NOT_AVAILABLE');
+    });
+
+    it('devuelve 200 con los agregados reales para admin con caso de uso', async () => {
+      const usage = { tokensUsed: 1250, requestsThisMonth: 42 };
+      const usageUseCase = {
+        usageEventRepository: {} as any,
+        getProviderInfo: () => ({ provider: 'freellmapi', model: 'test-model' }),
+        execute: jest.fn().mockResolvedValue(usage)
+      } as any;
+      const controllerConUso = new AIController(
+        suggestionsUseCase,
+        bulkUseCase,
+        habitsUseCase,
+        usageUseCase
+      );
+      const res = makeRes();
+      await controllerConUso.getUsageInfo(makeReq({ user: { userId: 'a-1', rol: 'ADMIN' } }), res);
       expect(res.statusCode).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.tokensRemaining).toBe(1000000);
+      expect(res.body.data).toEqual(usage);
     });
   });
 });
