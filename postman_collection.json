@@ -4035,6 +4035,36 @@
           "response": []
         },
         {
+          "name": "Métricas — Resumen (Panel Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/metrics/overview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "metrics",
+                "overview"
+              ],
+              "query": []
+            },
+            "description": "Métricas del panel de administración (fase 7). Datos REALES: crecimiento (registros por día 30 días y por mes 12 meses, listas y productos por día, con ceros rellenados; totales con verifiedPct y categorizedPct), embudo de usuarios (registered → verified → withList → withProduct → shared), actividad diaria (emails distintos con login correcto, 30 días), salud de copias (última CREATED, stale si >24 h) y uso de IA 7 días. La retención por cohortes no es calculable (available false con el motivo): nunca se inventa un %. Solo ADMIN (403 ADMIN_ROLE_REQUIRED para USUARIO)."
+          },
+          "response": []
+        },
+        {
           "name": "Seguridad — Intentos de Login (Panel Admin)",
           "request": {
             "method": "GET",

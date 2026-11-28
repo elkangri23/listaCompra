@@ -94,6 +94,13 @@ export class PrismaLoginAttemptRepository implements ILoginAttemptRepository {
     });
   }
 
+  async findSuccessfulSince(since: Date): Promise<LoginAttempt[]> {
+    return this.delegate.findMany({
+      where: { success: true, createdAt: { gte: since } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async countFailedSince(since: Date): Promise<number> {
     return this.delegate.count({
       where: { success: false, createdAt: { gte: since } },

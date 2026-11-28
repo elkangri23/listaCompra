@@ -733,6 +733,183 @@ export function createAdminRoutes(
 
   /**
    * @swagger
+   * /api/v1/admin/metrics/overview:
+   *   get:
+   *     summary: Métricas del panel de administración
+   *     description: Crecimiento (registros, listas y productos por día y mes, con ceros rellenados), embudo de usuarios, actividad diaria (emails distintos con login correcto), salud de copias y uso de IA de los últimos 7 días. Todo con datos reales; la retención por cohortes no es calculable (available false con el motivo) y nunca se inventa un porcentaje.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Métricas del panel de administración
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     growth:
+   *                       type: object
+   *                       properties:
+   *                         registrationsByDay:
+   *                           type: array
+   *                           items:
+   *                             type: object
+   *                             properties:
+   *                               date:
+   *                                 type: string
+   *                               count:
+   *                                 type: integer
+   *                         registrationsByMonth:
+   *                           type: array
+   *                           items:
+   *                             type: object
+   *                             properties:
+   *                               month:
+   *                                 type: string
+   *                               count:
+   *                                 type: integer
+   *                         listsByDay:
+   *                           type: array
+   *                           items:
+   *                             type: object
+   *                             properties:
+   *                               date:
+   *                                 type: string
+   *                               count:
+   *                                 type: integer
+   *                         productsByDay:
+   *                           type: array
+   *                           items:
+   *                             type: object
+   *                             properties:
+   *                               date:
+   *                                 type: string
+   *                               count:
+   *                                 type: integer
+   *                         totals:
+   *                           type: object
+   *                           properties:
+   *                             users:
+   *                               type: integer
+   *                             verifiedUsers:
+   *                               type: integer
+   *                             verifiedPct:
+   *                               type: number
+   *                             lists:
+   *                               type: integer
+   *                             products:
+   *                               type: integer
+   *                             categorizedProducts:
+   *                               type: integer
+   *                             categorizedPct:
+   *                               type: number
+   *                     funnel:
+   *                       type: object
+   *                       properties:
+   *                         registered:
+   *                           type: integer
+   *                           nullable: true
+   *                         verified:
+   *                           type: integer
+   *                           nullable: true
+   *                         withList:
+   *                           type: integer
+   *                           nullable: true
+   *                         withProduct:
+   *                           type: integer
+   *                           nullable: true
+   *                         shared:
+   *                           type: integer
+   *                           nullable: true
+   *                         reason:
+   *                           type: string
+   *                     activity:
+   *                       type: object
+   *                       properties:
+   *                         activeUsersByDay:
+   *                           type: array
+   *                           items:
+   *                             type: object
+   *                             properties:
+   *                               date:
+   *                                 type: string
+   *                               count:
+   *                                 type: integer
+   *                         retention:
+   *                           type: object
+   *                           properties:
+   *                             available:
+   *                               type: boolean
+   *                             reason:
+   *                               type: string
+   *                     backupHealth:
+   *                       type: object
+   *                       properties:
+   *                         lastCreated:
+   *                           type: object
+   *                           nullable: true
+   *                           properties:
+   *                             id:
+   *                               type: string
+   *                             filename:
+   *                               type: string
+   *                             sizeBytes:
+   *                               type: integer
+   *                             createdAt:
+   *                               type: string
+   *                               format: date-time
+   *                             ageHours:
+   *                               type: number
+   *                         stale:
+   *                           type: boolean
+   *                         reason:
+   *                           type: string
+   *                           nullable: true
+   *                     aiUsage7d:
+   *                       type: object
+   *                       properties:
+   *                         total:
+   *                           type: integer
+   *                         success:
+   *                           type: integer
+   *                         failed:
+   *                           type: integer
+   *                         cached:
+   *                           type: integer
+   *                         byDay:
+   *                           type: array
+   *                           items:
+   *                             type: object
+   *                             properties:
+   *                               date:
+   *                                 type: string
+   *                               total:
+   *                                 type: integer
+   *                               success:
+   *                                 type: integer
+   *       401:
+   *         description: Token no válido o expirado
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.get(
+    '/metrics/overview',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    (req: any, res: any) => adminController.getAdminMetricsOverview(req, res)
+  );
+
+  /**
+   * @swagger
    * /api/v1/admin/security/login-attempts:
    *   get:
    *     summary: Intentos de inicio de sesión (panel de administración)

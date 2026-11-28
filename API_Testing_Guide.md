@@ -179,7 +179,7 @@ Ver sección [MFA & Passkeys](#-nuevo-mfa--passkeys-cu-mfa-fases-1-3) más abajo
 - ✅ Recomendaciones por producto (`GET /recommendations/:listId/for-product/:productId`)
 - ✅ Ejemplos de contexto (`GET /recommendations/context-examples`)
 
-### 👑 Administración (11 endpoints)
+### 👑 Administración (12 endpoints)
 - ✅ Iniciar impersonación (`POST /admin/impersonate`)
 - ✅ Finalizar impersonación (`DELETE /admin/impersonate`)
 - ✅ Estado de impersonación (`GET /admin/impersonate/status`)
@@ -191,6 +191,7 @@ Ver sección [MFA & Passkeys](#-nuevo-mfa--passkeys-cu-mfa-fases-1-3) más abajo
 - ✅ Solicitar copia manual (`POST /admin/backups`) — fase 6, 201 PENDING; 409 si ya hay una PENDING
 - ✅ Descargar copia (`GET /admin/backups/:id/download`) — fase 6, .sql.gz; 404 si el fichero no está en disco
 - ✅ Solicitar restauración (`POST /admin/backups/:id/restore`) — fase 6, 202 RESTORING; confirmacion "RESTAURAR" + motivo
+- ✅ Métricas (`GET /admin/metrics/overview`) — fase 7, crecimiento (30 días / 12 meses, con ceros), embudo, actividad diaria, salud de copias y uso de IA 7 días; retención no calculable (available false)
 
 ### 📊 Dashboard y Monitoreo (4 endpoints)
 - ✅ Métricas (`GET /dashboard/metrics`)
@@ -975,6 +976,20 @@ GET {{baseUrl}}/admin/security/login-attempts?page=1&pageSize=20&success=false
 # cuenta en periodo de gracia a <7 días de su eliminación (media). Sin
 # alertas, la lista viene vacía.
 GET {{baseUrl}}/admin/security/alerts?page=1&pageSize=20
+
+# Métricas del panel de administración (fase 7, ADMIN): datos REALES.
+# Crecimiento: registros por día (30 días) y por mes (12 meses), listas y
+# productos por día, con ceros rellenados; totales con verifiedPct y
+# categorizedPct (1 decimal). Embudo: registered → verified → withList →
+# withProduct → shared (cada tramo subconjunto del anterior; a null con
+# 'reason' si no se puede calcular). Actividad: emails distintos con login
+# correcto por día (30 días). Retención por cohortes NO calculable
+# (available false con el motivo: sin última conexión por usuario y
+# cohortes demasiado pequeñas). Salud de copias: última CREATED con
+# ageHours; stale true si no hay CREATED en >24 h (o no hay ninguna).
+# Uso de IA: últimos 7 días desde ai_usage_events (total, success,
+# failed, cached, byDay). Sin datos: ceros y arrays completos.
+GET {{baseUrl}}/admin/metrics/overview
 
 # Copias de seguridad (fase 6, ADMIN): copias reales de la base de datos.
 # El backend solo REGISTRA y EXPONE; el dump y la restauración los hacen

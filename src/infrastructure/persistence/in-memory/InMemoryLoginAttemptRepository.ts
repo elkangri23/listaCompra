@@ -56,6 +56,12 @@ export class InMemoryLoginAttemptRepository implements ILoginAttemptRepository {
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
+  async findSuccessfulSince(since: Date): Promise<LoginAttempt[]> {
+    return Array.from(this.attempts.values())
+      .filter((a) => a.success && a.createdAt >= since)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
   async countFailedSince(since: Date): Promise<number> {
     return Array.from(this.attempts.values()).filter(
       (a) => !a.success && a.createdAt >= since

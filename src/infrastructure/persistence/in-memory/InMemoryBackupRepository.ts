@@ -54,6 +54,14 @@ export class InMemoryBackupRepository implements IBackupRepository {
     );
   }
 
+  async findLatestCreated(): Promise<Backup | null> {
+    return (
+      Array.from(this.backups.values())
+        .filter((b) => b.status === 'CREATED')
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null
+    );
+  }
+
   async findRestoring(): Promise<Backup | null> {
     return (
       Array.from(this.backups.values())

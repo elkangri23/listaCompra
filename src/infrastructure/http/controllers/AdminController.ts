@@ -9,6 +9,7 @@ import type { EndImpersonation } from '@application/use-cases/admin/EndImpersona
 import type { GetAdminUsers } from '@application/use-cases/admin/GetAdminUsers';
 import type { UpdateUserStatus } from '@application/use-cases/admin/UpdateUserStatus';
 import type { GetSecurityOverview } from '@application/use-cases/admin/GetSecurityOverview';
+import type { GetAdminMetricsOverview } from '@application/use-cases/admin/GetAdminMetricsOverview';
 import type { GetLoginAttempts } from '@application/use-cases/admin/GetLoginAttempts';
 import type { GetSecurityAlerts } from '@application/use-cases/admin/GetSecurityAlerts';
 import type { GetBackups } from '@application/use-cases/admin/GetBackups';
@@ -77,7 +78,8 @@ export class AdminController {
     private readonly getBackupsUseCase?: GetBackups,
     private readonly requestBackupUseCase?: RequestBackup,
     private readonly downloadBackupUseCase?: DownloadBackup,
-    private readonly requestRestoreUseCase?: RequestRestore
+    private readonly requestRestoreUseCase?: RequestRestore,
+    private readonly getAdminMetricsOverviewUseCase?: GetAdminMetricsOverview
   ) {}
 
   /**
@@ -586,6 +588,51 @@ export class AdminController {
       });
     } catch (error) {
       logger.error('Error inesperado al obtener el resumen de seguridad', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        adminUserId: req.user?.id
+      });
+
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  };
+
+  /**
+   * GET /admin/metrics/overview
+   * Métricas del panel de administración con datos reales (crecimiento,
+   * embudo, actividad, salud de copias y uso de IA). Las series vienen
+   * con ceros rellenados y la retención no es calculable (available false).
+   */
+  getAdminMetricsOverview = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Usuario no autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+        return;
+      }
+
+      if (!this.getAdminMetricsOverviewUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de métricas no disponible',
+          code: 'ADMIN_METRICS_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const overview = await this.getAdminMetricsOverviewUseCase.execute();
+
+      res.status(200).json({
+        success: true,
+        data: overview
+      });
+    } catch (error) {
+      logger.error('Error inesperado al obtener las métricas de administración', {
         error: error instanceof Error ? error.message : 'Error desconocido',
         stack: error instanceof Error ? error.stack : undefined,
         adminUserId: req.user?.id
