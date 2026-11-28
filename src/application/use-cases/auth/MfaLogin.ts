@@ -25,6 +25,7 @@ import {
 import { verifyTotpCode } from '@infrastructure/security/totp';
 import type { LoginResponseDto } from '@application/dto/auth/LoginDto';
 import type { Usuario } from '@domain/entities/Usuario';
+import type { ILoginAttemptRecorder } from '@application/ports/external/ILoginAttemptRecorder';
 
 const MAX_CHALLENGE_ATTEMPTS = 5;
 const TOTP_WINDOW_TOLERANCE = 31; // ±1 período de 30s
@@ -35,6 +36,12 @@ export interface MfaLoginDto {
   code?: string;
   /** Código de respaldo (mutuamente excluyente con code) */
   backupCode?: string;
+  /**
+   * Metadatos del intento (los pone el controlador desde la request).
+   * Solo para el registro de intentos de inicio de sesión.
+   */
+  ipAddress?: string | undefined;
+  userAgent?: string | undefined;
 }
 
 export interface MfaLoginResultDto extends LoginResponseDto {
@@ -48,8 +55,32 @@ export class MfaLogin {
   constructor(
     private readonly usuarioRepository: IUsuarioRepository,
     private readonly mfaRepository: IMfaRepository,
-    private readonly tokenService: ITokenService
+    private readonly tokenService: ITokenService,
+    // Registro best-effort de intentos de login (fase 5): sin él, el
+    // login funciona exactamente igual (el recorder es opcional).
+    private readonly loginAttemptRecorder?: ILoginAttemptRecorder
   ) {}
+
+  /**
+   * Registra el intento sin romper nunca el login: el recorder ya
+   * traga sus propios errores; esto es defensa en profundidad.
+   */
+  private async recordAttempt(input: {
+    email: string;
+    success: boolean;
+    reason?: 'MFA_FAILED' | null | undefined;
+    ipAddress?: string | null | undefined;
+    userAgent?: string | null | undefined;
+  }): Promise<void> {
+    if (!this.loginAttemptRecorder) {
+      return;
+    }
+    try {
+      await this.loginAttemptRecorder.record(input);
+    } catch {
+      // Best-effort: un fallo de telemetría nunca rompe el login.
+    }
+  }
 
   async execute(dto: MfaLoginDto): Promise<Result<MfaLoginResultDto, MfaChallengeExpiredError | MfaTooManyAttemptsError | TotpCodeInvalidError | BackupCodeInvalidError | UnauthorizedError | Error>> {
     // 1. Validar forma de la petición: exactamente una de las dos variantes
@@ -104,12 +135,19 @@ export class MfaLogin {
     const codeValid = verifyTotpCode(secret, dto.code as string, { toleranceSeconds: TOTP_WINDOW_TOLERANCE });
 
     if (!codeValid) {
+      await this.recordAttempt({
+        email: usuario.email.value,
+        success: false,
+        reason: 'MFA_FAILED',
+        ipAddress: dto.ipAddress,
+        userAgent: dto.userAgent,
+      });
       return this.registerFailedAttempt(dto.challengeId, new TotpCodeInvalidError());
     }
 
     // Éxito: consume el challenge (un uso) y emite tokens
     await this.mfaRepository.deleteChallenge(dto.challengeId);
-    return this.issueTokens(usuario, { method: 'TOTP' });
+    return this.issueTokens(usuario, { method: 'TOTP' }, dto);
   }
 
   private async loginWithBackupCode(
@@ -118,6 +156,13 @@ export class MfaLogin {
   ): Promise<Result<MfaLoginResultDto, MfaChallengeExpiredError | MfaTooManyAttemptsError | BackupCodeInvalidError | Error>> {
     const normalized = normalizeBackupCode(dto.backupCode as string);
     if (!normalized) {
+      await this.recordAttempt({
+        email: usuario.email.value,
+        success: false,
+        reason: 'MFA_FAILED',
+        ipAddress: dto.ipAddress,
+        userAgent: dto.userAgent,
+      });
       return this.registerFailedAttempt(dto.challengeId, new BackupCodeInvalidError());
     }
 
@@ -137,17 +182,31 @@ export class MfaLogin {
     }
 
     if (!matchedId) {
+      await this.recordAttempt({
+        email: usuario.email.value,
+        success: false,
+        reason: 'MFA_FAILED',
+        ipAddress: dto.ipAddress,
+        userAgent: dto.userAgent,
+      });
       return this.registerFailedAttempt(dto.challengeId, new BackupCodeInvalidError());
     }
 
     // Consumo atómico de un solo uso (race-safe)
     const consumedResult = await this.mfaRepository.consumeBackupCode(matchedId);
     if (consumedResult.isFailure || !consumedResult.value) {
+      await this.recordAttempt({
+        email: usuario.email.value,
+        success: false,
+        reason: 'MFA_FAILED',
+        ipAddress: dto.ipAddress,
+        userAgent: dto.userAgent,
+      });
       return this.registerFailedAttempt(dto.challengeId, new BackupCodeInvalidError());
     }
 
     await this.mfaRepository.deleteChallenge(dto.challengeId);
-    return this.issueTokens(usuario, { method: 'BACKUP_CODE', backupUsed: true });
+    return this.issueTokens(usuario, { method: 'BACKUP_CODE', backupUsed: true }, dto);
   }
 
   /** Incremento atómico con cap: 5 intentos → challenge borrado + 429 */
@@ -170,7 +229,8 @@ export class MfaLogin {
 
   private async issueTokens(
     usuario: Usuario,
-    mfaInfo: MfaLoginResultDto['mfaInfo']
+    mfaInfo: MfaLoginResultDto['mfaInfo'],
+    dto: MfaLoginDto
   ): Promise<Result<MfaLoginResultDto, Error>> {
     const tokenPayload: TokenPayload = {
       userId: usuario.id,
@@ -183,6 +243,16 @@ export class MfaLogin {
       return failure(tokensResult.error);
     }
     const tokens = tokensResult.value;
+
+    // Paso 2 completado: este es el login efectivo del usuario con MFA
+    // (el paso 1 solo emite el challenge y no se registra).
+    await this.recordAttempt({
+      email: usuario.email.value,
+      success: true,
+      reason: null,
+      ipAddress: dto.ipAddress,
+      userAgent: dto.userAgent,
+    });
 
     return success({
       user: {

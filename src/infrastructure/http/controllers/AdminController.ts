@@ -8,6 +8,9 @@ import type { ImpersonateUser } from '@application/use-cases/admin/ImpersonateUs
 import type { EndImpersonation } from '@application/use-cases/admin/EndImpersonation';
 import type { GetAdminUsers } from '@application/use-cases/admin/GetAdminUsers';
 import type { UpdateUserStatus } from '@application/use-cases/admin/UpdateUserStatus';
+import type { GetSecurityOverview } from '@application/use-cases/admin/GetSecurityOverview';
+import type { GetLoginAttempts } from '@application/use-cases/admin/GetLoginAttempts';
+import type { GetSecurityAlerts } from '@application/use-cases/admin/GetSecurityAlerts';
 import type { UpdateUserStatusDto } from '@application/dto/admin/AdminUserDto';
 import { Logger } from '@infrastructure/observability/logger/Logger';
 import type {
@@ -44,13 +47,28 @@ function parseQueryInt(value: unknown, defaultValue: number): number {
   return Number.isFinite(parsed) ? parsed : defaultValue;
 }
 
+/**
+ * Lee una fecha ISO de un query param; undefined si no viene o no es válida.
+ * Una fecha inválida se ignora (no rompe la consulta).
+ */
+function parseQueryDate(value: unknown): Date | undefined {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return undefined;
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
+
 export class AdminController {
   constructor(
     private readonly impersonateUserUseCase: ImpersonateUser,
     private readonly endImpersonationUseCase: EndImpersonation,
     private readonly auditRepository?: IAuditRepository,
     private readonly getAdminUsersUseCase?: GetAdminUsers,
-    private readonly updateUserStatusUseCase?: UpdateUserStatus
+    private readonly updateUserStatusUseCase?: UpdateUserStatus,
+    private readonly getSecurityOverviewUseCase?: GetSecurityOverview,
+    private readonly getLoginAttemptsUseCase?: GetLoginAttempts,
+    private readonly getSecurityAlertsUseCase?: GetSecurityAlerts
   ) {}
 
   /**
@@ -514,6 +532,156 @@ export class AdminController {
 
     } catch (error) {
       logger.error('Error inesperado al actualizar el estado del usuario', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        adminUserId: req.user?.id
+      });
+
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  };
+
+  /**
+   * GET /admin/security/overview
+   * Resumen de seguridad con datos reales (2FA, fallos 24 h, Turnstile,
+   * periodo de gracia). Las secciones que no se pueden calcular llegan
+   * como null con el motivo en `unavailable`.
+   */
+  getSecurityOverview = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Usuario no autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+        return;
+      }
+
+      if (!this.getSecurityOverviewUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de resumen de seguridad no disponible',
+          code: 'SECURITY_OVERVIEW_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const overview = await this.getSecurityOverviewUseCase.execute();
+
+      res.status(200).json({
+        success: true,
+        data: overview
+      });
+    } catch (error) {
+      logger.error('Error inesperado al obtener el resumen de seguridad', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        adminUserId: req.user?.id
+      });
+
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  };
+
+  /**
+   * GET /admin/security/login-attempts
+   * Lista paginada de intentos de inicio de sesión (fecha desc).
+   * Filtros: email, success (true/false), startDate, endDate.
+   */
+  getLoginAttempts = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Usuario no autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+        return;
+      }
+
+      if (!this.getLoginAttemptsUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de intentos de inicio de sesión no disponible',
+          code: 'LOGIN_ATTEMPTS_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const rawEmail = req.query['email'];
+      const email = typeof rawEmail === 'string' && rawEmail.trim() !== '' ? rawEmail.trim() : undefined;
+      const rawSuccess = req.query['success'];
+      const success = rawSuccess === 'true' ? true : rawSuccess === 'false' ? false : undefined;
+      const page = parseQueryInt(req.query['page'], 1);
+      const pageSize = parseQueryInt(req.query['pageSize'], 20);
+
+      const result = await this.getLoginAttemptsUseCase.execute({
+        email,
+        success,
+        startDate: parseQueryDate(req.query['startDate']),
+        endDate: parseQueryDate(req.query['endDate']),
+        page,
+        pageSize,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      logger.error('Error inesperado al listar intentos de inicio de sesión', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        adminUserId: req.user?.id
+      });
+
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  };
+
+  /**
+   * GET /admin/security/alerts
+   * Alertas CALCULADAS con datos reales (fuerza bruta, admin sin 2FA,
+   * periodo de gracia a punto de vencer). Lista vacía si no hay ninguna.
+   */
+  getSecurityAlerts = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Usuario no autenticado',
+          code: 'NOT_AUTHENTICATED'
+        });
+        return;
+      }
+
+      if (!this.getSecurityAlertsUseCase) {
+        res.status(503).json({
+          success: false,
+          error: 'Servicio de alertas de seguridad no disponible',
+          code: 'SECURITY_ALERTS_SERVICE_UNAVAILABLE'
+        });
+        return;
+      }
+
+      const page = parseQueryInt(req.query['page'], 1);
+      const pageSize = parseQueryInt(req.query['pageSize'], 20);
+
+      const result = await this.getSecurityAlertsUseCase.execute(page, pageSize);
+
+      res.status(200).json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      logger.error('Error inesperado al obtener alertas de seguridad', {
         error: error instanceof Error ? error.message : 'Error desconocido',
         stack: error instanceof Error ? error.stack : undefined,
         adminUserId: req.user?.id

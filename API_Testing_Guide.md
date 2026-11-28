@@ -213,7 +213,7 @@ Ver sección [MFA & Passkeys](#-nuevo-mfa--passkeys-cu-mfa-fases-1-3) más abajo
 - ✅ Limpiar eventos (`DELETE /dev/events`)
 - ✅ Publicar evento de prueba (`POST /dev/events/test`)
 
-**Total de Endpoints:** **59 endpoints** (12 dedicados a IA y observabilidad)
+**Total de Endpoints:** **62 endpoints** (12 dedicados a IA y observabilidad)
 
 ## 🎯 Ejemplos de Testing
 
@@ -320,7 +320,7 @@ GET /categories?tiendaId={storeId}&activas=true
 - ✅ 13. Dashboard & Monitoring (4)
 - ✅ 14. Dev Utilities (solo dev/test) (3)
 
-**Total:** **59 endpoints** listos para ejecutar (incluye CU-28, CU-29, CU-32, CU-33 y observabilidad de cache).
+**Total:** **62 endpoints** listos para ejecutar (incluye CU-28, CU-29, CU-32, CU-33 y observabilidad de cache).
 
 > Swagger UI actualizado en `/api/docs` y colección sincronizada con los nuevos endpoints de cache.
 
@@ -955,6 +955,23 @@ GET {{baseUrl}}/admin/audit-logs?page=1&pageSize=10&entityType=Lista&changeType=
 # Sin token → 401; USUARIO → 403 ADMIN_ROLE_REQUIRED
 # Nota: en producción solo hay eventos Lista y Producto (sin eventos de Usuario).
 
+# Seguridad del panel de administración (fase 5, ADMIN): resumen con datos
+# REALES (2FA n de m, fallos 24 h, Turnstile {enabled}, cuentas en periodo de
+# gracia con días restantes). Una sección a null = no se pudo calcular (nunca
+# se inventa un valor); el motivo está en 'unavailable'.
+GET {{baseUrl}}/admin/security/overview
+
+# Intentos de inicio de sesión (fase 5, ADMIN): un intento por cada login,
+# correcto o fallido, con su motivo real y su IP. Filtros: email, success,
+# startDate, endDate. pageSize por defecto 20 (máx. 100).
+GET {{baseUrl}}/admin/security/login-attempts?page=1&pageSize=20&success=false
+
+# Alertas de seguridad (fase 5, ADMIN): CALCULADAS con datos reales, no una
+# lista fija: >5 fallos del mismo email en 1 h (alta), ADMIN sin 2FA (media),
+# cuenta en periodo de gracia a <7 días de su eliminación (media). Sin
+# alertas, la lista viene vacía.
+GET {{baseUrl}}/admin/security/alerts?page=1&pageSize=20
+
 # Auditoría por recurso
 GET {{baseUrl}}/audit/lists/{{listId}}
 GET {{baseUrl}}/audit/products/{{productId}}   # ?changeType=UPDATE
@@ -976,4 +993,4 @@ Si encuentras algún endpoint que falta o algún error en la colección:
 
 **¡Happy Testing! 🎉**
 
-Última actualización: Noviembre 2026 - Postman 115 requests (MFA/passkeys CU-MFA, auth 13A, colaboradores, auditoría, dashboard, reorden de productos)
+Última actualización: Noviembre 2026 - Postman 118 requests (MFA/passkeys CU-MFA, auth 13A, colaboradores, auditoría, dashboard, reorden de productos)

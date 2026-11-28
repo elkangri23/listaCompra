@@ -318,3 +318,25 @@ model AIUsageEvent {
   @@index([operation])
   @@map("ai_usage_events")
 }
+
+/// Intentos de inicio de sesión (panel admin, fase 5): un evento por
+/// intento de login, correcto o fallido, con el motivo real que distingue
+/// AuthenticateUser. `email` se guarda normalizado en minúsculas; NUNCA
+/// se guardan contraseñas, códigos ni tokens. Sin FK a usuarios: un
+/// intento puede ser de un email inexistente, y la telemetría no debe
+/// interferir con la cascada GDPR de borrado de cuenta (igual que
+/// ai_usage_events). Base del overview, las alertas y la futura retención
+/// de la pestaña Métricas (ultimaConexion se deriva de aquí).
+model LoginAttempt {
+  id        String   @id @default(uuid())
+  email     String
+  success   Boolean
+  reason    String? // 'WRONG_PASSWORD' | 'USER_NOT_FOUND' | 'UNVERIFIED_EMAIL' | 'INACTIVE_ACCOUNT' | 'MFA_FAILED'
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([createdAt])
+  @@map("login_attempts")
+}

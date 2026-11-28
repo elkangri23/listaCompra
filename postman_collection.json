@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Lista Compra API",
-    "description": "Colección Postman v2.0.0 - 59 endpoints cubriendo autenticación, gestión colaborativa, inteligencia artificial, plantillas, administración avanzada y observabilidad de caché.",
+    "description": "Colección Postman v2.0.0 - 62 endpoints cubriendo autenticación, gestión colaborativa, inteligencia artificial, plantillas, administración avanzada y observabilidad de caché.",
     "version": "2.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -4001,6 +4001,114 @@
               ]
             },
             "description": "Vista global de auditoría del panel de administración (fase 4). Mismos datos y filtros que /admin/audit pero con el sobre {success, data} del resto de /admin/*. Filtros: entityType (Lista|Producto), changeType (CREATE|UPDATE|DELETE), changedByUserId, startDate, endDate. Solo ADMIN (403 ADMIN_ROLE_REQUIRED para USUARIO)."
+          },
+          "response": []
+        },
+        {
+          "name": "Seguridad — Resumen (Panel Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/security/overview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "security",
+                "overview"
+              ],
+              "query": []
+            },
+            "description": "Resumen de seguridad del panel de administración (fase 5). Datos REALES: cuentas con 2FA (n de m), intentos fallidos en las últimas 24 h, Turnstile {enabled} (solo si TURNSTILE_SECRET_KEY está configurada; la clave nunca se devuelve) y cuentas en periodo de gracia GDPR (n, con eliminacionSolicitadaEn y días restantes). Si un dato no se puede calcular llega como null con su motivo en 'unavailable': nunca se inventa un valor. Solo ADMIN (403 ADMIN_ROLE_REQUIRED para USUARIO)."
+          },
+          "response": []
+        },
+        {
+          "name": "Seguridad — Intentos de Login (Panel Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/security/login-attempts?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "security",
+                "login-attempts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Lista paginada de intentos de inicio de sesión (fase 5), ordenados por fecha desc. Un intento por cada login (correcto y fallido) con su motivo real (WRONG_PASSWORD, USER_NOT_FOUND, UNVERIFIED_EMAIL, INACTIVE_ACCOUNT, MFA_FAILED), IP y agente. Filtros: email, success (true|false), startDate, endDate. pageSize por defecto 20 (máx. 100). Solo ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Seguridad — Alertas (Panel Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/security/alerts?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "security",
+                "alerts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Alertas de seguridad CALCULADAS con datos reales (fase 5), no una lista fija: más de 5 intentos fallidos del mismo email en 1 h (alta), un ADMIN sin 2FA (media), una cuenta en periodo de gracia a menos de 7 días de su eliminación (media, incluido el caso vencido). Cada alerta: {id, type, severity, message, createdAt, relatedEmail?}. Sin alertas, la lista viene vacía. Solo ADMIN."
           },
           "response": []
         },

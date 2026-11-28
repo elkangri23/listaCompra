@@ -9,6 +9,8 @@ import type { IUsuarioRepository } from '@application/ports/repositories/IUsuari
 import type { IPasswordHasher } from '@application/ports/auth/IPasswordHasher';
 import type { ITokenService } from '@application/ports/auth/ITokenService';
 import type { IMfaRepository } from '@application/ports/repositories/IMfaRepository';
+import type { ILoginAttemptRecorder } from '@application/ports/external/ILoginAttemptRecorder';
+import type { LoginAttemptReason } from '@application/ports/repositories/ILoginAttemptRepository';
 import type { LoginDto, LoginResponseDto } from '@application/dto/auth/LoginDto';
 import type { LoginMfaRequiredDto } from '@application/dto/auth/LoginDto';
 import { Email } from '@domain/value-objects/Email';
@@ -22,8 +24,32 @@ export class AuthenticateUser {
     private readonly usuarioRepository: IUsuarioRepository,
     private readonly passwordHasher: IPasswordHasher,
     private readonly tokenService: ITokenService,
-    private readonly mfaRepository?: IMfaRepository
+    private readonly mfaRepository?: IMfaRepository,
+    // Registro best-effort de intentos de login (fase 5): sin él, el
+    // login funciona exactamente igual (el recorder es opcional).
+    private readonly loginAttemptRecorder?: ILoginAttemptRecorder
   ) {}
+
+  /**
+   * Registra el intento sin romper nunca el login: el recorder ya
+   * traga sus propios errores; esto es defensa en profundidad.
+   */
+  private async recordAttempt(input: {
+    email: string;
+    success: boolean;
+    reason?: LoginAttemptReason | null | undefined;
+    ipAddress?: string | null | undefined;
+    userAgent?: string | null | undefined;
+  }): Promise<void> {
+    if (!this.loginAttemptRecorder) {
+      return;
+    }
+    try {
+      await this.loginAttemptRecorder.record(input);
+    } catch {
+      // Best-effort: un fallo de telemetría nunca rompe el login.
+    }
+  }
 
   async execute(dto: LoginDto): Promise<Result<LoginResponseDto | LoginMfaRequiredDto, ValidationError | UnauthorizedError | NotFoundError | Error>> {
     // 1. Validar y crear email
@@ -40,6 +66,13 @@ export class AuthenticateUser {
     // 2. Validar contraseña
     const passwordResult = Password.create(dto.password);
     if (passwordResult.isFailure) {
+      await this.recordAttempt({
+        email: email.value,
+        success: false,
+        reason: 'WRONG_PASSWORD',
+        ipAddress: dto.ipAddress,
+        userAgent: dto.userAgent,
+      });
       return failure(ValidationError.create(
         passwordResult.error.message,
         'password',
@@ -56,11 +89,25 @@ export class AuthenticateUser {
 
     const usuario = userResult.value;
     if (!usuario) {
+      await this.recordAttempt({
+        email: email.value,
+        success: false,
+        reason: 'USER_NOT_FOUND',
+        ipAddress: dto.ipAddress,
+        userAgent: dto.userAgent,
+      });
       return failure(UnauthorizedError.invalidCredentials());
     }
 
     // 4. Verificar que el usuario esté activo
     if (!usuario.activo) {
+      await this.recordAttempt({
+        email: email.value,
+        success: false,
+        reason: 'INACTIVE_ACCOUNT',
+        ipAddress: dto.ipAddress,
+        userAgent: dto.userAgent,
+      });
       return failure(UnauthorizedError.userInactive());
     }
 
@@ -71,6 +118,13 @@ export class AuthenticateUser {
     }
 
     if (!passwordValidResult.value) {
+      await this.recordAttempt({
+        email: email.value,
+        success: false,
+        reason: 'WRONG_PASSWORD',
+        ipAddress: dto.ipAddress,
+        userAgent: dto.userAgent,
+      });
       return failure(UnauthorizedError.invalidCredentials());
     }
 
@@ -78,6 +132,13 @@ export class AuthenticateUser {
     // se entra; el controlador devuelve el estado emailNotVerified para
     // que el frontend lleve a /verify-email.
     if (!usuario.emailVerificado) {
+      await this.recordAttempt({
+        email: email.value,
+        success: false,
+        reason: 'UNVERIFIED_EMAIL',
+        ipAddress: dto.ipAddress,
+        userAgent: dto.userAgent,
+      });
       return failure(UnauthorizedError.emailNotVerified());
     }
 
@@ -107,6 +168,13 @@ export class AuthenticateUser {
       return failure(tokensResult.error);
     }
     const tokens = tokensResult.value;
+    await this.recordAttempt({
+      email: email.value,
+      success: true,
+      reason: null,
+      ipAddress: dto.ipAddress,
+      userAgent: dto.userAgent,
+    });
 
     // 9. Verificar si la contraseña necesita rehash (opcional)
     const needsRehashResult = await this.passwordHasher.needsRehash(usuario.password);

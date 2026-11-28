@@ -57,6 +57,9 @@ describe('EndImpersonation', () => {
       hardDelete: jest.fn(),
       count: jest.fn(),
       countActive: jest.fn(),
+      countTotpEnabled: jest.fn(),
+      findAdminsWithoutTotp: jest.fn(),
+      findGracePeriodAccounts: jest.fn(),
       search: jest.fn()
     };
 

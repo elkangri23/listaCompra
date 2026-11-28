@@ -71,6 +71,22 @@ export interface IUsuarioRepository {
   countActive(): Promise<Result<number, Error>>;
 
   /**
+   * Cuenta usuarios con TOTP activado (panel admin, fase 5: resumen 2FA)
+   */
+  countTotpEnabled(): Promise<Result<number, Error>>;
+
+  /**
+   * Administradores sin TOTP activado (panel admin, fase 5: alertas)
+   */
+  findAdminsWithoutTotp(): Promise<Result<Usuario[], Error>>;
+
+  /**
+   * Cuentas en periodo de gracia GDPR (eliminacionSolicitadaEn no nula)
+   * (panel admin, fase 5: resumen y alertas)
+   */
+  findGracePeriodAccounts(): Promise<Result<Usuario[], Error>>;
+
+  /**
    * Busca usuarios por término de búsqueda (nombre, apellidos, email)
    */
   search(term: string, params: PaginationParams): Promise<Result<PaginationResult<Usuario>, Error>>;

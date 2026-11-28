@@ -73,7 +73,10 @@ describe('GetAdminUsers', () => {
       delete: jest.fn(),
       hardDelete: jest.fn(),
       count: jest.fn(),
-      countActive: jest.fn()
+      countActive: jest.fn(),
+      countTotpEnabled: jest.fn(),
+      findAdminsWithoutTotp: jest.fn(),
+      findGracePeriodAccounts: jest.fn()
     } as jest.Mocked<IUsuarioRepository>;
 
     mockListaRepository = {

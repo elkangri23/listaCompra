@@ -46,6 +46,9 @@ import { ImpersonateUser } from '@application/use-cases/admin/ImpersonateUser';
 import { EndImpersonation } from '@application/use-cases/admin/EndImpersonation';
 import { GetAdminUsers } from '@application/use-cases/admin/GetAdminUsers';
 import { UpdateUserStatus } from '@application/use-cases/admin/UpdateUserStatus';
+import { GetSecurityOverview } from '@application/use-cases/admin/GetSecurityOverview';
+import { GetLoginAttempts } from '@application/use-cases/admin/GetLoginAttempts';
+import { GetSecurityAlerts } from '@application/use-cases/admin/GetSecurityAlerts';
 import { BulkCategorizeProducts } from '@application/use-cases/ai/BulkCategorizeProducts';
 import { GetAuditHistoryForList } from '@application/use-cases/audit/GetAuditHistoryForList';
 import { GetAuditHistoryForProduct } from '@application/use-cases/audit/GetAuditHistoryForProduct';
@@ -78,6 +81,11 @@ import { InMemoryEmailVerificationCodeRepository } from '@infrastructure/persist
 import { InMemoryPasswordResetCodeRepository } from '@infrastructure/persistence/in-memory/InMemoryPasswordResetCodeRepository';
 import { InMemoryAIUsageEventRepository } from '@infrastructure/persistence/in-memory/InMemoryAIUsageEventRepository';
 import { PrismaAIUsageEventRepository } from '@infrastructure/persistence/repositories/PrismaAIUsageEventRepository';
+import { InMemoryLoginAttemptRepository } from '@infrastructure/persistence/in-memory/InMemoryLoginAttemptRepository';
+import { PrismaLoginAttemptRepository } from '@infrastructure/persistence/repositories/PrismaLoginAttemptRepository';
+import type { ILoginAttemptRepository } from '@application/ports/repositories/ILoginAttemptRepository';
+import type { ILoginAttemptRecorder } from '@application/ports/external/ILoginAttemptRecorder';
+import { LoginAttemptRecorder } from '@infrastructure/security/LoginAttemptRecorder';
 import type { IAIUsageEventRepository } from '@application/ports/repositories/IAIUsageEventRepository';
 import type { IAIUsageRecorder } from '@application/ports/external/IAIUsageRecorder';
 import { AIUsageRecorder } from '@infrastructure/external-services/ai/AIUsageRecorder';
@@ -255,6 +263,9 @@ export class Container {
   private _endImpersonation!: EndImpersonation;
   private _getAdminUsers!: GetAdminUsers;
   private _updateUserStatus!: UpdateUserStatus;
+  private _getSecurityOverview!: GetSecurityOverview;
+  private _getLoginAttempts!: GetLoginAttempts;
+  private _getSecurityAlerts!: GetSecurityAlerts;
   private _bulkCategorizeProducts!: BulkCategorizeProducts;
   private _getAuditHistoryForList!: GetAuditHistoryForList;
   private _getAuditHistoryForProduct!: GetAuditHistoryForProduct;
@@ -276,6 +287,8 @@ export class Container {
   private _aiConfigController!: AIConfigController;
   private _aiUsageEventRepository!: IAIUsageEventRepository;
   private _aiUsageRecorder!: IAIUsageRecorder;
+  private _loginAttemptRepository!: ILoginAttemptRepository;
+  private _loginAttemptRecorder!: ILoginAttemptRecorder;
   private _aiHealthChecker!: AIHealthChecker;
   private _getAIUsage!: GetAIUsage;
   private _auditController!: AuditController;
@@ -385,6 +398,7 @@ export class Container {
       this._emailVerificationCodeRepository = new InMemoryEmailVerificationCodeRepository();
       this._passwordResetCodeRepository = new InMemoryPasswordResetCodeRepository();
       this._aiUsageEventRepository = new InMemoryAIUsageEventRepository();
+      this._loginAttemptRepository = new InMemoryLoginAttemptRepository();
       this._auditRepository = { save: async () => success({} as any), findById: async () => success(null), find: async () => success([]), count: async () => success(0) };
       this._blueprintRepository = {
         save: async (bp: any) => success(bp),
@@ -431,6 +445,7 @@ export class Container {
     this._emailVerificationCodeRepository = new PrismaEmailVerificationCodeRepository(this._prisma);
     this._passwordResetCodeRepository = new PrismaPasswordResetCodeRepository(this._prisma);
     this._aiUsageEventRepository = new PrismaAIUsageEventRepository(this._prisma);
+    this._loginAttemptRepository = new PrismaLoginAttemptRepository(this._prisma);
     this._passkeyRepository = new PrismaPasskeyRepository(this._prisma);
     this._listaRepository = new PrismaListaRepository(this._prisma);
     this._productoRepository = new PrismaProductoRepository(this._prisma);
@@ -478,6 +493,9 @@ export class Container {
     // es best-effort y se inyecta en el PerplexityService SIN cache, que
     // es el que ven los casos de uso de categorización en producción.
     this._aiUsageRecorder = new AIUsageRecorder(this._aiUsageEventRepository);
+    // Registro de intentos de login (panel admin, fase 5): best-effort,
+    // se inyecta en AuthenticateUser y MfaLogin.
+    this._loginAttemptRecorder = new LoginAttemptRecorder(this._loginAttemptRepository);
     this._aiService = new PerplexityService(aiConfig, undefined, this._aiUsageRecorder);
     this._aiConfigService = new AIConfigService(aiConfig);
     this._aiHealthChecker = new AIHealthChecker(this._aiConfigService);
@@ -590,7 +608,8 @@ export class Container {
       this._usuarioRepository,
       this._passwordHasher,
       this._tokenService,
-      this._mfaRepository
+      this._mfaRepository,
+      this._loginAttemptRecorder
     );
 
     // Renovación de sesión (POST /auth/refresh)
@@ -631,7 +650,7 @@ export class Container {
       this._passwordHasher,
       this._emailService
     );
-    this._mfaLogin = new MfaLogin(this._usuarioRepository, this._mfaRepository, this._tokenService);
+    this._mfaLogin = new MfaLogin(this._usuarioRepository, this._mfaRepository, this._tokenService, this._loginAttemptRecorder);
 
     // Passkeys (fase 2)
     this._stepUpPasswordVerifier = new StepUpPasswordVerifier(this._usuarioRepository, this._passwordHasher);
@@ -818,6 +837,19 @@ export class Container {
       this._usuarioRepository
     );
 
+    this._getSecurityOverview = new GetSecurityOverview(
+      this._loginAttemptRepository,
+      this._usuarioRepository,
+      this._turnstileVerifier
+    );
+
+    this._getLoginAttempts = new GetLoginAttempts(this._loginAttemptRepository);
+
+    this._getSecurityAlerts = new GetSecurityAlerts(
+      this._loginAttemptRepository,
+      this._usuarioRepository
+    );
+
     this._bulkCategorizeProducts = new BulkCategorizeProducts(
       this._aiService,
       this._usuarioRepository,
@@ -934,7 +966,10 @@ export class Container {
       this._endImpersonation,
       this._auditRepository,
       this._getAdminUsers,
-      this._updateUserStatus
+      this._updateUserStatus,
+      this._getSecurityOverview,
+      this._getLoginAttempts,
+      this._getSecurityAlerts
     );
 
     this._recommendationsController = new RecommendationsController(

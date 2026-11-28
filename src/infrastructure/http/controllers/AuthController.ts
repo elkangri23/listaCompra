@@ -125,7 +125,14 @@ export class AuthController {
         return;
       }
 
-      const result = await this.dependencies.authenticateUser.execute(dto);
+      // IP real del cliente: nginx pone X-Real-IP (nuestro proxy la
+      // sobrescribe, así que no es falsificable desde fuera); sin ella,
+      // req.ip sería la IP del gateway Docker compartida por todos.
+      const result = await this.dependencies.authenticateUser.execute({
+        ...dto,
+        ipAddress: req.get('X-Real-IP') || req.ip || 'unknown',
+        userAgent: req.get('User-Agent'),
+      });
 
       if (result.isFailure) {
         if (result.error instanceof UnauthorizedError) {

@@ -5,6 +5,13 @@
 export interface LoginDto {
   email: string;
   password: string;
+  /**
+   * Metadatos del intento (los pone el controlador desde la request).
+   * Solo para el registro de intentos de inicio de sesión; nunca se
+   * persisten en ningún otro sitio ni se devuelven al cliente.
+   */
+  ipAddress?: string | undefined;
+  userAgent?: string | undefined;
 }
 
 export interface LoginResponseDto {

@@ -292,6 +292,52 @@ export class PrismaUsuarioRepository implements IUsuarioRepository {
     }
   }
 
+  async countTotpEnabled(): Promise<Result<number, Error>> {
+    try {
+      const total = await this.prisma.usuario.count({
+        where: { totpEnabled: true },
+      });
+      return success(total);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al contar usuarios con 2FA';
+      return failure(new Error(`Error al contar usuarios con 2FA: ${errorMessage}`));
+    }
+  }
+
+  async findAdminsWithoutTotp(): Promise<Result<Usuario[], Error>> {
+    try {
+      // Solo admins activos: un admin inactivo no puede entrar, así que
+      // no supone riesgo aunque no tenga 2FA.
+      const usuariosData = await this.prisma.usuario.findMany({
+        where: {
+          rol: 'ADMIN' as any,
+          activo: true,
+          totpEnabled: false,
+        },
+        orderBy: { fechaCreacion: 'desc' },
+      });
+      return success(usuariosData.map(UsuarioMapper.toDomain));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al buscar administradores sin 2FA';
+      return failure(new Error(`Error al buscar administradores sin 2FA: ${errorMessage}`));
+    }
+  }
+
+  async findGracePeriodAccounts(): Promise<Result<Usuario[], Error>> {
+    try {
+      const usuariosData = await this.prisma.usuario.findMany({
+        where: {
+          eliminacionSolicitadaEn: { not: null },
+        },
+        orderBy: { eliminacionSolicitadaEn: 'desc' },
+      });
+      return success(usuariosData.map(UsuarioMapper.toDomain));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al buscar cuentas en periodo de gracia';
+      return failure(new Error(`Error al buscar cuentas en periodo de gracia: ${errorMessage}`));
+    }
+  }
+
   async search(term: string, params: PaginationParams): Promise<Result<PaginationResult<Usuario>, Error>> {
     try {
       const skip = (params.page - 1) * params.limit;

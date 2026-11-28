@@ -118,6 +118,27 @@ export class InMemoryUsuarioRepository implements IUsuarioRepository {
     return success(activos);
   }
 
+  async countTotpEnabled(): Promise<Result<number, Error>> {
+    const enabled = Array.from(this.usuarios.values()).filter(usuario => usuario.totpEnabled).length;
+    return success(enabled);
+  }
+
+  async findAdminsWithoutTotp(): Promise<Result<Usuario[], Error>> {
+    // Solo admins activos: un admin inactivo no puede entrar, así que
+    // no supone riesgo aunque no tenga 2FA.
+    const admins = Array.from(this.usuarios.values()).filter(
+      (usuario) => usuario.rol === 'ADMIN' && usuario.activo && !usuario.totpEnabled
+    );
+    return success(admins);
+  }
+
+  async findGracePeriodAccounts(): Promise<Result<Usuario[], Error>> {
+    const accounts = Array.from(this.usuarios.values()).filter(
+      (usuario) => usuario.eliminacionSolicitadaEn !== null
+    );
+    return success(accounts);
+  }
+
   async search(term: string, params: PaginationParams): Promise<Result<PaginationResult<Usuario>, Error>> {
     const normalized = term.toLowerCase();
     const items = Array.from(this.usuarios.values()).filter(usuario =>

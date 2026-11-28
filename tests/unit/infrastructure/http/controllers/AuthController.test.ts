@@ -28,7 +28,10 @@ describe('AuthController', () => {
     });
 
     req = {
-      body: {}
+      body: {},
+      // El login lee la IP real y el agente para el registro de intentos
+      get: jest.fn().mockReturnValue(undefined),
+      ip: '127.0.0.1',
     };
 
     res = {
@@ -160,7 +163,11 @@ describe('AuthController', () => {
       await authController.login(req as Request, res as Response, next);
 
       // Assert
-      expect(authenticateUser.execute).toHaveBeenCalledWith(req.body);
+      expect(authenticateUser.execute).toHaveBeenCalledWith({
+        ...req.body,
+        ipAddress: '127.0.0.1',
+        userAgent: undefined,
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({

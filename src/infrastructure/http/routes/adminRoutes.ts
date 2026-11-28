@@ -642,6 +642,274 @@ export function createAdminRoutes(
 
   /**
    * @swagger
+   * /api/v1/admin/security/overview:
+   *   get:
+   *     summary: Resumen de seguridad (panel de administración)
+   *     description: Cuentas con 2FA (n de m), intentos fallidos en las últimas 24 h, estado de Turnstile y cuentas en periodo de gracia GDPR. Todo con datos reales; una sección que no se puede calcular llega como null con el motivo en `unavailable`, nunca inventada.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Resumen de seguridad
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     twoFactor:
+   *                       type: object
+   *                       nullable: true
+   *                       properties:
+   *                         enabled:
+   *                           type: integer
+   *                         total:
+   *                           type: integer
+   *                     failedLoginsLast24h:
+   *                       type: integer
+   *                       nullable: true
+   *                     turnstile:
+   *                       type: object
+   *                       properties:
+   *                         enabled:
+   *                           type: boolean
+   *                     gracePeriod:
+   *                       type: object
+   *                       nullable: true
+   *                       properties:
+   *                         count:
+   *                           type: integer
+   *                         accounts:
+   *                           type: array
+   *                           items:
+   *                             type: object
+   *                             properties:
+   *                               email:
+   *                                 type: string
+   *                               eliminacionSolicitadaEn:
+   *                                 type: string
+   *                                 format: date-time
+   *                               daysLeft:
+   *                                 type: integer
+   *                     unavailable:
+   *                       type: object
+   *                       properties:
+   *                         twoFactor:
+   *                           type: string
+   *                         failedLogins:
+   *                           type: string
+   *                         gracePeriod:
+   *                           type: string
+   *       401:
+   *         description: Token no válido o expirado
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.get(
+    '/security/overview',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    (req: any, res: any) => adminController.getSecurityOverview(req, res)
+  );
+
+  /**
+   * @swagger
+   * /api/v1/admin/security/login-attempts:
+   *   get:
+   *     summary: Intentos de inicio de sesión (panel de administración)
+   *     description: Lista paginada de los intentos de login registrados (correctos y fallidos), ordenados por fecha descendente. Filtros por email, resultado y rango de fechas.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: email
+   *         schema:
+   *           type: string
+   *         description: Filtrar por email (insensible a mayúsculas)
+   *       - in: query
+   *         name: success
+   *         schema:
+   *           type: boolean
+   *         description: true para correctos, false para fallidos
+   *       - in: query
+   *         name: startDate
+   *         schema:
+   *           type: string
+   *           format: date-time
+   *         description: Fecha de inicio para filtrar
+   *       - in: query
+   *         name: endDate
+   *         schema:
+   *           type: string
+   *           format: date-time
+   *         description: Fecha de fin para filtrar
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *         description: Número de página
+   *       - in: query
+   *         name: pageSize
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 20
+   *         description: Elementos por página
+   *     responses:
+   *       200:
+   *         description: Listado de intentos de inicio de sesión
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     attempts:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           id:
+   *                             type: string
+   *                           email:
+   *                             type: string
+   *                           success:
+   *                             type: boolean
+   *                           reason:
+   *                             type: string
+   *                             nullable: true
+   *                             enum: [WRONG_PASSWORD, USER_NOT_FOUND, UNVERIFIED_EMAIL, INACTIVE_ACCOUNT, MFA_FAILED]
+   *                           ipAddress:
+   *                             type: string
+   *                             nullable: true
+   *                           userAgent:
+   *                             type: string
+   *                             nullable: true
+   *                           createdAt:
+   *                             type: string
+   *                             format: date-time
+   *                     total:
+   *                       type: integer
+   *                     page:
+   *                       type: integer
+   *                     pageSize:
+   *                       type: integer
+   *                     totalPages:
+   *                       type: integer
+   *       401:
+   *         description: Token no válido o expirado
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.get(
+    '/security/login-attempts',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    (req: any, res: any) => adminController.getLoginAttempts(req, res)
+  );
+
+  /**
+   * @swagger
+   * /api/v1/admin/security/alerts:
+   *   get:
+   *     summary: Alertas de seguridad calculadas (panel de administración)
+   *     description: Alertas generadas con datos reales, no una lista fija. Reglas: más de 5 intentos fallidos para el mismo email en 1 hora (alta); un administrador sin 2FA (media); una cuenta en periodo de gracia a menos de 7 días de su eliminación definitiva (media). Sin datos que las disparen, la lista es vacía.
+   *     tags: [Admin]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *         description: Número de página
+   *       - in: query
+   *         name: pageSize
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 20
+   *         description: Elementos por página
+   *     responses:
+   *       200:
+   *         description: Alertas de seguridad
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     alerts:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           id:
+   *                             type: string
+   *                           type:
+   *                             type: string
+   *                             enum: [BRUTE_FORCE_EMAIL, ADMIN_WITHOUT_2FA, GRACE_PERIOD_ENDING]
+   *                           severity:
+   *                             type: string
+   *                             enum: [high, medium, low]
+   *                           message:
+   *                             type: string
+   *                           createdAt:
+   *                             type: string
+   *                             format: date-time
+   *                           relatedEmail:
+   *                             type: string
+   *                     total:
+   *                       type: integer
+   *                     page:
+   *                       type: integer
+   *                     pageSize:
+   *                       type: integer
+   *                     totalPages:
+   *                       type: integer
+   *       401:
+   *         description: Token no válido o expirado
+   *       403:
+   *         description: Acceso denegado, se requiere rol de administrador
+   *       500:
+   *         description: Error interno del servidor
+   */
+  router.get(
+    '/security/alerts',
+    authMiddleware,
+    adminMiddleware,
+    adminRateLimitMiddleware,
+    (req: any, res: any) => adminController.getSecurityAlerts(req, res)
+  );
+
+  /**
+   * @swagger
    * /api/v1/admin/audit-logs:
    *   get:
    *     summary: Vista global de auditoría (panel de administración)

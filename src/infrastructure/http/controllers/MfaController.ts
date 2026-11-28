@@ -171,6 +171,10 @@ export class MfaController {
       challengeId: body.challengeId,
       ...(hasCode && { code: body.code }),
       ...(hasBackup && { backupCode: body.backupCode }),
+      // IP real del cliente: nginx pone X-Real-IP (nuestro proxy la
+      // sobrescribe, así que no es falsificable desde fuera).
+      ipAddress: req.get('X-Real-IP') || req.ip || 'unknown',
+      userAgent: req.get('User-Agent'),
     });
     if (result.isFailure) {
       this.sendDomainError(res, result.error);
